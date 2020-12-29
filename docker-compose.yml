@@ -1,0 +1,87 @@
+version: '3.6'
+
+networks:
+
+  cctv-internal:
+    internal: true
+  cctv-external:
+
+volumes:
+
+  cctv-data:
+
+services:
+
+  postgres:
+    image: postgres:12
+    networks:
+      - cctv-internal
+    volumes:
+      - cctv-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: postgrespassword
+    restart: always
+
+  hasura:
+    image: hasura/graphql-engine:v1.3.3
+    networks:
+      - cctv-internal
+      - cctv-external
+    ports:
+      - 8079:8080
+    environment:
+      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_DEV_MODE: "true"
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
+    depends_on:
+      - postgres
+    restart: always
+
+  quotanizer:
+    networks:
+      - cctv-internal
+    build:
+      context: ./quotanizer
+    volumes:
+      - ${CCTV_EVENTS_PATH}:/mnt/events
+      - ${CCTV_SEGMENTS_PATH}:/mnt/segments
+    command: "-path /mnt/events -quota ${CCTV_EVENTS_QUOTA} -path /mnt/segments -quota ${CCTV_SEGMENTS_QUOTA} -suffix .mp4 -suffix .jpg -period 60"
+    restart: always
+
+  motion-processor:
+    build:
+      context: ./
+      dockerfile: docker/motion-processor/Dockerfile
+    networks:
+      - cctv-internal
+      - cctv-external
+    ports:
+      - 6291:6291/udp
+    volumes:
+      - ${CCTV_EVENTS_PATH}:/srv/target_dir/events
+    environment:
+      - DISABLE_NVIDIA=${DISABLE_NVIDIA:-0}
+    command: "-url http://hasura:8080/v1/graphql"
+    depends_on:
+      - hasura
+
+  motion:
+    build:
+      context: ./
+      dockerfile: docker/motion/Dockerfile
+    networks:
+      - cctv-internal
+      - cctv-external
+    volumes:
+      - ${CCTV_MOTION_CONFIGS}:/etc/motion
+      - ${CCTV_EVENTS_PATH}:/srv/target_dir/events
+    ports:
+      - 8080:8080
+      - 8081:8081
+    environment:
+      UDP_HOST: motion-processor
+    restart: always
+    depends_on:
+      - quotanizer
+      - motion-processor
