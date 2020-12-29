@@ -11,11 +11,16 @@ import (
 	"github.com/initialed85/cameranator/pkg/media/metadata"
 )
 
+type File struct {
+	Name string
+	Size float64
+}
+
 type Watcher struct {
 	path          string
 	matcher       *regexp.Regexp
-	onFileCreate  func(string, float64)
-	onFileWrite   func(string, float64)
+	onFileCreate  func(File)
+	onFileWrite   func(File)
 	ticker        *time.Ticker
 	watcher       *fsnotify.Watcher
 	blockedWorker *worker.BlockedWorker
@@ -24,8 +29,8 @@ type Watcher struct {
 func NewWatcher(
 	path string,
 	matcher *regexp.Regexp,
-	onFileCreate func(string, float64),
-	onFileWrite func(string, float64),
+	onFileCreate func(File),
+	onFileWrite func(File),
 ) *Watcher {
 	w := Watcher{
 		path:         path,
@@ -72,10 +77,10 @@ func (w *Watcher) onStart() {
 }
 
 func (w *Watcher) handleEvent(event fsnotify.Event) {
-	path := event.Name
+	name := event.Name
 
 	if w.matcher != nil {
-		if !w.matcher.Match([]byte(path)) {
+		if !w.matcher.Match([]byte(name)) {
 			return
 		}
 	}
@@ -91,20 +96,25 @@ func (w *Watcher) handleEvent(event fsnotify.Event) {
 		return
 	}
 
-	size, err := metadata.GetFileSize(path)
+	size, err := metadata.GetFileSize(name)
 	if err != nil {
-		log.Printf("warning: failed to get file size for %#+v because %#+v", path, err)
+		log.Printf("warning: failed to get file size for %#+v because %#+v", name, err)
 		return
+	}
+
+	file := File{
+		Name: name,
+		Size: size,
 	}
 
 	if event.Op&fsnotify.Create == fsnotify.Create {
 		// TODO: fix unbounded goroutine usage
-		go w.onFileCreate(path, size)
+		go w.onFileCreate(file)
 	}
 
 	if event.Op&fsnotify.Write == fsnotify.Write {
 		// TODO: fix unbounded goroutine usage
-		go w.onFileWrite(path, size)
+		go w.onFileWrite(file)
 	}
 }
 
