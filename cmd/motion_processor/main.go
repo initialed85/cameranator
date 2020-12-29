@@ -46,6 +46,6 @@ func main() {
 	}
 
 	log.Printf("Press Ctrl + C to exit...")
-	common.WaitForCtrlC()
+	utils.WaitForCtrlC()
 	motionProcessor.Stop()
 }

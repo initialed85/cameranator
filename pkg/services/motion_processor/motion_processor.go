@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/initialed85/cameranator/pkg/media/converter"
+	"github.com/initialed85/cameranator/pkg/media/metadata"
 	"github.com/initialed85/cameranator/pkg/motion/event_receiver"
 	"github.com/initialed85/cameranator/pkg/persistence/application"
 	"github.com/initialed85/cameranator/pkg/persistence/model"
@@ -194,10 +195,16 @@ func (m *MotionProcessor) reconcileConvertedEvent(convertedEvent *ConvertedEvent
 
 	camera := cameras[0]
 
+	highQualityVideoSize, err := metadata.GetFileSize(conversion.VideoWork.SourcePath)
+	if err != nil {
+		log.Printf("warning: could not handle event because %v", err)
+		return
+	}
+
 	highQualityVideo := model.NewVideo(
 		convertedEvent.Event.StartTimestamp,
 		convertedEvent.Event.EndTimestamp,
-		1,
+		highQualityVideoSize,
 		conversion.VideoWork.SourcePath,
 		true,
 		camera,
@@ -208,9 +215,15 @@ func (m *MotionProcessor) reconcileConvertedEvent(convertedEvent *ConvertedEvent
 		return
 	}
 
+	highQualityImageSize, err := metadata.GetFileSize(conversion.ImageWork.SourcePath)
+	if err != nil {
+		log.Printf("warning: could not handle event because %v", err)
+		return
+	}
+
 	highQualityImage := model.NewImage(
 		convertedEvent.Event.StartTimestamp,
-		1,
+		highQualityImageSize,
 		conversion.ImageWork.SourcePath,
 		true,
 		camera,
@@ -221,10 +234,16 @@ func (m *MotionProcessor) reconcileConvertedEvent(convertedEvent *ConvertedEvent
 		return
 	}
 
+	lowQualityVideoSize, err := metadata.GetFileSize(conversion.VideoWork.DestinationPath)
+	if err != nil {
+		log.Printf("warning: could not handle event because %v", err)
+		return
+	}
+
 	lowQualityVideo := model.NewVideo(
 		convertedEvent.Event.StartTimestamp,
 		convertedEvent.Event.EndTimestamp,
-		1,
+		lowQualityVideoSize,
 		conversion.VideoWork.DestinationPath,
 		false,
 		camera,
@@ -235,9 +254,15 @@ func (m *MotionProcessor) reconcileConvertedEvent(convertedEvent *ConvertedEvent
 		return
 	}
 
+	lowQualityImageSize, err := metadata.GetFileSize(conversion.ImageWork.DestinationPath)
+	if err != nil {
+		log.Printf("warning: could not handle event because %v", err)
+		return
+	}
+
 	lowQualityImage := model.NewImage(
 		convertedEvent.Event.StartTimestamp,
-		1,
+		lowQualityImageSize,
 		conversion.ImageWork.DestinationPath,
 		false,
 		camera,

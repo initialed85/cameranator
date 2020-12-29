@@ -27,7 +27,7 @@ func NewVideo(
 	IsHighQuality bool,
 	SourceCamera Camera,
 ) Video {
-	randomUUID := common.GetUUID()
+	randomUUID := utils.GetUUID()
 
 	return Video{
 		UUID:           randomUUID,
@@ -48,7 +48,7 @@ func NewVideoWithID(
 	IsHighQuality bool,
 	SourceCameraID int64,
 ) Video {
-	randomUUID := common.GetUUID()
+	randomUUID := utils.GetUUID()
 
 	return Video{
 		UUID:           randomUUID,

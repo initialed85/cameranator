@@ -251,7 +251,7 @@ func TestInsertQuery_Nested(t *testing.T) {
 
 	image := model.Image{
 		UUID:          uuid.UUID{0x42, 0xed, 0xb, 0xce, 0xd8, 0x94, 0x49, 0xfe, 0xbe, 0xef, 0x7, 0xf5, 0xce, 0x7f, 0xcc, 0xec},
-		Timestamp:     common.GetISO8601Time("2020-03-27T08:30:00+08:00"),
+		Timestamp:     utils.GetISO8601Time("2020-03-27T08:30:00+08:00"),
 		Size:          65536,
 		FilePath:      "/some/path",
 		IsHighQuality: true,

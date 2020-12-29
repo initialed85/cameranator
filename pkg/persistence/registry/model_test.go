@@ -90,7 +90,7 @@ func TestModel_GetOne(t *testing.T) {
 func TestModel_AddAndRemove(t *testing.T) {
 	m := NewModelAndClient(testGetModel(), testGetClient())
 
-	cameraUUID := common.GetUUID()
+	cameraUUID := utils.GetUUID()
 
 	camera := model.Camera{
 		UUID:      cameraUUID,

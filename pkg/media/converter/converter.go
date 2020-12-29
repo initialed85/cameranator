@@ -9,7 +9,7 @@ import (
 
 	"github.com/initialed85/glue/pkg/worker"
 
-	"github.com/initialed85/cameranator/pkg/common"
+	"github.com/initialed85/cameranator/pkg/subprocess"
 )
 
 var disableNvidia = false
@@ -89,7 +89,7 @@ func ConvertVideo(sourcePath, destinationPath string, width, height int) (string
 		destinationPath,
 	)
 
-	return common.RunCommand(
+	return process.RunCommand(
 		"ffmpeg",
 		arguments...,
 	)
@@ -120,7 +120,7 @@ func ConvertImage(sourcePath, destinationPath string, width, height int) (string
 		destinationPath,
 	}
 
-	return common.RunCommand(
+	return process.RunCommand(
 		"convert",
 		arguments...,
 	)

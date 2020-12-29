@@ -25,7 +25,7 @@ func NewImage(
 	IsHighQuality bool,
 	SourceCamera Camera,
 ) Image {
-	randomUUID := common.GetUUID()
+	randomUUID := utils.GetUUID()
 
 	return Image{
 		UUID:          randomUUID,
@@ -44,7 +44,7 @@ func NewImageWithID(
 	IsHighQuality bool,
 	SourceCameraID int64,
 ) Image {
-	randomUUID := common.GetUUID()
+	randomUUID := utils.GetUUID()
 
 	return Image{
 		UUID:           randomUUID,

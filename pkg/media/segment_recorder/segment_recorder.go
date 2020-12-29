@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/initialed85/cameranator/pkg/common"
+	"github.com/initialed85/cameranator/pkg/subprocess"
 )
 
 var disableNvidia = false
@@ -22,7 +22,7 @@ func init() {
 	}
 }
 
-func RecordSegments(netCamURL, destinationPath, cameraName string, duration int) (*common.BackgroundProcess, error) {
+func RecordSegments(netCamURL, destinationPath, cameraName string, duration int) (*process.BackgroundProcess, error) {
 	log.Printf("RecordSegments; recording %v second segments from %v to %v for %v", duration, netCamURL, destinationPath, cameraName)
 
 	arguments := make([]string, 0)
@@ -94,7 +94,7 @@ func RecordSegments(netCamURL, destinationPath, cameraName string, duration int)
 		filepath.Join(destinationPath, "Segment_%Y-%m-%dT%H:%M:%S_"+cameraName+".mp4"),
 	)
 
-	return common.RunBackgroundProcess(
+	return process.RunBackgroundProcess(
 		"ffmpeg",
 		arguments...,
 	)

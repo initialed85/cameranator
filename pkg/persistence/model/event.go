@@ -35,7 +35,7 @@ func NewEvent(
 	LowQualityImage Image,
 	SourceCamera Camera,
 ) Event {
-	randomUUID := common.GetUUID()
+	randomUUID := utils.GetUUID()
 
 	return Event{
 		UUID:             randomUUID,
@@ -60,7 +60,7 @@ func NewEventWithIDs(
 	LowQualityImageID int64,
 	SourceCameraID int64,
 ) Event {
-	randomUUID := common.GetUUID()
+	randomUUID := utils.GetUUID()
 
 	return Event{
 		UUID:               randomUUID,

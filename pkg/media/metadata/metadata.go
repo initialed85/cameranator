@@ -2,6 +2,7 @@ package metadata
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/alfg/mp4"
@@ -18,4 +19,17 @@ func GetVideoDuration(path string) (time.Duration, error) {
 	}
 
 	return time.Millisecond * time.Duration(video.Moov.Mvhd.Duration), nil
+}
+
+func GetFileSize(path string) (float64, error) {
+	fileInfo, err := os.Lstat(path)
+	if err != nil {
+		return 0, err
+	}
+
+	if fileInfo.IsDir() {
+		return 0, fmt.Errorf("%#+v is a folder, not a file", path)
+	}
+
+	return float64(fileInfo.Size()) / 1000000, nil
 }

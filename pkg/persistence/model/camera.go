@@ -17,7 +17,7 @@ func NewCamera(
 	Name string,
 	StreamURL string,
 ) Camera {
-	randomUUID := common.GetUUID()
+	randomUUID := utils.GetUUID()
 
 	return Camera{
 		UUID:      randomUUID,
