@@ -56,31 +56,29 @@ func NewSegmentGenerator(
 
 func (s *SegmentGenerator) onFileCreate(file filesystem.File) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
+	lastCreatedPath := s.lastCreatedPath
+	s.mu.Unlock()
 
-	if file.Name == s.lastCreatedPath {
+	if file.Name == lastCreatedPath {
 		return
 	}
 
-	if s.lastCreatedPath != "" {
-		log.Printf("onFileCreate; %#+v closed, %#+v created", s.lastCreatedPath, file.Name)
+	if lastCreatedPath != "" {
+		log.Printf("onFileCreate; %#+v closed, %#+v created", lastCreatedPath, file.Name)
 
-		imagePath := strings.Split(s.lastCreatedPath, ".mp4")[0]
+		imagePath := fmt.Sprintf("%v.jpg", strings.Split(lastCreatedPath, ".mp4")[0])
 
 		err := thumbnail_creator.GetThumbnail(
-			s.lastCreatedPath,
-			fmt.Sprintf(
-				"%v.jpg",
-				imagePath,
-			),
+			lastCreatedPath,
+			imagePath,
 		)
 		if err != nil {
-			log.Printf("warning: attempt to get thumbnail for %#+v raisd %#+v", s.lastCreatedPath, err)
+			log.Printf("warning: attempt to get thumbnail for %#+v raisd %#+v", lastCreatedPath, err)
 		}
 
 		rawVideoStartTimestamp := strings.Split(
 			strings.Split(
-				s.lastCreatedPath,
+				lastCreatedPath,
 				"/Segment_",
 			)[1],
 			fmt.Sprintf("_%v", s.feed.CameraName),
@@ -88,9 +86,9 @@ func (s *SegmentGenerator) onFileCreate(file filesystem.File) {
 
 		videoStartTimestamp := utils.GetISO8601Time(rawVideoStartTimestamp)
 
-		duration, err := metadata.GetVideoDuration(s.lastCreatedPath)
+		duration, err := metadata.GetVideoDuration(lastCreatedPath)
 		if err != nil {
-			log.Printf("warning: attempt to get duration for %#+v raised %#+v", s.lastCreatedPath, err)
+			log.Printf("warning: attempt to get duration for %#+v raised %#+v", lastCreatedPath, err)
 			return
 		}
 
@@ -100,7 +98,7 @@ func (s *SegmentGenerator) onFileCreate(file filesystem.File) {
 
 		event := Event{
 			CameraName:          s.feed.CameraName,
-			VideoPath:           s.lastCreatedPath,
+			VideoPath:           lastCreatedPath,
 			ImagePath:           imagePath,
 			VideoStartTimestamp: videoStartTimestamp,
 			VideoEndTimestamp:   videoEndTimestamp,
@@ -112,7 +110,9 @@ func (s *SegmentGenerator) onFileCreate(file filesystem.File) {
 		s.completeFn(event)
 	}
 
+	s.mu.Lock()
 	s.lastCreatedPath = file.Name
+	s.mu.Unlock()
 }
 
 func (s *SegmentGenerator) Start() error {

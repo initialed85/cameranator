@@ -141,6 +141,7 @@ func (m *MotionProcessor) reconcileEvent(correlation *utils.Correlation) {
 		originalEvent.CameraName,
 		originalEvent.StartTimestamp,
 		originalEvent.EndTimestamp,
+		false,
 		videoWork.Work.SourcePath,
 		imageWork.Work.SourcePath,
 		videoWork.Work.DestinationPath,

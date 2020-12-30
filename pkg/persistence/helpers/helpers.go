@@ -37,6 +37,7 @@ func AddEvent(
 	cameraName string,
 	startTimestamp iso8601.Time,
 	endTimestamp iso8601.Time,
+	isSegment bool,
 	highQualityVideoPath string,
 	highQualityImagePath string,
 	lowQualityVideoPath string,
@@ -104,7 +105,7 @@ func AddEvent(
 	event := model.NewEvent(
 		startTimestamp,
 		endTimestamp,
-		false,
+		isSegment,
 		highQualityVideo,
 		highQualityImage,
 		lowQualityVideo,

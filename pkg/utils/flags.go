@@ -1,7 +1,5 @@
 package utils
 
-import "fmt"
-
 /*
 
 e.g.
@@ -15,7 +13,7 @@ flag.Var(&things, "thing", "a single thing")
 type FlagSliceString []string
 
 func (f *FlagSliceString) String() string {
-	return fmt.Sprintf("%d", f)
+	return "" // TODO: is this important?
 }
 
 func (f *FlagSliceString) Set(value string) error {

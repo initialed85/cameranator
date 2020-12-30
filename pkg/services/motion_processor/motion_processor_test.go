@@ -131,7 +131,7 @@ func TestNewMotionProcessor(t *testing.T) {
 		time.Sleep(time.Millisecond)
 	}
 
-	timeout := time.Now().Add(time.Second * 10)
+	timeout := time.Now().Add(time.Second * 15)
 	for time.Now().Before(timeout) {
 		events := make([]model.Event, 0)
 

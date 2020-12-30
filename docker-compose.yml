@@ -56,8 +56,8 @@ services:
     networks:
       - cctv-internal
       - cctv-external
-    ports:
-      - 6291:6291/udp
+    # ports:
+    #   - 6291:6291/udp
     volumes:
       - ${CCTV_EVENTS_PATH}:/srv/target_dir/events
     environment:
@@ -86,6 +86,23 @@ services:
       - quotanizer
       - motion-processor
 
+  segment-processor:
+    build:
+      context: ./
+      dockerfile: docker/segment-processor/Dockerfile
+    networks:
+      - cctv-internal
+      - cctv-external
+    # ports:
+    #   - 6291:6291/udp
+    volumes:
+      - ${CCTV_SEGMENTS_PATH}:/srv/target_dir/segments
+    environment:
+      - DISABLE_NVIDIA=${DISABLE_NVIDIA:-0}
+    command: "-url http://hasura:8080/v1/graphql"
+    depends_on:
+      - hasura
+
   segment-generator:
     build:
       context: ./
@@ -99,7 +116,9 @@ services:
       - DISABLE_NVIDIA=${DISABLE_NVIDIA:-0}
     # TODO: parse motion config for this command line
     command: >
-      -host segment-processor -port 6291 -destinationPath /srv/target_dir/segments -duration 10
+      -host segment-processor -port 6291 -destinationPath /srv/target_dir/segments -duration ${CCTV_SEGMENT_DURATION}
       -netCamURL rtsp://192.168.137.31:554/Streaming/Channels/101 -cameraName Driveway
       -netCamURL rtsp://192.168.137.32:554/Streaming/Channels/101 -cameraName FrontDoor
       -netCamURL rtsp://192.168.137.33:554/Streaming/Channels/101 -cameraName SideGate
+    depends_on:
+      - segment-processor

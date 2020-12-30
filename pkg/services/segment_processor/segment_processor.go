@@ -142,6 +142,7 @@ func (s *SegmentProcessor) reconcileEvent(correlation *utils.Correlation) {
 		originalEvent.CameraName,
 		originalEvent.VideoStartTimestamp,
 		originalEvent.VideoEndTimestamp,
+		true,
 		videoWork.Work.SourcePath,
 		imageWork.Work.SourcePath,
 		videoWork.Work.DestinationPath,

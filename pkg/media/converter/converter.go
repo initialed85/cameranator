@@ -149,7 +149,11 @@ func NewConverter(numWorkers int, queueSize int, workFn func(Work) (string, stri
 func (c *Converter) Submit(work Work, completeFn func(Work, error)) {
 	c.executor.Submit(
 		func() (interface{}, error) {
-			_, _, err := c.workFn(work)
+			stdout, stderr, err := c.workFn(work)
+
+			if err != nil {
+				err = fmt.Errorf("err=%v, stdout=%#+v, stderr=%#+v", err, stdout, stderr)
+			}
 
 			return struct{}{}, err
 		},

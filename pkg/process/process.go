@@ -80,7 +80,7 @@ func RunBackgroundProcess(executable string, arguments ...string) (process *Back
 
 			startErr = process.Cmd.Start()
 			if startErr != nil {
-				log.Printf("failed to Start because: %v; trying again...", startErr)
+				log.Printf("failed to Start because: %v; trying again...; stdout=%+v, stderr=%#+v", startErr, process.Cmd.Stdout, process.Cmd.Stderr)
 
 				_ = process.Cmd.Process.Kill()
 
@@ -93,7 +93,7 @@ func RunBackgroundProcess(executable string, arguments ...string) (process *Back
 
 			waitErr := process.Cmd.Wait()
 			if waitErr != nil {
-				log.Printf("failed to Wait because: %v; trying again...", waitErr)
+				log.Printf("failed to Wait because: %v; trying again...; stdout=%+v, stderr=%#+v", startErr, process.Cmd.Stdout, process.Cmd.Stderr)
 
 				_ = process.Cmd.Process.Kill()
 
