@@ -1,6 +1,7 @@
 package motion_processor
 
 import (
+	"encoding/json"
 	"log"
 	"testing"
 	"time"
@@ -140,6 +141,13 @@ func TestNewMotionProcessor(t *testing.T) {
 		}
 
 		if len(events) > 0 {
+			eventsJSON, err := json.MarshalIndent(events, "", "   ")
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			log.Print(string(eventsJSON))
+
 			return
 		}
 	}

@@ -2,7 +2,6 @@ package filesystem
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"regexp"
@@ -10,14 +9,12 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/initialed85/cameranator/pkg/test_utils"
 )
 
-func getTempDir() (string, error) {
-	return ioutil.TempDir("", "cameranator")
-}
-
 func TestNewWatcher(t *testing.T) {
-	dir, err := getTempDir()
+	dir, err := test_utils.GetTempDir()
 	if err != nil {
 		log.Fatal(err)
 	}

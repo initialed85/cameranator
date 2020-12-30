@@ -1,7 +1,6 @@
 package converter
 
 import (
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -9,32 +8,25 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-)
 
-const (
-	testVideoPath = "../../../test_data/events/Event_2020-12-27T10:25:05__104__Testing__01.mp4"
-	testImagePath = "../../../test_data/events/Event_2020-12-27T10:25:09__104__Testing__01.jpg"
+	"github.com/initialed85/cameranator/pkg/test_utils"
 )
-
-func getTempDir() (string, error) {
-	return ioutil.TempDir("", "cameranator")
-}
 
 func TestConvertVideo(t *testing.T) {
 	DisableNvidia()
 
-	dir, err := getTempDir()
+	dir, err := test_utils.GetTempDir()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	path := filepath.Join(dir, "some_file.mkv")
+	path := filepath.Join(dir, "some_file.mp4")
 	defer func() {
 		_ = os.Remove(path)
 	}()
 
 	stdout, stderr, err := ConvertVideo(
-		testVideoPath,
+		test_utils.TestVideoPath,
 		path,
 		640,
 		360,
@@ -55,7 +47,7 @@ func TestConvertVideo(t *testing.T) {
 }
 
 func TestConvertImage(t *testing.T) {
-	dir, err := ioutil.TempDir("", "cameranator")
+	dir, err := test_utils.GetTempDir()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -66,7 +58,7 @@ func TestConvertImage(t *testing.T) {
 	}()
 
 	stdout, stderr, err := ConvertImage(
-		testImagePath,
+		test_utils.TestImagePath,
 		path,
 		640,
 		360,
@@ -87,70 +79,79 @@ func TestConvertImage(t *testing.T) {
 	}
 }
 
-func TestNewVideoConverter(t *testing.T) {
+func testNewConverter(
+	t *testing.T,
+	newConverter func(int, int) *Converter,
+	fileName string,
+	sourcePath string,
+) {
 	DisableNvidia()
 
-	dir, err := getTempDir()
+	dir, err := test_utils.GetTempDir()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	path := filepath.Join(dir, "some_file.mkv")
+	path := filepath.Join(dir, fileName)
 	defer func() {
 		_ = os.Remove(path)
 	}()
 
 	results := make([]struct {
-		Stdout string
-		Stderr string
-		Err    error
+		Work Work
+		Err  error
 	}, 0)
 
-	workQueue := make(chan Work, 16)
-
-	c := NewVideoConverter(
-		workQueue,
-		func(work Work, stdout string, stderr string, err error) {
-			results = append(
-				results,
-				struct {
-					Stdout string
-					Stderr string
-					Err    error
-				}{
-					Stdout: stdout,
-					Stderr: stderr,
-					Err:    err,
-				},
-			)
-		},
+	c := newConverter(
+		4,
+		16,
 	)
 
 	c.Start()
 	defer c.Stop()
 
-	workQueue <- Work{
-		SourcePath:      testVideoPath,
+	time.Sleep(time.Millisecond * 100)
+
+	work := Work{
+		SourcePath:      sourcePath,
 		DestinationPath: path,
 		Width:           640,
 		Height:          360,
 	}
+
+	c.Submit(
+		work,
+		func(work Work, err error) {
+			result := struct {
+				Work Work
+				Err  error
+			}{
+				work,
+				err,
+			}
+
+			results = append(
+				results,
+				result,
+			)
+		},
+	)
 
 	timeout := time.Now().Add(time.Second * 10)
 	for len(results) < 1 && time.Now().Before(timeout) {
 		time.Sleep(time.Millisecond * 100)
 	}
 
-	assert.Len(t, results, 1)
+	if len(results) < 1 {
+		log.Fatal("results empty")
+	}
 
 	result := results[0]
 	if result.Err != nil {
-		if result.Err != nil {
-			log.Fatalf("stdout=%#+v, stderr=%#+v, err=%#+v", result.Stdout, result.Stderr, result.Err)
-		}
+		log.Fatal(result.Err)
 	}
 
-	assert.NotEqual(t, "", result.Stderr)
+	assert.Equal(t, work, result.Work)
 
 	_, err = os.Stat(path)
 	if err != nil {
@@ -158,74 +159,10 @@ func TestNewVideoConverter(t *testing.T) {
 	}
 }
 
+func TestNewVideoConverter(t *testing.T) {
+	testNewConverter(t, NewVideoConverter, "some_file.mp4", test_utils.TestVideoPath)
+}
+
 func TestNewImageConverter(t *testing.T) {
-	DisableNvidia()
-
-	dir, err := getTempDir()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	path := filepath.Join(dir, "some_file.jpg")
-	defer func() {
-		_ = os.Remove(path)
-	}()
-
-	results := make([]struct {
-		Stdout string
-		Stderr string
-		Err    error
-	}, 0)
-
-	workQueue := make(chan Work, 16)
-
-	c := NewImageConverter(
-		workQueue,
-		func(work Work, stdout string, stderr string, err error) {
-			results = append(
-				results,
-				struct {
-					Stdout string
-					Stderr string
-					Err    error
-				}{
-					Stdout: stdout,
-					Stderr: stderr,
-					Err:    err,
-				},
-			)
-		},
-	)
-
-	c.Start()
-	defer c.Stop()
-
-	workQueue <- Work{
-		SourcePath:      testImagePath,
-		DestinationPath: path,
-		Width:           640,
-		Height:          360,
-	}
-
-	timeout := time.Now().Add(time.Second * 10)
-	for len(results) < 1 && time.Now().Before(timeout) {
-		time.Sleep(time.Millisecond * 100)
-	}
-
-	assert.Len(t, results, 1)
-
-	result := results[0]
-	if result.Err != nil {
-		if result.Err != nil {
-			log.Fatalf("stdout=%#+v, stderr=%#+v, err=%#+v", result.Stdout, result.Stderr, result.Err)
-		}
-	}
-
-	assert.Equal(t, "", result.Stderr)
-	assert.Equal(t, "", result.Stdout)
-
-	_, err = os.Stat(path)
-	if err != nil {
-		log.Fatal("during test:", err)
-	}
+	testNewConverter(t, NewImageConverter, "some_file.jpg", test_utils.TestImagePath)
 }

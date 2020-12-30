@@ -7,9 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/initialed85/glue/pkg/worker"
-
 	"github.com/initialed85/cameranator/pkg/process"
+	"github.com/initialed85/cameranator/pkg/utils"
 )
 
 var disableNvidia = false
@@ -134,79 +133,66 @@ type Work struct {
 }
 
 type Converter struct {
-	blockedWorker *worker.BlockedWorker
-	workQueue     chan Work
-	workFn        func(string, string, int, int) (string, string, error)
-	completeFn    func(Work, string, string, error)
+	executor *utils.Executor
+	workFn   func(Work) (string, string, error)
 }
 
-func NewConverter(
-	workQueue chan Work,
-	workFn func(string, string, int, int) (string, string, error),
-	completeFn func(Work, string, string, error),
-) *Converter {
+func NewConverter(numWorkers int, queueSize int, workFn func(Work) (string, string, error)) *Converter {
 	c := Converter{
-		workQueue:  workQueue,
-		workFn:     workFn,
-		completeFn: completeFn,
+		executor: utils.NewExecutor(numWorkers, queueSize),
+		workFn:   workFn,
 	}
-
-	c.blockedWorker = worker.NewBlockedWorker(
-		func() {},
-		func() {
-			c.work()
-		},
-		func() {
-			close(c.workQueue)
-		},
-	)
 
 	return &c
 }
 
-func (c *Converter) work() {
-	log.Printf("Converter.work; waiting for work...")
+func (c *Converter) Submit(work Work, completeFn func(Work, error)) {
+	c.executor.Submit(
+		func() (interface{}, error) {
+			_, _, err := c.workFn(work)
 
-	work := <-c.workQueue
-	log.Printf("Converter.work; got %#+v, working...", work)
-
-	stdout, stderr, err := c.workFn(
-		work.SourcePath,
-		work.DestinationPath,
-		work.Width,
-		work.Height,
+			return struct{}{}, err
+		},
+		func(result interface{}, err error) {
+			completeFn(work, err)
+		},
 	)
-
-	log.Printf("Converter.work; calling completeFn with...\nstdout=%v\n\nstderr=%v\n\nerr=%#+v", stdout, stderr, err)
-	c.completeFn(work, stdout, stderr, err)
 }
 
 func (c *Converter) Start() {
-	c.blockedWorker.Start()
+	c.executor.Start()
 }
 
 func (c *Converter) Stop() {
-	c.blockedWorker.Stop()
+	c.executor.Stop()
 }
 
-func NewVideoConverter(
-	workQueue chan Work,
-	completeFn func(Work, string, string, error),
-) *Converter {
+func NewVideoConverter(numWorkers int, queueSize int) *Converter {
 	return NewConverter(
-		workQueue,
-		ConvertVideo,
-		completeFn,
+		numWorkers,
+		queueSize,
+		func(work Work) (string, string, error) {
+			return ConvertVideo(
+				work.SourcePath,
+				work.DestinationPath,
+				work.Width,
+				work.Height,
+			)
+		},
 	)
 }
 
-func NewImageConverter(
-	workQueue chan Work,
-	completeFn func(Work, string, string, error),
-) *Converter {
+func NewImageConverter(numWorkers int, queueSize int) *Converter {
 	return NewConverter(
-		workQueue,
-		ConvertImage,
-		completeFn,
+		numWorkers,
+		queueSize,
+		func(work Work) (string, string, error) {
+			return ConvertImage(
+				work.SourcePath,
+				work.DestinationPath,
+				work.Width,
+				work.Height,
+			)
+		},
 	)
 }

@@ -28,9 +28,7 @@ type MotionProcessor struct {
 	mu                         sync.Mutex
 	eventReceiver              *event_receiver.EventReceiver
 	convertedEventByConversion map[Conversion]*ConvertedEvent
-	videoConverterWorkQueue    chan converter.Work
 	videoConverter             *converter.Converter
-	imageConverterWorkQueue    chan converter.Work
 	imageConverter             *converter.Converter
 	application                *application.Application
 }
@@ -44,8 +42,6 @@ func NewMotionProcessor(
 
 	m := MotionProcessor{
 		convertedEventByConversion: make(map[Conversion]*ConvertedEvent),
-		videoConverterWorkQueue:    make(chan converter.Work, 1024),
-		imageConverterWorkQueue:    make(chan converter.Work, 1024),
 	}
 
 	m.eventReceiver, err = event_receiver.NewEventReceiver(port, m.eventReceiverHandler)
@@ -54,13 +50,13 @@ func NewMotionProcessor(
 	}
 
 	m.videoConverter = converter.NewVideoConverter(
-		m.videoConverterWorkQueue,
-		m.videoConverterCompleteFn,
+		2,
+		1024,
 	)
 
 	m.imageConverter = converter.NewImageConverter(
-		m.imageConverterWorkQueue,
-		m.imageConverterCompleteFn,
+		2,
+		1024,
 	)
 
 	m.application, err = application.NewApplication(url, timeout)
@@ -84,9 +80,15 @@ func (m *MotionProcessor) eventReceiverHandler(event event_receiver.Event) {
 		},
 	}
 
-	m.videoConverterWorkQueue <- conversion.VideoWork
+	m.videoConverter.Submit(
+		conversion.VideoWork,
+		m.videoConverterCompleteFn,
+	)
 
-	m.imageConverterWorkQueue <- conversion.ImageWork
+	m.imageConverter.Submit(
+		conversion.ImageWork,
+		m.imageConverterCompleteFn,
+	)
 
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -171,7 +173,7 @@ func (m *MotionProcessor) reconcileConvertedEvent(convertedEvent *ConvertedEvent
 	log.Printf("added %#+v", event)
 }
 
-func (m *MotionProcessor) videoConverterCompleteFn(work converter.Work, stdout string, stderr string, err error) {
+func (m *MotionProcessor) videoConverterCompleteFn(work converter.Work, err error) {
 	convertedEvent, findConvertedEventErr := m.getConvertedEvent(work)
 	if findConvertedEventErr != nil {
 		log.Printf("warning: could not convert video because %v", findConvertedEventErr)
@@ -188,7 +190,7 @@ func (m *MotionProcessor) videoConverterCompleteFn(work converter.Work, stdout s
 	m.reconcileConvertedEvent(convertedEvent)
 }
 
-func (m *MotionProcessor) imageConverterCompleteFn(work converter.Work, stdout string, stderr string, err error) {
+func (m *MotionProcessor) imageConverterCompleteFn(work converter.Work, err error) {
 	convertedEvent, findConvertedEventErr := m.getConvertedEvent(work)
 	if findConvertedEventErr != nil {
 		log.Printf("warning: could not convert image because %v", findConvertedEventErr)
