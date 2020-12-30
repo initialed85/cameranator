@@ -4,7 +4,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/relvacode/iso8601"
 
-	"github.com/initialed85/cameranator/pkg/common"
+	"github.com/initialed85/cameranator/pkg/utils"
 )
 
 type Event struct {

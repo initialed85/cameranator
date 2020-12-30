@@ -3,7 +3,6 @@ package graphql
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"reflect"
 	"sort"
 	"strings"
@@ -372,7 +371,7 @@ func InsertQuery(
 	key string,
 	item interface{},
 ) (string, error) {
-	fields, err := getFields(item, 1, true)
+	fields, err := getFields(item, 1, false)
 	if err != nil {
 		return "", err
 	}
@@ -395,7 +394,7 @@ func DeleteQuery(
 	key string,
 	item interface{},
 ) (string, error) {
-	fields, err := getFields(item, 2, true)
+	fields, err := getFields(item, 2, false)
 	if err != nil {
 		return "", err
 	}
@@ -412,8 +411,6 @@ mutation {
   }
 }
 `, key, where, fields)
-
-	log.Printf("%v", query)
 
 	return query, nil
 }

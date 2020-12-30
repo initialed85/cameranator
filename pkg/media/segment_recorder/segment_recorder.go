@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/initialed85/cameranator/pkg/subprocess"
+	"github.com/initialed85/cameranator/pkg/process"
 )
 
 var disableNvidia = false

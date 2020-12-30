@@ -8,9 +8,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/initialed85/cameranator/pkg/common"
 	"github.com/initialed85/cameranator/pkg/persistence/graphql"
 	"github.com/initialed85/cameranator/pkg/persistence/model"
+	"github.com/initialed85/cameranator/pkg/utils"
 )
 
 func testGetClient() *graphql.Client {
@@ -107,10 +107,16 @@ func TestModel_AddAndRemove(t *testing.T) {
 	}
 	assert.Len(t, cameras, 3)
 
-	err = m.Add(&camera)
+	defer func() {
+		_ = m.Remove(&camera, &cameras)
+	}()
+
+	cameras = make([]model.Camera, 0)
+	err = m.Add(&camera, &cameras)
 	if err != nil {
-		log.Fatal()
+		log.Fatal(err)
 	}
+	log.Printf("%#+v", cameras)
 
 	cameras = make([]model.Camera, 0)
 	err = m.GetAll(&cameras)
@@ -119,12 +125,12 @@ func TestModel_AddAndRemove(t *testing.T) {
 	}
 	assert.Len(t, cameras, 4)
 
-	log.Printf("%#+v", camera)
-
-	err = m.Remove(&camera)
+	cameras = make([]model.Camera, 0)
+	err = m.Remove(&camera, &cameras)
 	if err != nil {
-		log.Fatal()
+		log.Fatal(err)
 	}
+	log.Printf("%#+v", cameras)
 
 	cameras = make([]model.Camera, 0)
 	err = m.GetAll(&cameras)

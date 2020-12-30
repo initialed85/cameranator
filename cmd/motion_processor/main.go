@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/initialed85/cameranator/pkg/common"
 	"github.com/initialed85/cameranator/pkg/services/motion_processor"
+	"github.com/initialed85/cameranator/pkg/utils"
 )
 
 func main() {

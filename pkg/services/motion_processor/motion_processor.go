@@ -8,10 +8,9 @@ import (
 	"time"
 
 	"github.com/initialed85/cameranator/pkg/media/converter"
-	"github.com/initialed85/cameranator/pkg/media/metadata"
 	"github.com/initialed85/cameranator/pkg/motion/event_receiver"
 	"github.com/initialed85/cameranator/pkg/persistence/application"
-	"github.com/initialed85/cameranator/pkg/persistence/model"
+	"github.com/initialed85/cameranator/pkg/persistence/helpers"
 )
 
 type Conversion struct {
@@ -154,141 +153,22 @@ func (m *MotionProcessor) reconcileConvertedEvent(convertedEvent *ConvertedEvent
 
 	delete(m.convertedEventByConversion, conversion)
 
-	cameraModelAndClient, err := m.application.GetModelAndClient("camera")
-	if err != nil {
-		log.Printf("warning: could not handle event because %v", err)
-		return
-	}
-
-	videoModelAndClient, err := m.application.GetModelAndClient("video")
-	if err != nil {
-		log.Printf("warning: could not handle event because %v", err)
-		return
-	}
-
-	imageModelAndClient, err := m.application.GetModelAndClient("image")
-	if err != nil {
-		log.Printf("warning: could not handle event because %v", err)
-		return
-	}
-
-	eventModelAndClient, err := m.application.GetModelAndClient("event")
-	if err != nil {
-		log.Printf("warning: could not handle event because %v", err)
-		return
-	}
-
-	cameras := make([]model.Camera, 0)
-	err = cameraModelAndClient.GetOne(&cameras, "name", convertedEvent.Event.CameraName)
-	if err != nil {
-		log.Printf("warning: could not handle event because %v", err)
-		return
-	}
-
-	if len(cameras) != 1 {
-		log.Printf(
-			"warning: could not handle event because %v",
-			fmt.Errorf("failed to find exactly one camera for %#+v", convertedEvent.Event.CameraName),
-		)
-		return
-	}
-
-	camera := cameras[0]
-
-	highQualityVideoSize, err := metadata.GetFileSize(conversion.VideoWork.SourcePath)
-	if err != nil {
-		log.Printf("warning: could not handle event because %v", err)
-		return
-	}
-
-	highQualityVideo := model.NewVideo(
+	event, err := helpers.AddEvent(
+		m.application,
+		convertedEvent.Event.CameraName,
 		convertedEvent.Event.StartTimestamp,
 		convertedEvent.Event.EndTimestamp,
-		highQualityVideoSize,
 		conversion.VideoWork.SourcePath,
-		true,
-		camera,
-	)
-	err = videoModelAndClient.Add(highQualityVideo)
-	if err != nil {
-		log.Printf("warning: could not handle event because %v", err)
-		return
-	}
-
-	highQualityImageSize, err := metadata.GetFileSize(conversion.ImageWork.SourcePath)
-	if err != nil {
-		log.Printf("warning: could not handle event because %v", err)
-		return
-	}
-
-	highQualityImage := model.NewImage(
-		convertedEvent.Event.StartTimestamp,
-		highQualityImageSize,
 		conversion.ImageWork.SourcePath,
-		true,
-		camera,
-	)
-	err = imageModelAndClient.Add(highQualityImage)
-	if err != nil {
-		log.Printf("warning: could not handle event because %v", err)
-		return
-	}
-
-	lowQualityVideoSize, err := metadata.GetFileSize(conversion.VideoWork.DestinationPath)
-	if err != nil {
-		log.Printf("warning: could not handle event because %v", err)
-		return
-	}
-
-	lowQualityVideo := model.NewVideo(
-		convertedEvent.Event.StartTimestamp,
-		convertedEvent.Event.EndTimestamp,
-		lowQualityVideoSize,
 		conversion.VideoWork.DestinationPath,
-		false,
-		camera,
-	)
-	err = videoModelAndClient.Add(lowQualityVideo)
-	if err != nil {
-		log.Printf("warning: could not handle event because %v", err)
-		return
-	}
-
-	lowQualityImageSize, err := metadata.GetFileSize(conversion.ImageWork.DestinationPath)
-	if err != nil {
-		log.Printf("warning: could not handle event because %v", err)
-		return
-	}
-
-	lowQualityImage := model.NewImage(
-		convertedEvent.Event.StartTimestamp,
-		lowQualityImageSize,
 		conversion.ImageWork.DestinationPath,
-		false,
-		camera,
 	)
-	err = imageModelAndClient.Add(lowQualityImage)
 	if err != nil {
 		log.Printf("warning: could not handle event because %v", err)
 		return
 	}
 
-	event := model.NewEvent(
-		convertedEvent.Event.StartTimestamp,
-		convertedEvent.Event.EndTimestamp,
-		true,
-		highQualityVideo,
-		highQualityImage,
-		lowQualityVideo,
-		lowQualityImage,
-		camera,
-	)
-
-	err = eventModelAndClient.Add(event)
-	if err != nil {
-		log.Printf("warning: could not handle event because %v", err)
-		return
-	}
+	log.Printf("added %#+v", event)
 }
 
 func (m *MotionProcessor) videoConverterCompleteFn(work converter.Work, stdout string, stderr string, err error) {

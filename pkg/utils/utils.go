@@ -3,6 +3,7 @@ package utils
 import (
 	"os"
 	"os/signal"
+	"reflect"
 	"sync"
 
 	"github.com/google/uuid"
@@ -36,4 +37,8 @@ func WaitForCtrlC() {
 	}()
 
 	wg.Wait()
+}
+
+func Dereference(thing interface{}) interface{} {
+	return reflect.Indirect(reflect.ValueOf(thing)).Interface()
 }

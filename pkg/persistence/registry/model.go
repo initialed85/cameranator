@@ -1,7 +1,10 @@
 package registry
 
 import (
+	"fmt"
+
 	"github.com/initialed85/cameranator/pkg/persistence/graphql"
+	"github.com/initialed85/cameranator/pkg/utils"
 )
 
 type Model struct {
@@ -70,41 +73,41 @@ func (m *Model) GetOne(
 func (m *Model) Add(
 	c *graphql.Client,
 	item interface{},
+	items interface{},
 ) error {
 	query, err := graphql.InsertQuery(
 		m.name,
-		item,
+		utils.Dereference(item),
 	)
 	if err != nil {
 		return err
 	}
 
-	err = c.QueryAndExtract(query, m.name, &item)
-	if err != nil {
-		return err
-	}
-
-	return err
+	return c.QueryAndExtract(
+		query,
+		fmt.Sprintf("insert_%v_one", m.name),
+		&items,
+	)
 }
 
 func (m *Model) Remove(
 	c *graphql.Client,
 	item interface{},
+	items interface{},
 ) error {
 	query, err := graphql.DeleteQuery(
 		m.name,
-		item,
+		utils.Dereference(item),
 	)
 	if err != nil {
 		return err
 	}
 
-	err = c.QueryAndExtract(query, m.name, &item)
-	if err != nil {
-		return err
-	}
-
-	return err
+	return c.QueryAndExtract(
+		query,
+		fmt.Sprintf("delete_%v", m.name),
+		&items,
+	)
 }
 
 type ModelAndClient struct {
@@ -122,27 +125,29 @@ func NewModelAndClient(model *Model, client *graphql.Client) *ModelAndClient {
 }
 
 func (m *ModelAndClient) GetAll(
-	item interface{},
+	items interface{},
 ) error {
-	return m.model.GetAll(m.client, &item)
+	return m.model.GetAll(m.client, &items)
 }
 
 func (m *ModelAndClient) GetOne(
-	item interface{},
+	items interface{},
 	conditionKey string,
 	conditionValue interface{},
 ) error {
-	return m.model.GetOne(m.client, &item, conditionKey, conditionValue)
+	return m.model.GetOne(m.client, &items, conditionKey, conditionValue)
 }
 
 func (m *ModelAndClient) Add(
 	item interface{},
+	items interface{},
 ) error {
-	return m.model.Add(m.client, item)
+	return m.model.Add(m.client, &item, &items)
 }
 
 func (m *ModelAndClient) Remove(
 	item interface{},
+	items interface{},
 ) error {
-	return m.model.Remove(m.client, item)
+	return m.model.Remove(m.client, &item, &items)
 }

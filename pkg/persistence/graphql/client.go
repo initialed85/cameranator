@@ -149,7 +149,7 @@ func (c *Client) Extract(
 		return err
 	}
 
-	return json.Unmarshal(dataJSON, &result)
+	return json.Unmarshal(dataJSON, result)
 }
 
 func (c *Client) QueryAndExtract(
@@ -165,7 +165,7 @@ func (c *Client) QueryAndExtract(
 	return c.Extract(
 		data,
 		key,
-		&result,
+		result,
 	)
 }
 

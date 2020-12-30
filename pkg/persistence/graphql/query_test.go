@@ -9,8 +9,8 @@ import (
 	"github.com/relvacode/iso8601"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/initialed85/cameranator/pkg/common"
 	"github.com/initialed85/cameranator/pkg/persistence/model"
+	"github.com/initialed85/cameranator/pkg/utils"
 )
 
 func TestGetManyQuery(t *testing.T) {
@@ -190,6 +190,7 @@ mutation {
     stream_url: "rtsp://192.168.137.34:554/Streaming/Channels/101/",
     uuid: "64dbac5a-29c7-4244-b297-0c540af329f9"
   }) {
+    id
     uuid
     name
     stream_url
@@ -203,12 +204,19 @@ mutation {
 func TestInsertQuery_WithTimestamp(t *testing.T) {
 	timestamp, _ := iso8601.ParseString("2020-12-26T12:23:54+0930")
 
+	camera := model.Camera{
+		UUID:      uuid.UUID{0x64, 0xdb, 0xac, 0x5a, 0x29, 0xc7, 0x42, 0x44, 0xb2, 0x97, 0xc, 0x54, 0xa, 0xf3, 0x29, 0xf9},
+		Name:      "model.Camera",
+		StreamURL: "rtsp://192.168.137.34:554/Streaming/Channels/101/",
+	}
+
 	image := model.Image{
 		UUID:          uuid.UUID{0x64, 0xdb, 0xac, 0x5a, 0x29, 0xc7, 0x42, 0x44, 0xb2, 0x97, 0xc, 0x54, 0xa, 0xf3, 0x29, 0xf9},
 		Timestamp:     iso8601.Time{Time: timestamp},
 		Size:          65536,
 		FilePath:      "/path/to/file",
 		IsHighQuality: true,
+		SourceCamera:  camera,
 	}
 
 	query, err := InsertQuery("image", image)
@@ -227,14 +235,33 @@ mutation {
     file_path: "/path/to/file",
     is_high_quality: true,
     size: 65536,
+    source_camera: {
+      data: {
+        name: "model.Camera",
+        stream_url: "rtsp://192.168.137.34:554/Streaming/Channels/101/",
+        uuid: "64dbac5a-29c7-4244-b297-0c540af329f9"
+      },
+      on_conflict: {
+        constraint: camera_uuid_key
+        update_columns: [name, stream_url, uuid]
+      }
+    },
     timestamp: "2020-12-26T12:23:54+0930",
     uuid: "64dbac5a-29c7-4244-b297-0c540af329f9"
   }) {
+    id
     uuid
     timestamp
     size
     file_path
     is_high_quality
+    source_camera_id
+    source_camera {
+      id
+      uuid
+      name
+      stream_url
+    }
   }
 }
 `,
@@ -288,12 +315,15 @@ mutation {
     timestamp: "2020-03-27T08:30:00+0800",
     uuid: "42ed0bce-d894-49fe-beef-07f5ce7fccec"
   }) {
+    id
     uuid
     timestamp
     size
     file_path
     is_high_quality
+    source_camera_id
     source_camera {
+      id
       uuid
       name
       stream_url
@@ -325,6 +355,7 @@ func TestDeleteQuery(t *testing.T) {
 mutation {
   delete_camera(where: {name: {_eq: "model.Camera"}, stream_url: {_eq: "rtsp://192.168.137.34:554/Streaming/Channels/101/"}, uuid: {_eq: "64dbac5a-29c7-4244-b297-0c540af329f9"}}) {
     returning {
+      id
       uuid
       name
       stream_url

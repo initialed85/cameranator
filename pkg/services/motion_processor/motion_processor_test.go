@@ -56,7 +56,7 @@ func TestNewMotionProcessor(t *testing.T) {
 		"rtsp://host.docker.internal:8554/Streaming/Channels/101",
 	)
 
-	err = cameraModelAndClient.Add(camera)
+	err = cameraModelAndClient.Add(camera, []model.Camera{})
 	defer func() {
 		events := make([]model.Event, 0)
 		err = eventModelAndClient.GetAll(&events)
@@ -65,7 +65,7 @@ func TestNewMotionProcessor(t *testing.T) {
 		}
 
 		for _, event := range events {
-			err = eventModelAndClient.Remove(&event)
+			err = eventModelAndClient.Remove(&event, []model.Event{})
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -78,7 +78,7 @@ func TestNewMotionProcessor(t *testing.T) {
 		}
 
 		for _, video := range videos {
-			err = videoModelAndClient.Remove(&video)
+			err = videoModelAndClient.Remove(&video, []model.Video{})
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -91,13 +91,13 @@ func TestNewMotionProcessor(t *testing.T) {
 		}
 
 		for _, image := range images {
-			err = imageModelAndClient.Remove(&image)
+			err = imageModelAndClient.Remove(&image, []model.Image{})
 			if err != nil {
 				log.Fatal(err)
 			}
 		}
 
-		err = cameraModelAndClient.Remove(&camera)
+		err = cameraModelAndClient.Remove(&camera, []model.Camera{})
 		if err != nil {
 			log.Fatal(err)
 		}

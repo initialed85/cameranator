@@ -48,10 +48,10 @@ docker run --rm -d --name ffmpeg -v "$(pwd)/test_data/segments/":/srv/ jrottenbe
   -re -stream_loop -1 -i /srv/Segment_2020-12-25_08-45-04_Driveway.mp4 -c copy -f rtsp rtsp://host.docker.internal:8554/Streaming/Channels/101
 
 #
-# run tests
+# run tests (serially, because of the shared database)
 #
 
-go test -v ./pkg/common
+go test -v ./pkg/filesystem
 go test -v ./pkg/media/converter
 go test -v ./pkg/media/metadata
 go test -v ./pkg/media/segment_recorder
@@ -60,7 +60,9 @@ go test -v ./pkg/persistence/application
 go test -v ./pkg/persistence/graphql
 go test -v ./pkg/persistence/model
 go test -v ./pkg/persistence/registry
+go test -v ./pkg/process
 go test -v ./pkg/services/motion_processor
+go test -v ./pkg/utils
 
 echo ""
 echo "All passed."

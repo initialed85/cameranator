@@ -3,7 +3,7 @@ package model
 import (
 	"github.com/google/uuid"
 
-	"github.com/initialed85/cameranator/pkg/common"
+	"github.com/initialed85/cameranator/pkg/utils"
 )
 
 type Camera struct {
