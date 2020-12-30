@@ -52,7 +52,7 @@ Each service below deploys as a Docker container:
     - consume UDP event messages from `motion`
     - convert the `.mp4` and `.jpg` files to low resolution previews (keeping the originals)
     - wrap up all the metadata and file paths as an event and push it to `hasura`
-- `segment-recorder` (TODO)
+- `segment-recorder`
     - generate 5 minute `.mp4` segments using FFmpeg
     - use file watchers to send UDP event messages to `segment-processor`
 - `segment-processor` (TODO)
