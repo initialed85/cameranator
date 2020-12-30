@@ -54,10 +54,10 @@ Each service below deploys as a Docker container:
     - wrap up all the metadata and file paths as an event and push it to `hasura`
 - `segment-recorder`
     - generate 5 minute `.mp4` segments using FFmpeg
+    - extract `.jpg` files from the `.mp4` files
     - use file watchers to send UDP event messages to `segment-processor`
 - `segment-processor`
     - consume UDP event messages from `segment-recorder`
-    - extract `.jpg` files from the `.mp4` files
     - convert the `.mp4` and `.jpg` files to low resolution previews (keeping the originals) 
     - wrap up all the metadata and file paths as an event and push it to `hasura`
 - `front-end` (TODO)
