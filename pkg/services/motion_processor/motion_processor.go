@@ -1,36 +1,28 @@
 package motion_processor
 
 import (
-	"fmt"
 	"log"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/initialed85/cameranator/pkg/media/converter"
 	"github.com/initialed85/cameranator/pkg/motion/event_receiver"
 	"github.com/initialed85/cameranator/pkg/persistence/application"
 	"github.com/initialed85/cameranator/pkg/persistence/helpers"
+	"github.com/initialed85/cameranator/pkg/utils"
 )
 
-type Conversion struct {
-	VideoWork converter.Work
-	ImageWork converter.Work
-}
-
-type ConvertedEvent struct {
-	Event         event_receiver.Event
-	VideoComplete bool
-	ImageComplete bool
+type WorkAndError struct {
+	Work converter.Work
+	Err  error
 }
 
 type MotionProcessor struct {
-	mu                         sync.Mutex
-	eventReceiver              *event_receiver.EventReceiver
-	convertedEventByConversion map[Conversion]*ConvertedEvent
-	videoConverter             *converter.Converter
-	imageConverter             *converter.Converter
-	application                *application.Application
+	correlator     *utils.Correlator
+	eventReceiver  *event_receiver.EventReceiver
+	videoConverter *converter.Converter
+	imageConverter *converter.Converter
+	application    *application.Application
 }
 
 func NewMotionProcessor(
@@ -41,7 +33,15 @@ func NewMotionProcessor(
 	var err error
 
 	m := MotionProcessor{
-		convertedEventByConversion: make(map[Conversion]*ConvertedEvent),
+		correlator: utils.NewCorrelator(),
+		videoConverter: converter.NewVideoConverter(
+			2,
+			1024,
+		),
+		imageConverter: converter.NewImageConverter(
+			2,
+			1024,
+		),
 	}
 
 	m.eventReceiver, err = event_receiver.NewEventReceiver(port, m.eventReceiverHandler)
@@ -49,121 +49,102 @@ func NewMotionProcessor(
 		return nil, err
 	}
 
-	m.videoConverter = converter.NewVideoConverter(
-		2,
-		1024,
-	)
-
-	m.imageConverter = converter.NewImageConverter(
-		2,
-		1024,
-	)
-
 	m.application, err = application.NewApplication(url, timeout)
 
 	return &m, nil
 }
 
 func (m *MotionProcessor) eventReceiverHandler(event event_receiver.Event) {
-	conversion := Conversion{
-		VideoWork: converter.Work{
-			SourcePath:      event.VideoPath,
-			DestinationPath: strings.ReplaceAll(event.VideoPath, ".mp4", "__lowres.mp4"),
-			Width:           640,
-			Height:          360,
-		},
-		ImageWork: converter.Work{
-			SourcePath:      event.ImagePath,
-			DestinationPath: strings.ReplaceAll(event.ImagePath, ".jpg", "__lowres.jpg"),
-			Width:           640,
-			Height:          360,
-		},
+	correlation := m.correlator.NewCorrelation(m.reconcileEvent)
+
+	videoWork := converter.Work{
+		SourcePath:      event.VideoPath,
+		DestinationPath: strings.ReplaceAll(event.VideoPath, ".mp4", "__lowres.mp4"),
+		Width:           640,
+		Height:          360,
 	}
 
+	imageWork := converter.Work{
+		SourcePath:      event.ImagePath,
+		DestinationPath: strings.ReplaceAll(event.ImagePath, ".jpg", "__lowres.jpg"),
+		Width:           640,
+		Height:          360,
+	}
+
+	eventItem := correlation.NewItem("event")
+	videoItem := correlation.NewItem("video")
+	imageItem := correlation.NewItem("image")
+
+	eventItem.SetValue(event)
+	eventItem.Complete()
+
 	m.videoConverter.Submit(
-		conversion.VideoWork,
-		m.videoConverterCompleteFn,
+		videoWork,
+		func(work converter.Work, err error) {
+			videoItem.SetValue(WorkAndError{
+				Work: work,
+				Err:  err,
+			})
+			videoItem.Complete()
+		},
 	)
 
 	m.imageConverter.Submit(
-		conversion.ImageWork,
-		m.imageConverterCompleteFn,
+		imageWork,
+		func(work converter.Work, err error) {
+			imageItem.SetValue(WorkAndError{
+				Work: work,
+				Err:  err,
+			})
+			imageItem.Complete()
+		},
 	)
-
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	m.convertedEventByConversion[conversion] = &ConvertedEvent{
-		Event:         event,
-		VideoComplete: false,
-		ImageComplete: false,
-	}
 }
 
-func (m *MotionProcessor) getConvertedEvent(work converter.Work) (*ConvertedEvent, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+func (m *MotionProcessor) reconcileEvent(correlation *utils.Correlation) {
+	log.Printf("reconciling %#+v...", correlation.GetCorrelationID().String())
 
-	for conversion, convertedEvent := range m.convertedEventByConversion {
-		if !(conversion.VideoWork == work || conversion.ImageWork == work) {
-			continue
-		}
-
-		return convertedEvent, nil
-	}
-
-	return nil, fmt.Errorf("failed to find convertedEvent for %#+v", work)
-}
-
-func (m *MotionProcessor) reconcileConvertedEvent(convertedEvent *ConvertedEvent) {
-	if !(convertedEvent.VideoComplete && convertedEvent.ImageComplete) {
+	eventItem, err := correlation.GetItem("event")
+	if err != nil {
+		log.Printf("warning: %#+v marked as complete but failed to get event because %v", correlation, err)
 		return
 	}
 
-	m.mu.Lock()
-	defer m.mu.Unlock()
+	originalEvent := eventItem.GetValue().(event_receiver.Event)
 
-	found := false
-	var conversion Conversion
-	var possibleConvertedEvent *ConvertedEvent
-
-	for conversion, possibleConvertedEvent = range m.convertedEventByConversion {
-		found = true
-
-		if convertedEvent.Event.VideoPath != possibleConvertedEvent.Event.VideoPath {
-			found = false
-		}
-
-		if convertedEvent.Event.ImagePath != possibleConvertedEvent.Event.ImagePath {
-			found = false
-		}
-
-		if !found {
-			continue
-		}
-
-		break
-	}
-
-	if !found {
-		log.Printf(
-			"warning: could not handle event because %v",
-			fmt.Errorf("failed to find conversion for convertedEvent"),
-		)
+	videoWorkItem, err := correlation.GetItem("video")
+	if err != nil {
+		log.Printf("warning: %#+v marked as complete but failed to get video because %v", correlation, err)
 		return
 	}
 
-	delete(m.convertedEventByConversion, conversion)
+	videoWork := videoWorkItem.GetValue().(WorkAndError)
+	if videoWork.Err != nil {
+		log.Printf("warning: %#+v marked as complete but failed to get video because %v", correlation, videoWork.Err)
+		return
+	}
+
+	imageWorkItem, err := correlation.GetItem("image")
+	if err != nil {
+		log.Printf("warning: %#+v marked as complete but failed to get image because %v", correlation, err)
+		return
+	}
+
+	imageWork := imageWorkItem.GetValue().(WorkAndError)
+	if imageWork.Err != nil {
+		log.Printf("warning: %#+v marked as complete but failed to get image because %v", correlation, imageWork.Err)
+		return
+	}
 
 	event, err := helpers.AddEvent(
 		m.application,
-		convertedEvent.Event.CameraName,
-		convertedEvent.Event.StartTimestamp,
-		convertedEvent.Event.EndTimestamp,
-		conversion.VideoWork.SourcePath,
-		conversion.ImageWork.SourcePath,
-		conversion.VideoWork.DestinationPath,
-		conversion.ImageWork.DestinationPath,
+		originalEvent.CameraName,
+		originalEvent.StartTimestamp,
+		originalEvent.EndTimestamp,
+		videoWork.Work.SourcePath,
+		imageWork.Work.SourcePath,
+		videoWork.Work.DestinationPath,
+		imageWork.Work.DestinationPath,
 	)
 	if err != nil {
 		log.Printf("warning: could not handle event because %v", err)
@@ -171,40 +152,6 @@ func (m *MotionProcessor) reconcileConvertedEvent(convertedEvent *ConvertedEvent
 	}
 
 	log.Printf("added %#+v", event)
-}
-
-func (m *MotionProcessor) videoConverterCompleteFn(work converter.Work, err error) {
-	convertedEvent, findConvertedEventErr := m.getConvertedEvent(work)
-	if findConvertedEventErr != nil {
-		log.Printf("warning: could not convert video because %v", findConvertedEventErr)
-		return
-	}
-
-	if err != nil {
-		log.Printf("warning:could not convert video because %v", err)
-		return
-	}
-
-	convertedEvent.VideoComplete = true
-
-	m.reconcileConvertedEvent(convertedEvent)
-}
-
-func (m *MotionProcessor) imageConverterCompleteFn(work converter.Work, err error) {
-	convertedEvent, findConvertedEventErr := m.getConvertedEvent(work)
-	if findConvertedEventErr != nil {
-		log.Printf("warning: could not convert image because %v", findConvertedEventErr)
-		return
-	}
-
-	if err != nil {
-		log.Printf("warning:could not convert image because %v", err)
-		return
-	}
-
-	convertedEvent.ImageComplete = true
-
-	m.reconcileConvertedEvent(convertedEvent)
 }
 
 func (m *MotionProcessor) Start() error {

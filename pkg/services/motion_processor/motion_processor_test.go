@@ -114,7 +114,7 @@ func TestNewMotionProcessor(t *testing.T) {
 	}
 	time.Sleep(time.Millisecond * 100)
 
-	sender := network.NewSender("0.0.0.0:6291")
+	sender := network.NewSender("localhost:6291")
 	err = sender.Open()
 	defer sender.Close()
 	if err != nil {
@@ -146,7 +146,7 @@ func TestNewMotionProcessor(t *testing.T) {
 				log.Fatal(err)
 			}
 
-			log.Print(string(eventsJSON))
+			log.Printf("added event %v", string(eventsJSON))
 
 			return
 		}
