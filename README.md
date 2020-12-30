@@ -77,6 +77,7 @@ are some things that need attention:
   side)
 - camera config management isn't clean- one needs to define the necessary `motion` config 
   files in addition to the `camera` object instances in `hasura`
+- there's a lot of repetition between the motion_processor and the segment_processor
 
 ## Usage
 

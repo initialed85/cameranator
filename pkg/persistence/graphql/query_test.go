@@ -60,7 +60,7 @@ func TestGetManyQuery_Nested(t *testing.T) {
     uuid
     start_timestamp
     end_timestamp
-    is_processed
+    is_segment
     high_quality_video_id
     high_quality_video {
       id

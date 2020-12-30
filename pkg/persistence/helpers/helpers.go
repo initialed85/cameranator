@@ -104,7 +104,7 @@ func AddEvent(
 	event := model.NewEvent(
 		startTimestamp,
 		endTimestamp,
-		true,
+		false,
 		highQualityVideo,
 		highQualityImage,
 		lowQualityVideo,

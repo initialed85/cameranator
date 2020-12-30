@@ -85,3 +85,21 @@ services:
     depends_on:
       - quotanizer
       - motion-processor
+
+  segment-generator:
+    build:
+      context: ./
+      dockerfile: docker/segment-generator/Dockerfile
+    networks:
+      - cctv-internal
+      - cctv-external
+    volumes:
+      - ${CCTV_SEGMENTS_PATH}:/srv/target_dir/segments
+    environment:
+      - DISABLE_NVIDIA=${DISABLE_NVIDIA:-0}
+    # TODO: parse motion config for this command line
+    command: >
+      -host segment-processor -port 6291 -destinationPath /srv/target_dir/segments -duration 10
+      -netCamURL rtsp://192.168.137.31:554/Streaming/Channels/101 -cameraName Driveway
+      -netCamURL rtsp://192.168.137.32:554/Streaming/Channels/101 -cameraName FrontDoor
+      -netCamURL rtsp://192.168.137.33:554/Streaming/Channels/101 -cameraName SideGate

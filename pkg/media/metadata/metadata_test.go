@@ -9,7 +9,7 @@ import (
 )
 
 func TestGetVideoDuration(t *testing.T) {
-	duration, err := GetVideoDuration("../../../test_data/segments/Segment_2020-12-25_08-45-04_Driveway.mp4")
+	duration, err := GetVideoDuration("../../../test_data/segments/Segment_2020-12-25T08:45:04_Driveway.mp4")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -21,7 +21,7 @@ func TestGetVideoDuration(t *testing.T) {
 }
 
 func TestGetSize(t *testing.T) {
-	size, err := GetFileSize("../../../test_data/segments/Segment_2020-12-25_08-45-04_Driveway.mp4")
+	size, err := GetFileSize("../../../test_data/segments/Segment_2020-12-25T08:45:04_Driveway.mp4")
 	if err != nil {
 		log.Fatal(err)
 	}

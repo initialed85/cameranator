@@ -17,7 +17,7 @@ CREATE TABLE public.event (
     uuid uuid DEFAULT public.gen_random_uuid() NOT NULL,
     start_timestamp timestamp with time zone NOT NULL,
     end_timestamp timestamp with time zone NOT NULL,
-    is_processed boolean DEFAULT false NOT NULL,
+    is_segment boolean DEFAULT false NOT NULL,
     high_quality_video_id integer NOT NULL,
     high_quality_image_id integer NOT NULL,
     low_quality_video_id integer,

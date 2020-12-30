@@ -42,3 +42,4 @@ func WaitForCtrlC() {
 func Dereference(thing interface{}) interface{} {
 	return reflect.Indirect(reflect.ValueOf(thing)).Interface()
 }
+

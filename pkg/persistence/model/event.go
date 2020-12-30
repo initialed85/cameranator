@@ -12,7 +12,7 @@ type Event struct {
 	UUID               uuid.UUID    `json:"uuid,omitempty"`
 	StartTimestamp     iso8601.Time `json:"start_timestamp,omitempty"`
 	EndTimestamp       iso8601.Time `json:"end_timestamp,omitempty"`
-	IsProcessed        bool         `json:"is_processed"`
+	IsSegment          bool         `json:"is_segment"`
 	HighQualityVideoID int64        `json:"high_quality_video_id,omitempty"`
 	HighQualityVideo   Video        `json:"high_quality_video,omitempty"`
 	HighQualityImageID int64        `json:"high_quality_image_id,omitempty"`
@@ -28,7 +28,7 @@ type Event struct {
 func NewEvent(
 	StartTimestamp iso8601.Time,
 	EndTimestamp iso8601.Time,
-	IsProcessed bool,
+	IsSegment bool,
 	HighQualityVideo Video,
 	HighQualityImage Image,
 	LowQualityVideo Video,
@@ -41,7 +41,7 @@ func NewEvent(
 		UUID:             randomUUID,
 		StartTimestamp:   StartTimestamp,
 		EndTimestamp:     EndTimestamp,
-		IsProcessed:      IsProcessed,
+		IsSegment:        IsSegment,
 		HighQualityVideo: HighQualityVideo,
 		HighQualityImage: HighQualityImage,
 		LowQualityVideo:  LowQualityVideo,
@@ -53,7 +53,7 @@ func NewEvent(
 func NewEventWithIDs(
 	StartTimestamp iso8601.Time,
 	EndTimestamp iso8601.Time,
-	IsProcessed bool,
+	IsSegment bool,
 	HighQualityVideoID int64,
 	HighQualityImageID int64,
 	LowQualityVideoID int64,
@@ -66,7 +66,7 @@ func NewEventWithIDs(
 		UUID:               randomUUID,
 		StartTimestamp:     StartTimestamp,
 		EndTimestamp:       EndTimestamp,
-		IsProcessed:        IsProcessed,
+		IsSegment:          IsSegment,
 		HighQualityVideoID: HighQualityVideoID,
 		HighQualityImageID: HighQualityImageID,
 		LowQualityVideoID:  LowQualityVideoID,
