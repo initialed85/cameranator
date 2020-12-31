@@ -34,7 +34,7 @@ export CCTV_EXPOSE_PORT
 
 export DOCKER_BUILDKIT=1
 
-export HASURA_GRAPHQL_ENDPOINT="http://localhost/api"
+export HASURA_GRAPHQL_ENDPOINT="http://host.docker.internal:8082/"
 
 docker-compose up -d nginx postgres hasura motion
 
