@@ -5,21 +5,19 @@ set -e -x
 pushd "$(pwd)"
 
 function teardown() {
-  docker-compose down --remove-orphans --volumes || true
+  docker-compose down --remove-orphans || true
   popd >/dev/null 2>&1
 }
 trap teardown EXIT
 
-CCTV_EVENTS_QUOTA=1
-CCTV_EVENTS_PATH="$(pwd)/temp_data/events"
+CCTV_EVENTS_QUOTA=2000
+CCTV_EVENTS_PATH="/media/storage/Cameras/events"
 
-CCTV_SEGMENTS_QUOTA=1
-CCTV_SEGMENTS_PATH="$(pwd)/temp_data/segments"
-CCTV_SEGMENT_DURATION=30
+CCTV_SEGMENTS_QUOTA=4000
+CCTV_SEGMENTS_PATH="/media/storage/Cameras/segments"
+CCTV_SEGMENT_DURATION=300
 
-CCTV_MOTION_CONFIGS="$(pwd)/motion-configs-run"
-
-DISABLE_NVIDIA=1
+CCTV_MOTION_CONFIGS="$(pwd)/motion-configs-run-in-prod"
 
 export CCTV_EVENTS_QUOTA
 export CCTV_EVENTS_PATH
@@ -30,11 +28,9 @@ export CCTV_SEGMENT_DURATION
 
 export CCTV_MOTION_CONFIGS
 
-export DISABLE_NVIDIA
-
 export DOCKER_BUILDKIT=1
 
-export HASURA_GRAPHQL_ENDPOINT="http://host.docker.internal/api"
+export HASURA_GRAPHQL_ENDPOINT="http://localhost/api"
 
 docker-compose up -d nginx postgres hasura motion
 
@@ -56,4 +52,4 @@ popd
 
 docker-compose up -d
 
-docker-compose logs -f -t
+docker-compose ps -a
