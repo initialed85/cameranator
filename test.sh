@@ -36,7 +36,7 @@ export DISABLE_NVIDIA
 
 export DOCKER_BUILDKIT=1
 
-export HASURA_GRAPHQL_ENDPOINT="http://host.docker.internal:8082/"
+export HASURA_GRAPHQL_ENDPOINT="http://localhost:8082/"
 
 #
 # hasura deps
@@ -67,7 +67,7 @@ popd
 docker run --rm -d --name rtsp-simple-server -e RTSP_PROTOCOLS=tcp -p 8554:8554 aler9/rtsp-simple-server
 
 docker run --rm -d --name ffmpeg -v "$(pwd)/test_data/segments/":/srv/ jrottenberg/ffmpeg:4.3.1-ubuntu1804 \
-  -re -stream_loop -1 -i /srv/Segment_2020-12-25T08:45:04_Driveway.mp4 -c copy -f rtsp rtsp://host.docker.internal:8554/Streaming/Channels/101
+  -re -stream_loop -1 -i /srv/Segment_2020-12-25T08:45:04_Driveway.mp4 -c copy -f rtsp rtsp://localhost:8554/Streaming/Channels/101
 
 #
 # run tests (serially, because of the shared database)

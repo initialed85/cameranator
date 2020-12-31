@@ -142,8 +142,8 @@ docker run --rm -it --name rtsp-simple-server -e RTSP_PROTOCOLS=tcp -p 8554:8554
 
 # shell 2
 docker run --rm -it --name ffmpeg -v "$(pwd)/test_data/segments/":/srv/ jrottenberg/ffmpeg:4.3.1-ubuntu1804 \
-  -re -stream_loop -1 -i /srv/Segment_2020-12-25T08:45:04_Driveway.mp4 -c copy -f rtsp rtsp://host.docker.internal:8554/Streaming/Channels/101
+  -re -stream_loop -1 -i /srv/Segment_2020-12-25T08:45:04_Driveway.mp4 -c copy -f rtsp rtsp://localhost:8554/Streaming/Channels/101
 ```
 
 At this point, you'll have a looping RTSP stream of the folks who come and look after our 
-cats when we're away [at this URL](rtsp://host.docker.internal:8554/Streaming/Channels/101).
+cats when we're away [at this URL](rtsp://localhost:8554/Streaming/Channels/101).

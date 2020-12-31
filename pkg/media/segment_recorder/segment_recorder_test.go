@@ -19,7 +19,7 @@ func TestRecordSegments(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	process, err := RecordSegments("rtsp://host.docker.internal:8554/Streaming/Channels/101", dir, "Driveway", 5)
+	process, err := RecordSegments("rtsp://localhost:8554/Streaming/Channels/101", dir, "Driveway", 5)
 	if process == nil {
 		log.Fatal("process unexpectedly nil")
 	}
