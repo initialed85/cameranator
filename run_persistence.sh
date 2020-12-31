@@ -8,7 +8,7 @@ function teardown() {
   docker-compose down --remove-orphans --volumes || true
   popd >/dev/null 2>&1
 }
-trap teardown EXIT
+trap teardown ERR
 
 CCTV_EVENTS_QUOTA=1
 CCTV_EVENTS_PATH="$(pwd)/temp_data/events"
