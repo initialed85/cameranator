@@ -34,9 +34,9 @@ services:
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
       HASURA_GRAPHQL_DEV_MODE: "true"
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
+    restart: always
     depends_on:
       - postgres
-    restart: always
 
   quotanizer:
     networks:
@@ -63,7 +63,9 @@ services:
     environment:
       - DISABLE_NVIDIA=${DISABLE_NVIDIA:-0}
     command: "-url http://hasura:8080/v1/graphql"
+    restart: always
     depends_on:
+      - quotanizer
       - hasura
 
   motion:
@@ -101,6 +103,7 @@ services:
       - DISABLE_NVIDIA=${DISABLE_NVIDIA:-0}
     command: "-url http://hasura:8080/v1/graphql"
     depends_on:
+      - quotanizer
       - hasura
 
   segment-generator:
@@ -121,6 +124,7 @@ services:
       -netCamURL rtsp://192.168.137.32:554/Streaming/Channels/101 -cameraName FrontDoor
       -netCamURL rtsp://192.168.137.33:554/Streaming/Channels/101 -cameraName SideGate
     depends_on:
+      - quotanizer
       - segment-processor
 
   page-renderer:
@@ -137,3 +141,23 @@ services:
     depends_on:
       - motion-processor
       - segment-processor
+
+  nginx:
+    image: nginx:1.18
+    networks:
+      - cctv-internal
+      - cctv-external
+    ports:
+      - 80:80
+    environment:
+      - NGINX_ENTRYPOINT_QUIET_LOGS=1
+    volumes:
+      - ./docker/nginx/empty_folder:/docker-entrypoint.d:ro
+      - ./docker/nginx/root:/srv/root:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ${CCTV_EVENTS_PATH}:/srv/target_dir/events
+      - ${CCTV_SEGMENTS_PATH}:/srv/target_dir/segments
+    restart: always
+    depends_on:
+      - hasura
+      - motion

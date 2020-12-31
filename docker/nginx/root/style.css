@@ -1,0 +1,27 @@
+BODY {
+    font-family: Tahoma, sans-serif;
+    font-size: 8pt;
+    font-weight: normal;
+    text-align: center;
+}
+
+A {
+    font-family: Tahoma, sans-serif;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+INPUT {
+    font-family: Tahoma, sans-serif;
+    font-size: 8pt;
+    font-weight: normal;
+    text-align: center;
+
+    color: black;
+    background-color: lightgray;
+
+    width: 70px;
+    padding: 5px;
+
+    border: 1px solid gray;
+}

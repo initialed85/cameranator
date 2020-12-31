@@ -1,0 +1,47 @@
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Streams</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <script>
+        // TODO: fixed camera ID knowledge
+        const ids = ["101", "103", "102"];
+        const prefix = "/motion-stream/";
+        const suffix = "/stream";
+
+        function update() {
+            ids.forEach(function (item, index) {
+                let a = document.getElementById("a_" + item);
+                let img = document.getElementById("img_" + item);
+
+                a.href = window.location.origin + prefix + item + suffix;
+                img.src = window.location.origin + prefix + item + suffix;
+            });
+        }
+
+    </script>
+</head>
+
+<body onload="update()">
+
+<a id="a_101" href="error.jpg">
+    <img id="img_101" src="error.jpg" width="90%">
+</a> <br/>
+
+<br/>
+
+<a id="a_102" href="error.jpg">
+    <img id="img_102" src="error.jpg" width="90%">
+</a> <br/>
+
+<br/>
+
+<a id="a_103" href="error.jpg">
+    <img id="img_103" src="error.jpg" width="90%">
+</a> <br/>
+
+</body>
+</html>

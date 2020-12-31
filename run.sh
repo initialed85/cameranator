@@ -10,28 +10,6 @@ function teardown() {
 }
 trap teardown EXIT
 
-export DOCKER_BUILDKIT=1
-
-docker-compose up -d postgres hasura
-
-export HASURA_GRAPHQL_ENDPOINT="http://host.docker.internal:8079/"
-
-cd persistence/hasura
-
-while ! hasura migrate apply; do
-  sleep 1
-done
-
-while ! hasura metadata apply; do
-  sleep 1
-done
-
-while ! hasura seeds apply; do
-  sleep 1
-done
-
-popd
-
 CCTV_EVENTS_QUOTA=1
 CCTV_EVENTS_PATH="$(pwd)/temp_data/events"
 
@@ -53,6 +31,28 @@ export CCTV_SEGMENT_DURATION
 export CCTV_MOTION_CONFIGS
 
 export DISABLE_NVIDIA
+
+export DOCKER_BUILDKIT=1
+
+export HASURA_GRAPHQL_ENDPOINT="http://host.docker.internal/api"
+
+docker-compose up -d nginx postgres hasura motion
+
+cd persistence/hasura
+
+while ! hasura migrate apply; do
+  sleep 1
+done
+
+while ! hasura metadata apply; do
+  sleep 1
+done
+
+while ! hasura seeds apply; do
+  sleep 1
+done
+
+popd
 
 docker-compose up -d
 
