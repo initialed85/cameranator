@@ -68,6 +68,11 @@ Each service below deploys as a Docker container:
     - consume events from `hasura`
     - present them to the user
 
+## Overall TODOs
+
+- extend the persistence piece to be able to subscribe to push events
+    - implied: work out how hasura does subscriptions (WebSockets?) 
+
 ## Technical debt
 
 It wouldn't be a project (or at least a project that I wrote) without technical debt; here
@@ -84,6 +89,7 @@ are some things that need attention:
   files in addition to the `camera` object instances in `hasura`
 - there's a lot of repetition between the motion_processor and the segment_processor
 - need to DRY up the Dockerfiles
+- need to throw away the page render stuff (maybe not though? handy as an alternate path to see the data)
 
 ## Usage
 
