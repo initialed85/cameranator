@@ -44,13 +44,9 @@ while ! hasura migrate apply; do
   sleep 1
 done
 
-while ! hasura metadata apply; do
-  sleep 1
-done
+hasura metadata apply
 
-while ! hasura seeds apply; do
-  sleep 1
-done
+hasura seeds apply || true
 
 popd
 
