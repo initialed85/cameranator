@@ -36,15 +36,13 @@ export DISABLE_NVIDIA
 
 export DOCKER_BUILDKIT=1
 
-export HASURA_GRAPHQL_ENDPOINT="http://host.docker.internal/api"
+export HASURA_GRAPHQL_ENDPOINT="http://host.docker.internal:8079/"
 
 #
 # hasura deps
 #
 
-docker-compose up -d nginx postgres hasura
-
-export HASURA_GRAPHQL_ENDPOINT="http://host.docker.internal/api"
+docker-compose up -d postgres hasura
 
 cd persistence/hasura
 

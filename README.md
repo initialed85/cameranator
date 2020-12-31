@@ -122,6 +122,8 @@ This requires you to have run `./build.sh` first- it uses docker-compose to star
 Docker containers and it uses the configuration for my cameras at home from the 
 `motion-config` folder (so it probably won't work for you without tweaking those configs).
 
+On the assumption you've figured that piece out, navigate to [http://localhost/](http://localhost/)
+
 ### Other
 
 There is also a `./run_persistence.sh` option- this is handy if you want to run the tests from
