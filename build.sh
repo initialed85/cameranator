@@ -41,6 +41,11 @@ export DISABLE_NVIDIA
 
 export DOCKER_BUILDKIT=1
 
+if ! docker-compose pull --parallel; then
+  echo "error: build failed"
+  exit 1
+fi
+
 if ! docker-compose build --parallel; then
   echo "error: build failed"
   exit 1
