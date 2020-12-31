@@ -37,7 +37,7 @@ CCTV_EVENTS_PATH="$(pwd)/temp_data/events"
 
 CCTV_SEGMENTS_QUOTA=1
 CCTV_SEGMENTS_PATH="$(pwd)/temp_data/segments"
-CCTV_SEGMENT_DURATION=10
+CCTV_SEGMENT_DURATION=30
 
 CCTV_MOTION_CONFIGS="$(pwd)/motion-configs"
 

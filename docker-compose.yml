@@ -122,3 +122,18 @@ services:
       -netCamURL rtsp://192.168.137.33:554/Streaming/Channels/101 -cameraName SideGate
     depends_on:
       - segment-processor
+
+  page-renderer:
+    build:
+      context: ./
+      dockerfile: docker/page-renderer/Dockerfile
+    networks:
+      - cctv-internal
+      - cctv-external
+    volumes:
+      - ${CCTV_EVENTS_PATH}:/srv/target_dir/events
+      - ${CCTV_SEGMENTS_PATH}:/srv/target_dir/segments
+    command: "-url http://hasura:8080/v1/graphql -eventsPath /srv/target_dir/events -segmentsPath /srv/target_dir/segments"
+    depends_on:
+      - motion-processor
+      - segment-processor

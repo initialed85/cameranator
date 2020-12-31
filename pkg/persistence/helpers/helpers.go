@@ -72,7 +72,7 @@ func AddEvent(
 		startTimestamp,
 		endTimestamp,
 		highQualityVideoSize,
-		highQualityImagePath,
+		highQualityVideoPath,
 		true,
 		camera,
 	)
@@ -89,7 +89,7 @@ func AddEvent(
 		startTimestamp,
 		endTimestamp,
 		lowQualityVideoSize,
-		lowQualityImagePath,
+		lowQualityVideoPath,
 		true,
 		camera,
 	)
