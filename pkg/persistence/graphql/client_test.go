@@ -12,7 +12,7 @@ import (
 )
 
 func testGetClient() *Client {
-	return NewClient("http://localhost:8079/v1/graphql", time.Second*30)
+	return NewClient("http://localhost:8082/v1/graphql", time.Second*30)
 }
 
 func testGetManyQuery() string {

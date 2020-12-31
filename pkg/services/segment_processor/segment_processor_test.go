@@ -20,7 +20,7 @@ func TestSegmentProcessor(t *testing.T) {
 
 	m, err := NewSegmentProcessor(
 		6291,
-		"http://localhost:8079/v1/graphql",
+		"http://localhost:8082/v1/graphql",
 		time.Second*10,
 	)
 	if err != nil {

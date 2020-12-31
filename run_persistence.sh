@@ -34,7 +34,7 @@ export DISABLE_NVIDIA
 
 export DOCKER_BUILDKIT=1
 
-export HASURA_GRAPHQL_ENDPOINT="http://host.docker.internal:8079/"
+export HASURA_GRAPHQL_ENDPOINT="http://host.docker.internal:8082/"
 
 docker-compose up -d postgres hasura
 

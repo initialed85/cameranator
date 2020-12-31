@@ -14,7 +14,7 @@ import (
 )
 
 func testGetClient() *graphql.Client {
-	return graphql.NewClient("http://localhost:8079/v1/graphql", time.Second*30)
+	return graphql.NewClient("http://localhost:8082/v1/graphql", time.Second*30)
 }
 
 func testGetModel() *Model {
