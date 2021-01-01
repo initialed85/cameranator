@@ -1,0 +1,2090 @@
+# This file was generated based on ".graphqlconfig". Do not edit manually.
+
+schema {
+    query: query_root
+    mutation: mutation_root
+    subscription: subscription_root
+}
+
+"columns and relationships of \"camera\""
+type camera {
+    "An array relationship"
+    events(
+        "distinct select on columns"
+        distinct_on: [event_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [event_order_by!],
+        "filter the rows returned"
+        where: event_bool_exp
+    ): [event!]!
+    "An aggregated array relationship"
+    events_aggregate(
+        "distinct select on columns"
+        distinct_on: [event_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [event_order_by!],
+        "filter the rows returned"
+        where: event_bool_exp
+    ): event_aggregate!
+    id: Int!
+    "An array relationship"
+    images(
+        "distinct select on columns"
+        distinct_on: [image_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [image_order_by!],
+        "filter the rows returned"
+        where: image_bool_exp
+    ): [image!]!
+    "An aggregated array relationship"
+    images_aggregate(
+        "distinct select on columns"
+        distinct_on: [image_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [image_order_by!],
+        "filter the rows returned"
+        where: image_bool_exp
+    ): image_aggregate!
+    name: String!
+    stream_url: String!
+    uuid: uuid!
+    "An array relationship"
+    videos(
+        "distinct select on columns"
+        distinct_on: [video_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [video_order_by!],
+        "filter the rows returned"
+        where: video_bool_exp
+    ): [video!]!
+    "An aggregated array relationship"
+    videos_aggregate(
+        "distinct select on columns"
+        distinct_on: [video_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [video_order_by!],
+        "filter the rows returned"
+        where: video_bool_exp
+    ): video_aggregate!
+}
+
+"aggregated selection of \"camera\""
+type camera_aggregate {
+    aggregate: camera_aggregate_fields
+    nodes: [camera!]!
+}
+
+"aggregate fields of \"camera\""
+type camera_aggregate_fields {
+    avg: camera_avg_fields
+    count(columns: [camera_select_column!], distinct: Boolean): Int
+    max: camera_max_fields
+    min: camera_min_fields
+    stddev: camera_stddev_fields
+    stddev_pop: camera_stddev_pop_fields
+    stddev_samp: camera_stddev_samp_fields
+    sum: camera_sum_fields
+    var_pop: camera_var_pop_fields
+    var_samp: camera_var_samp_fields
+    variance: camera_variance_fields
+}
+
+"aggregate avg on columns"
+type camera_avg_fields {
+    id: Float
+}
+
+"aggregate max on columns"
+type camera_max_fields {
+    id: Int
+    name: String
+    stream_url: String
+    uuid: uuid
+}
+
+"aggregate min on columns"
+type camera_min_fields {
+    id: Int
+    name: String
+    stream_url: String
+    uuid: uuid
+}
+
+"response of any mutation on the table \"camera\""
+type camera_mutation_response {
+    "number of affected rows by the mutation"
+    affected_rows: Int!
+    "data of the affected rows by the mutation"
+    returning: [camera!]!
+}
+
+"aggregate stddev on columns"
+type camera_stddev_fields {
+    id: Float
+}
+
+"aggregate stddev_pop on columns"
+type camera_stddev_pop_fields {
+    id: Float
+}
+
+"aggregate stddev_samp on columns"
+type camera_stddev_samp_fields {
+    id: Float
+}
+
+"aggregate sum on columns"
+type camera_sum_fields {
+    id: Int
+}
+
+"aggregate var_pop on columns"
+type camera_var_pop_fields {
+    id: Float
+}
+
+"aggregate var_samp on columns"
+type camera_var_samp_fields {
+    id: Float
+}
+
+"aggregate variance on columns"
+type camera_variance_fields {
+    id: Float
+}
+
+"columns and relationships of \"event\""
+type event {
+    end_timestamp: timestamptz!
+    "An object relationship"
+    high_quality_image: image!
+    high_quality_image_id: Int!
+    "An object relationship"
+    high_quality_video: video!
+    high_quality_video_id: Int!
+    id: Int!
+    is_segment: Boolean!
+    "An object relationship"
+    low_quality_image: image
+    low_quality_image_id: Int
+    "An object relationship"
+    low_quality_video: video
+    low_quality_video_id: Int
+    "An object relationship"
+    source_camera: camera!
+    source_camera_id: Int!
+    start_timestamp: timestamptz!
+    uuid: uuid!
+}
+
+"aggregated selection of \"event\""
+type event_aggregate {
+    aggregate: event_aggregate_fields
+    nodes: [event!]!
+}
+
+"aggregate fields of \"event\""
+type event_aggregate_fields {
+    avg: event_avg_fields
+    count(columns: [event_select_column!], distinct: Boolean): Int
+    max: event_max_fields
+    min: event_min_fields
+    stddev: event_stddev_fields
+    stddev_pop: event_stddev_pop_fields
+    stddev_samp: event_stddev_samp_fields
+    sum: event_sum_fields
+    var_pop: event_var_pop_fields
+    var_samp: event_var_samp_fields
+    variance: event_variance_fields
+}
+
+"aggregate avg on columns"
+type event_avg_fields {
+    high_quality_image_id: Float
+    high_quality_video_id: Float
+    id: Float
+    low_quality_image_id: Float
+    low_quality_video_id: Float
+    source_camera_id: Float
+}
+
+"aggregate max on columns"
+type event_max_fields {
+    end_timestamp: timestamptz
+    high_quality_image_id: Int
+    high_quality_video_id: Int
+    id: Int
+    low_quality_image_id: Int
+    low_quality_video_id: Int
+    source_camera_id: Int
+    start_timestamp: timestamptz
+    uuid: uuid
+}
+
+"aggregate min on columns"
+type event_min_fields {
+    end_timestamp: timestamptz
+    high_quality_image_id: Int
+    high_quality_video_id: Int
+    id: Int
+    low_quality_image_id: Int
+    low_quality_video_id: Int
+    source_camera_id: Int
+    start_timestamp: timestamptz
+    uuid: uuid
+}
+
+"response of any mutation on the table \"event\""
+type event_mutation_response {
+    "number of affected rows by the mutation"
+    affected_rows: Int!
+    "data of the affected rows by the mutation"
+    returning: [event!]!
+}
+
+"aggregate stddev on columns"
+type event_stddev_fields {
+    high_quality_image_id: Float
+    high_quality_video_id: Float
+    id: Float
+    low_quality_image_id: Float
+    low_quality_video_id: Float
+    source_camera_id: Float
+}
+
+"aggregate stddev_pop on columns"
+type event_stddev_pop_fields {
+    high_quality_image_id: Float
+    high_quality_video_id: Float
+    id: Float
+    low_quality_image_id: Float
+    low_quality_video_id: Float
+    source_camera_id: Float
+}
+
+"aggregate stddev_samp on columns"
+type event_stddev_samp_fields {
+    high_quality_image_id: Float
+    high_quality_video_id: Float
+    id: Float
+    low_quality_image_id: Float
+    low_quality_video_id: Float
+    source_camera_id: Float
+}
+
+"aggregate sum on columns"
+type event_sum_fields {
+    high_quality_image_id: Int
+    high_quality_video_id: Int
+    id: Int
+    low_quality_image_id: Int
+    low_quality_video_id: Int
+    source_camera_id: Int
+}
+
+"aggregate var_pop on columns"
+type event_var_pop_fields {
+    high_quality_image_id: Float
+    high_quality_video_id: Float
+    id: Float
+    low_quality_image_id: Float
+    low_quality_video_id: Float
+    source_camera_id: Float
+}
+
+"aggregate var_samp on columns"
+type event_var_samp_fields {
+    high_quality_image_id: Float
+    high_quality_video_id: Float
+    id: Float
+    low_quality_image_id: Float
+    low_quality_video_id: Float
+    source_camera_id: Float
+}
+
+"aggregate variance on columns"
+type event_variance_fields {
+    high_quality_image_id: Float
+    high_quality_video_id: Float
+    id: Float
+    low_quality_image_id: Float
+    low_quality_video_id: Float
+    source_camera_id: Float
+}
+
+"columns and relationships of \"image\""
+type image {
+    "An array relationship"
+    events(
+        "distinct select on columns"
+        distinct_on: [event_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [event_order_by!],
+        "filter the rows returned"
+        where: event_bool_exp
+    ): [event!]!
+    "An array relationship"
+    eventsByLowQualityImageId(
+        "distinct select on columns"
+        distinct_on: [event_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [event_order_by!],
+        "filter the rows returned"
+        where: event_bool_exp
+    ): [event!]!
+    "An aggregated array relationship"
+    eventsByLowQualityImageId_aggregate(
+        "distinct select on columns"
+        distinct_on: [event_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [event_order_by!],
+        "filter the rows returned"
+        where: event_bool_exp
+    ): event_aggregate!
+    "An aggregated array relationship"
+    events_aggregate(
+        "distinct select on columns"
+        distinct_on: [event_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [event_order_by!],
+        "filter the rows returned"
+        where: event_bool_exp
+    ): event_aggregate!
+    file_path: String!
+    id: Int!
+    is_high_quality: Boolean!
+    size: float8!
+    "An object relationship"
+    source_camera: camera!
+    source_camera_id: Int!
+    timestamp: timestamptz!
+    uuid: uuid!
+}
+
+"aggregated selection of \"image\""
+type image_aggregate {
+    aggregate: image_aggregate_fields
+    nodes: [image!]!
+}
+
+"aggregate fields of \"image\""
+type image_aggregate_fields {
+    avg: image_avg_fields
+    count(columns: [image_select_column!], distinct: Boolean): Int
+    max: image_max_fields
+    min: image_min_fields
+    stddev: image_stddev_fields
+    stddev_pop: image_stddev_pop_fields
+    stddev_samp: image_stddev_samp_fields
+    sum: image_sum_fields
+    var_pop: image_var_pop_fields
+    var_samp: image_var_samp_fields
+    variance: image_variance_fields
+}
+
+"aggregate avg on columns"
+type image_avg_fields {
+    id: Float
+    size: Float
+    source_camera_id: Float
+}
+
+"aggregate max on columns"
+type image_max_fields {
+    file_path: String
+    id: Int
+    size: float8
+    source_camera_id: Int
+    timestamp: timestamptz
+    uuid: uuid
+}
+
+"aggregate min on columns"
+type image_min_fields {
+    file_path: String
+    id: Int
+    size: float8
+    source_camera_id: Int
+    timestamp: timestamptz
+    uuid: uuid
+}
+
+"response of any mutation on the table \"image\""
+type image_mutation_response {
+    "number of affected rows by the mutation"
+    affected_rows: Int!
+    "data of the affected rows by the mutation"
+    returning: [image!]!
+}
+
+"aggregate stddev on columns"
+type image_stddev_fields {
+    id: Float
+    size: Float
+    source_camera_id: Float
+}
+
+"aggregate stddev_pop on columns"
+type image_stddev_pop_fields {
+    id: Float
+    size: Float
+    source_camera_id: Float
+}
+
+"aggregate stddev_samp on columns"
+type image_stddev_samp_fields {
+    id: Float
+    size: Float
+    source_camera_id: Float
+}
+
+"aggregate sum on columns"
+type image_sum_fields {
+    id: Int
+    size: float8
+    source_camera_id: Int
+}
+
+"aggregate var_pop on columns"
+type image_var_pop_fields {
+    id: Float
+    size: Float
+    source_camera_id: Float
+}
+
+"aggregate var_samp on columns"
+type image_var_samp_fields {
+    id: Float
+    size: Float
+    source_camera_id: Float
+}
+
+"aggregate variance on columns"
+type image_variance_fields {
+    id: Float
+    size: Float
+    source_camera_id: Float
+}
+
+"mutation root"
+type mutation_root {
+    "delete data from the table: \"camera\""
+    delete_camera(
+        "filter the rows which have to be deleted"
+        where: camera_bool_exp!
+    ): camera_mutation_response
+    "delete single row from the table: \"camera\""
+    delete_camera_by_pk(id: Int!): camera
+    "delete data from the table: \"event\""
+    delete_event(
+        "filter the rows which have to be deleted"
+        where: event_bool_exp!
+    ): event_mutation_response
+    "delete single row from the table: \"event\""
+    delete_event_by_pk(id: Int!): event
+    "delete data from the table: \"image\""
+    delete_image(
+        "filter the rows which have to be deleted"
+        where: image_bool_exp!
+    ): image_mutation_response
+    "delete single row from the table: \"image\""
+    delete_image_by_pk(id: Int!): image
+    "delete data from the table: \"video\""
+    delete_video(
+        "filter the rows which have to be deleted"
+        where: video_bool_exp!
+    ): video_mutation_response
+    "delete single row from the table: \"video\""
+    delete_video_by_pk(id: Int!): video
+    "insert data into the table: \"camera\""
+    insert_camera(
+        "the rows to be inserted"
+        objects: [camera_insert_input!]!,
+        "on conflict condition"
+        on_conflict: camera_on_conflict
+    ): camera_mutation_response
+    "insert a single row into the table: \"camera\""
+    insert_camera_one(
+        "the row to be inserted"
+        object: camera_insert_input!,
+        "on conflict condition"
+        on_conflict: camera_on_conflict
+    ): camera
+    "insert data into the table: \"event\""
+    insert_event(
+        "the rows to be inserted"
+        objects: [event_insert_input!]!,
+        "on conflict condition"
+        on_conflict: event_on_conflict
+    ): event_mutation_response
+    "insert a single row into the table: \"event\""
+    insert_event_one(
+        "the row to be inserted"
+        object: event_insert_input!,
+        "on conflict condition"
+        on_conflict: event_on_conflict
+    ): event
+    "insert data into the table: \"image\""
+    insert_image(
+        "the rows to be inserted"
+        objects: [image_insert_input!]!,
+        "on conflict condition"
+        on_conflict: image_on_conflict
+    ): image_mutation_response
+    "insert a single row into the table: \"image\""
+    insert_image_one(
+        "the row to be inserted"
+        object: image_insert_input!,
+        "on conflict condition"
+        on_conflict: image_on_conflict
+    ): image
+    "insert data into the table: \"video\""
+    insert_video(
+        "the rows to be inserted"
+        objects: [video_insert_input!]!,
+        "on conflict condition"
+        on_conflict: video_on_conflict
+    ): video_mutation_response
+    "insert a single row into the table: \"video\""
+    insert_video_one(
+        "the row to be inserted"
+        object: video_insert_input!,
+        "on conflict condition"
+        on_conflict: video_on_conflict
+    ): video
+    "update data of the table: \"camera\""
+    update_camera(
+        "increments the integer columns with given value of the filtered values"
+        _inc: camera_inc_input,
+        "sets the columns of the filtered rows to the given values"
+        _set: camera_set_input,
+        "filter the rows which have to be updated"
+        where: camera_bool_exp!
+    ): camera_mutation_response
+    "update single row of the table: \"camera\""
+    update_camera_by_pk(
+        "increments the integer columns with given value of the filtered values"
+        _inc: camera_inc_input,
+        "sets the columns of the filtered rows to the given values"
+        _set: camera_set_input,
+        pk_columns: camera_pk_columns_input!
+    ): camera
+    "update data of the table: \"event\""
+    update_event(
+        "increments the integer columns with given value of the filtered values"
+        _inc: event_inc_input,
+        "sets the columns of the filtered rows to the given values"
+        _set: event_set_input,
+        "filter the rows which have to be updated"
+        where: event_bool_exp!
+    ): event_mutation_response
+    "update single row of the table: \"event\""
+    update_event_by_pk(
+        "increments the integer columns with given value of the filtered values"
+        _inc: event_inc_input,
+        "sets the columns of the filtered rows to the given values"
+        _set: event_set_input,
+        pk_columns: event_pk_columns_input!
+    ): event
+    "update data of the table: \"image\""
+    update_image(
+        "increments the integer columns with given value of the filtered values"
+        _inc: image_inc_input,
+        "sets the columns of the filtered rows to the given values"
+        _set: image_set_input,
+        "filter the rows which have to be updated"
+        where: image_bool_exp!
+    ): image_mutation_response
+    "update single row of the table: \"image\""
+    update_image_by_pk(
+        "increments the integer columns with given value of the filtered values"
+        _inc: image_inc_input,
+        "sets the columns of the filtered rows to the given values"
+        _set: image_set_input,
+        pk_columns: image_pk_columns_input!
+    ): image
+    "update data of the table: \"video\""
+    update_video(
+        "increments the integer columns with given value of the filtered values"
+        _inc: video_inc_input,
+        "sets the columns of the filtered rows to the given values"
+        _set: video_set_input,
+        "filter the rows which have to be updated"
+        where: video_bool_exp!
+    ): video_mutation_response
+    "update single row of the table: \"video\""
+    update_video_by_pk(
+        "increments the integer columns with given value of the filtered values"
+        _inc: video_inc_input,
+        "sets the columns of the filtered rows to the given values"
+        _set: video_set_input,
+        pk_columns: video_pk_columns_input!
+    ): video
+}
+
+"query root"
+type query_root {
+    "fetch data from the table: \"camera\""
+    camera(
+        "distinct select on columns"
+        distinct_on: [camera_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [camera_order_by!],
+        "filter the rows returned"
+        where: camera_bool_exp
+    ): [camera!]!
+    "fetch aggregated fields from the table: \"camera\""
+    camera_aggregate(
+        "distinct select on columns"
+        distinct_on: [camera_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [camera_order_by!],
+        "filter the rows returned"
+        where: camera_bool_exp
+    ): camera_aggregate!
+    "fetch data from the table: \"camera\" using primary key columns"
+    camera_by_pk(id: Int!): camera
+    "fetch data from the table: \"event\""
+    event(
+        "distinct select on columns"
+        distinct_on: [event_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [event_order_by!],
+        "filter the rows returned"
+        where: event_bool_exp
+    ): [event!]!
+    "fetch aggregated fields from the table: \"event\""
+    event_aggregate(
+        "distinct select on columns"
+        distinct_on: [event_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [event_order_by!],
+        "filter the rows returned"
+        where: event_bool_exp
+    ): event_aggregate!
+    "fetch data from the table: \"event\" using primary key columns"
+    event_by_pk(id: Int!): event
+    "fetch data from the table: \"image\""
+    image(
+        "distinct select on columns"
+        distinct_on: [image_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [image_order_by!],
+        "filter the rows returned"
+        where: image_bool_exp
+    ): [image!]!
+    "fetch aggregated fields from the table: \"image\""
+    image_aggregate(
+        "distinct select on columns"
+        distinct_on: [image_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [image_order_by!],
+        "filter the rows returned"
+        where: image_bool_exp
+    ): image_aggregate!
+    "fetch data from the table: \"image\" using primary key columns"
+    image_by_pk(id: Int!): image
+    "fetch data from the table: \"video\""
+    video(
+        "distinct select on columns"
+        distinct_on: [video_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [video_order_by!],
+        "filter the rows returned"
+        where: video_bool_exp
+    ): [video!]!
+    "fetch aggregated fields from the table: \"video\""
+    video_aggregate(
+        "distinct select on columns"
+        distinct_on: [video_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [video_order_by!],
+        "filter the rows returned"
+        where: video_bool_exp
+    ): video_aggregate!
+    "fetch data from the table: \"video\" using primary key columns"
+    video_by_pk(id: Int!): video
+}
+
+"subscription root"
+type subscription_root {
+    "fetch data from the table: \"camera\""
+    camera(
+        "distinct select on columns"
+        distinct_on: [camera_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [camera_order_by!],
+        "filter the rows returned"
+        where: camera_bool_exp
+    ): [camera!]!
+    "fetch aggregated fields from the table: \"camera\""
+    camera_aggregate(
+        "distinct select on columns"
+        distinct_on: [camera_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [camera_order_by!],
+        "filter the rows returned"
+        where: camera_bool_exp
+    ): camera_aggregate!
+    "fetch data from the table: \"camera\" using primary key columns"
+    camera_by_pk(id: Int!): camera
+    "fetch data from the table: \"event\""
+    event(
+        "distinct select on columns"
+        distinct_on: [event_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [event_order_by!],
+        "filter the rows returned"
+        where: event_bool_exp
+    ): [event!]!
+    "fetch aggregated fields from the table: \"event\""
+    event_aggregate(
+        "distinct select on columns"
+        distinct_on: [event_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [event_order_by!],
+        "filter the rows returned"
+        where: event_bool_exp
+    ): event_aggregate!
+    "fetch data from the table: \"event\" using primary key columns"
+    event_by_pk(id: Int!): event
+    "fetch data from the table: \"image\""
+    image(
+        "distinct select on columns"
+        distinct_on: [image_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [image_order_by!],
+        "filter the rows returned"
+        where: image_bool_exp
+    ): [image!]!
+    "fetch aggregated fields from the table: \"image\""
+    image_aggregate(
+        "distinct select on columns"
+        distinct_on: [image_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [image_order_by!],
+        "filter the rows returned"
+        where: image_bool_exp
+    ): image_aggregate!
+    "fetch data from the table: \"image\" using primary key columns"
+    image_by_pk(id: Int!): image
+    "fetch data from the table: \"video\""
+    video(
+        "distinct select on columns"
+        distinct_on: [video_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [video_order_by!],
+        "filter the rows returned"
+        where: video_bool_exp
+    ): [video!]!
+    "fetch aggregated fields from the table: \"video\""
+    video_aggregate(
+        "distinct select on columns"
+        distinct_on: [video_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [video_order_by!],
+        "filter the rows returned"
+        where: video_bool_exp
+    ): video_aggregate!
+    "fetch data from the table: \"video\" using primary key columns"
+    video_by_pk(id: Int!): video
+}
+
+"columns and relationships of \"video\""
+type video {
+    end_timestamp: timestamptz!
+    "An array relationship"
+    events(
+        "distinct select on columns"
+        distinct_on: [event_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [event_order_by!],
+        "filter the rows returned"
+        where: event_bool_exp
+    ): [event!]!
+    "An array relationship"
+    eventsByLowQualityVideoId(
+        "distinct select on columns"
+        distinct_on: [event_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [event_order_by!],
+        "filter the rows returned"
+        where: event_bool_exp
+    ): [event!]!
+    "An aggregated array relationship"
+    eventsByLowQualityVideoId_aggregate(
+        "distinct select on columns"
+        distinct_on: [event_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [event_order_by!],
+        "filter the rows returned"
+        where: event_bool_exp
+    ): event_aggregate!
+    "An aggregated array relationship"
+    events_aggregate(
+        "distinct select on columns"
+        distinct_on: [event_select_column!],
+        "limit the number of rows returned"
+        limit: Int,
+        "skip the first n rows. Use only with order_by"
+        offset: Int,
+        "sort the rows by one or more columns"
+        order_by: [event_order_by!],
+        "filter the rows returned"
+        where: event_bool_exp
+    ): event_aggregate!
+    file_path: String!
+    id: Int!
+    is_high_quality: Boolean!
+    size: float8!
+    "An object relationship"
+    source_camera: camera!
+    source_camera_id: Int!
+    start_timestamp: timestamptz!
+    uuid: uuid!
+}
+
+"aggregated selection of \"video\""
+type video_aggregate {
+    aggregate: video_aggregate_fields
+    nodes: [video!]!
+}
+
+"aggregate fields of \"video\""
+type video_aggregate_fields {
+    avg: video_avg_fields
+    count(columns: [video_select_column!], distinct: Boolean): Int
+    max: video_max_fields
+    min: video_min_fields
+    stddev: video_stddev_fields
+    stddev_pop: video_stddev_pop_fields
+    stddev_samp: video_stddev_samp_fields
+    sum: video_sum_fields
+    var_pop: video_var_pop_fields
+    var_samp: video_var_samp_fields
+    variance: video_variance_fields
+}
+
+"aggregate avg on columns"
+type video_avg_fields {
+    id: Float
+    size: Float
+    source_camera_id: Float
+}
+
+"aggregate max on columns"
+type video_max_fields {
+    end_timestamp: timestamptz
+    file_path: String
+    id: Int
+    size: float8
+    source_camera_id: Int
+    start_timestamp: timestamptz
+    uuid: uuid
+}
+
+"aggregate min on columns"
+type video_min_fields {
+    end_timestamp: timestamptz
+    file_path: String
+    id: Int
+    size: float8
+    source_camera_id: Int
+    start_timestamp: timestamptz
+    uuid: uuid
+}
+
+"response of any mutation on the table \"video\""
+type video_mutation_response {
+    "number of affected rows by the mutation"
+    affected_rows: Int!
+    "data of the affected rows by the mutation"
+    returning: [video!]!
+}
+
+"aggregate stddev on columns"
+type video_stddev_fields {
+    id: Float
+    size: Float
+    source_camera_id: Float
+}
+
+"aggregate stddev_pop on columns"
+type video_stddev_pop_fields {
+    id: Float
+    size: Float
+    source_camera_id: Float
+}
+
+"aggregate stddev_samp on columns"
+type video_stddev_samp_fields {
+    id: Float
+    size: Float
+    source_camera_id: Float
+}
+
+"aggregate sum on columns"
+type video_sum_fields {
+    id: Int
+    size: float8
+    source_camera_id: Int
+}
+
+"aggregate var_pop on columns"
+type video_var_pop_fields {
+    id: Float
+    size: Float
+    source_camera_id: Float
+}
+
+"aggregate var_samp on columns"
+type video_var_samp_fields {
+    id: Float
+    size: Float
+    source_camera_id: Float
+}
+
+"aggregate variance on columns"
+type video_variance_fields {
+    id: Float
+    size: Float
+    source_camera_id: Float
+}
+
+"unique or primary key constraints on table \"camera\""
+enum camera_constraint {
+    "unique or primary key constraint"
+    camera_pkey
+    "unique or primary key constraint"
+    camera_uuid_key
+}
+
+"select columns of table \"camera\""
+enum camera_select_column {
+    "column name"
+    id
+    "column name"
+    name
+    "column name"
+    stream_url
+    "column name"
+    uuid
+}
+
+"update columns of table \"camera\""
+enum camera_update_column {
+    "column name"
+    id
+    "column name"
+    name
+    "column name"
+    stream_url
+    "column name"
+    uuid
+}
+
+"unique or primary key constraints on table \"event\""
+enum event_constraint {
+    "unique or primary key constraint"
+    event_pkey
+    "unique or primary key constraint"
+    event_uuid_key
+}
+
+"select columns of table \"event\""
+enum event_select_column {
+    "column name"
+    end_timestamp
+    "column name"
+    high_quality_image_id
+    "column name"
+    high_quality_video_id
+    "column name"
+    id
+    "column name"
+    is_segment
+    "column name"
+    low_quality_image_id
+    "column name"
+    low_quality_video_id
+    "column name"
+    source_camera_id
+    "column name"
+    start_timestamp
+    "column name"
+    uuid
+}
+
+"update columns of table \"event\""
+enum event_update_column {
+    "column name"
+    end_timestamp
+    "column name"
+    high_quality_image_id
+    "column name"
+    high_quality_video_id
+    "column name"
+    id
+    "column name"
+    is_segment
+    "column name"
+    low_quality_image_id
+    "column name"
+    low_quality_video_id
+    "column name"
+    source_camera_id
+    "column name"
+    start_timestamp
+    "column name"
+    uuid
+}
+
+"unique or primary key constraints on table \"image\""
+enum image_constraint {
+    "unique or primary key constraint"
+    image_pkey
+    "unique or primary key constraint"
+    image_uuid_key
+}
+
+"select columns of table \"image\""
+enum image_select_column {
+    "column name"
+    file_path
+    "column name"
+    id
+    "column name"
+    is_high_quality
+    "column name"
+    size
+    "column name"
+    source_camera_id
+    "column name"
+    timestamp
+    "column name"
+    uuid
+}
+
+"update columns of table \"image\""
+enum image_update_column {
+    "column name"
+    file_path
+    "column name"
+    id
+    "column name"
+    is_high_quality
+    "column name"
+    size
+    "column name"
+    source_camera_id
+    "column name"
+    timestamp
+    "column name"
+    uuid
+}
+
+"column ordering options"
+enum order_by {
+    "in the ascending order, nulls last"
+    asc
+    "in the ascending order, nulls first"
+    asc_nulls_first
+    "in the ascending order, nulls last"
+    asc_nulls_last
+    "in the descending order, nulls first"
+    desc
+    "in the descending order, nulls first"
+    desc_nulls_first
+    "in the descending order, nulls last"
+    desc_nulls_last
+}
+
+"unique or primary key constraints on table \"video\""
+enum video_constraint {
+    "unique or primary key constraint"
+    video_pkey
+    "unique or primary key constraint"
+    video_uuid_key
+}
+
+"select columns of table \"video\""
+enum video_select_column {
+    "column name"
+    end_timestamp
+    "column name"
+    file_path
+    "column name"
+    id
+    "column name"
+    is_high_quality
+    "column name"
+    size
+    "column name"
+    source_camera_id
+    "column name"
+    start_timestamp
+    "column name"
+    uuid
+}
+
+"update columns of table \"video\""
+enum video_update_column {
+    "column name"
+    end_timestamp
+    "column name"
+    file_path
+    "column name"
+    id
+    "column name"
+    is_high_quality
+    "column name"
+    size
+    "column name"
+    source_camera_id
+    "column name"
+    start_timestamp
+    "column name"
+    uuid
+}
+
+"expression to compare columns of type Boolean. All fields are combined with logical 'AND'."
+input Boolean_comparison_exp {
+    _eq: Boolean
+    _gt: Boolean
+    _gte: Boolean
+    _in: [Boolean!]
+    _is_null: Boolean
+    _lt: Boolean
+    _lte: Boolean
+    _neq: Boolean
+    _nin: [Boolean!]
+}
+
+"expression to compare columns of type Int. All fields are combined with logical 'AND'."
+input Int_comparison_exp {
+    _eq: Int
+    _gt: Int
+    _gte: Int
+    _in: [Int!]
+    _is_null: Boolean
+    _lt: Int
+    _lte: Int
+    _neq: Int
+    _nin: [Int!]
+}
+
+"expression to compare columns of type String. All fields are combined with logical 'AND'."
+input String_comparison_exp {
+    _eq: String
+    _gt: String
+    _gte: String
+    _ilike: String
+    _in: [String!]
+    _is_null: Boolean
+    _like: String
+    _lt: String
+    _lte: String
+    _neq: String
+    _nilike: String
+    _nin: [String!]
+    _nlike: String
+    _nsimilar: String
+    _similar: String
+}
+
+"order by aggregate values of table \"camera\""
+input camera_aggregate_order_by {
+    avg: camera_avg_order_by
+    count: order_by
+    max: camera_max_order_by
+    min: camera_min_order_by
+    stddev: camera_stddev_order_by
+    stddev_pop: camera_stddev_pop_order_by
+    stddev_samp: camera_stddev_samp_order_by
+    sum: camera_sum_order_by
+    var_pop: camera_var_pop_order_by
+    var_samp: camera_var_samp_order_by
+    variance: camera_variance_order_by
+}
+
+"input type for inserting array relation for remote table \"camera\""
+input camera_arr_rel_insert_input {
+    data: [camera_insert_input!]!
+    on_conflict: camera_on_conflict
+}
+
+"order by avg() on columns of table \"camera\""
+input camera_avg_order_by {
+    id: order_by
+}
+
+"Boolean expression to filter rows from the table \"camera\". All fields are combined with a logical 'AND'."
+input camera_bool_exp {
+    _and: [camera_bool_exp]
+    _not: camera_bool_exp
+    _or: [camera_bool_exp]
+    events: event_bool_exp
+    id: Int_comparison_exp
+    images: image_bool_exp
+    name: String_comparison_exp
+    stream_url: String_comparison_exp
+    uuid: uuid_comparison_exp
+    videos: video_bool_exp
+}
+
+"input type for incrementing integer column in table \"camera\""
+input camera_inc_input {
+    id: Int
+}
+
+"input type for inserting data into table \"camera\""
+input camera_insert_input {
+    events: event_arr_rel_insert_input
+    id: Int
+    images: image_arr_rel_insert_input
+    name: String
+    stream_url: String
+    uuid: uuid
+    videos: video_arr_rel_insert_input
+}
+
+"order by max() on columns of table \"camera\""
+input camera_max_order_by {
+    id: order_by
+    name: order_by
+    stream_url: order_by
+    uuid: order_by
+}
+
+"order by min() on columns of table \"camera\""
+input camera_min_order_by {
+    id: order_by
+    name: order_by
+    stream_url: order_by
+    uuid: order_by
+}
+
+"input type for inserting object relation for remote table \"camera\""
+input camera_obj_rel_insert_input {
+    data: camera_insert_input!
+    on_conflict: camera_on_conflict
+}
+
+"on conflict condition type for table \"camera\""
+input camera_on_conflict {
+    constraint: camera_constraint!
+    update_columns: [camera_update_column!]!
+    where: camera_bool_exp
+}
+
+"ordering options when selecting data from \"camera\""
+input camera_order_by {
+    events_aggregate: event_aggregate_order_by
+    id: order_by
+    images_aggregate: image_aggregate_order_by
+    name: order_by
+    stream_url: order_by
+    uuid: order_by
+    videos_aggregate: video_aggregate_order_by
+}
+
+"primary key columns input for table: \"camera\""
+input camera_pk_columns_input {
+    id: Int!
+}
+
+"input type for updating data in table \"camera\""
+input camera_set_input {
+    id: Int
+    name: String
+    stream_url: String
+    uuid: uuid
+}
+
+"order by stddev() on columns of table \"camera\""
+input camera_stddev_order_by {
+    id: order_by
+}
+
+"order by stddev_pop() on columns of table \"camera\""
+input camera_stddev_pop_order_by {
+    id: order_by
+}
+
+"order by stddev_samp() on columns of table \"camera\""
+input camera_stddev_samp_order_by {
+    id: order_by
+}
+
+"order by sum() on columns of table \"camera\""
+input camera_sum_order_by {
+    id: order_by
+}
+
+"order by var_pop() on columns of table \"camera\""
+input camera_var_pop_order_by {
+    id: order_by
+}
+
+"order by var_samp() on columns of table \"camera\""
+input camera_var_samp_order_by {
+    id: order_by
+}
+
+"order by variance() on columns of table \"camera\""
+input camera_variance_order_by {
+    id: order_by
+}
+
+"order by aggregate values of table \"event\""
+input event_aggregate_order_by {
+    avg: event_avg_order_by
+    count: order_by
+    max: event_max_order_by
+    min: event_min_order_by
+    stddev: event_stddev_order_by
+    stddev_pop: event_stddev_pop_order_by
+    stddev_samp: event_stddev_samp_order_by
+    sum: event_sum_order_by
+    var_pop: event_var_pop_order_by
+    var_samp: event_var_samp_order_by
+    variance: event_variance_order_by
+}
+
+"input type for inserting array relation for remote table \"event\""
+input event_arr_rel_insert_input {
+    data: [event_insert_input!]!
+    on_conflict: event_on_conflict
+}
+
+"order by avg() on columns of table \"event\""
+input event_avg_order_by {
+    high_quality_image_id: order_by
+    high_quality_video_id: order_by
+    id: order_by
+    low_quality_image_id: order_by
+    low_quality_video_id: order_by
+    source_camera_id: order_by
+}
+
+"Boolean expression to filter rows from the table \"event\". All fields are combined with a logical 'AND'."
+input event_bool_exp {
+    _and: [event_bool_exp]
+    _not: event_bool_exp
+    _or: [event_bool_exp]
+    end_timestamp: timestamptz_comparison_exp
+    high_quality_image: image_bool_exp
+    high_quality_image_id: Int_comparison_exp
+    high_quality_video: video_bool_exp
+    high_quality_video_id: Int_comparison_exp
+    id: Int_comparison_exp
+    is_segment: Boolean_comparison_exp
+    low_quality_image: image_bool_exp
+    low_quality_image_id: Int_comparison_exp
+    low_quality_video: video_bool_exp
+    low_quality_video_id: Int_comparison_exp
+    source_camera: camera_bool_exp
+    source_camera_id: Int_comparison_exp
+    start_timestamp: timestamptz_comparison_exp
+    uuid: uuid_comparison_exp
+}
+
+"input type for incrementing integer column in table \"event\""
+input event_inc_input {
+    high_quality_image_id: Int
+    high_quality_video_id: Int
+    id: Int
+    low_quality_image_id: Int
+    low_quality_video_id: Int
+    source_camera_id: Int
+}
+
+"input type for inserting data into table \"event\""
+input event_insert_input {
+    end_timestamp: timestamptz
+    high_quality_image: image_obj_rel_insert_input
+    high_quality_image_id: Int
+    high_quality_video: video_obj_rel_insert_input
+    high_quality_video_id: Int
+    id: Int
+    is_segment: Boolean
+    low_quality_image: image_obj_rel_insert_input
+    low_quality_image_id: Int
+    low_quality_video: video_obj_rel_insert_input
+    low_quality_video_id: Int
+    source_camera: camera_obj_rel_insert_input
+    source_camera_id: Int
+    start_timestamp: timestamptz
+    uuid: uuid
+}
+
+"order by max() on columns of table \"event\""
+input event_max_order_by {
+    end_timestamp: order_by
+    high_quality_image_id: order_by
+    high_quality_video_id: order_by
+    id: order_by
+    low_quality_image_id: order_by
+    low_quality_video_id: order_by
+    source_camera_id: order_by
+    start_timestamp: order_by
+    uuid: order_by
+}
+
+"order by min() on columns of table \"event\""
+input event_min_order_by {
+    end_timestamp: order_by
+    high_quality_image_id: order_by
+    high_quality_video_id: order_by
+    id: order_by
+    low_quality_image_id: order_by
+    low_quality_video_id: order_by
+    source_camera_id: order_by
+    start_timestamp: order_by
+    uuid: order_by
+}
+
+"input type for inserting object relation for remote table \"event\""
+input event_obj_rel_insert_input {
+    data: event_insert_input!
+    on_conflict: event_on_conflict
+}
+
+"on conflict condition type for table \"event\""
+input event_on_conflict {
+    constraint: event_constraint!
+    update_columns: [event_update_column!]!
+    where: event_bool_exp
+}
+
+"ordering options when selecting data from \"event\""
+input event_order_by {
+    end_timestamp: order_by
+    high_quality_image: image_order_by
+    high_quality_image_id: order_by
+    high_quality_video: video_order_by
+    high_quality_video_id: order_by
+    id: order_by
+    is_segment: order_by
+    low_quality_image: image_order_by
+    low_quality_image_id: order_by
+    low_quality_video: video_order_by
+    low_quality_video_id: order_by
+    source_camera: camera_order_by
+    source_camera_id: order_by
+    start_timestamp: order_by
+    uuid: order_by
+}
+
+"primary key columns input for table: \"event\""
+input event_pk_columns_input {
+    id: Int!
+}
+
+"input type for updating data in table \"event\""
+input event_set_input {
+    end_timestamp: timestamptz
+    high_quality_image_id: Int
+    high_quality_video_id: Int
+    id: Int
+    is_segment: Boolean
+    low_quality_image_id: Int
+    low_quality_video_id: Int
+    source_camera_id: Int
+    start_timestamp: timestamptz
+    uuid: uuid
+}
+
+"order by stddev() on columns of table \"event\""
+input event_stddev_order_by {
+    high_quality_image_id: order_by
+    high_quality_video_id: order_by
+    id: order_by
+    low_quality_image_id: order_by
+    low_quality_video_id: order_by
+    source_camera_id: order_by
+}
+
+"order by stddev_pop() on columns of table \"event\""
+input event_stddev_pop_order_by {
+    high_quality_image_id: order_by
+    high_quality_video_id: order_by
+    id: order_by
+    low_quality_image_id: order_by
+    low_quality_video_id: order_by
+    source_camera_id: order_by
+}
+
+"order by stddev_samp() on columns of table \"event\""
+input event_stddev_samp_order_by {
+    high_quality_image_id: order_by
+    high_quality_video_id: order_by
+    id: order_by
+    low_quality_image_id: order_by
+    low_quality_video_id: order_by
+    source_camera_id: order_by
+}
+
+"order by sum() on columns of table \"event\""
+input event_sum_order_by {
+    high_quality_image_id: order_by
+    high_quality_video_id: order_by
+    id: order_by
+    low_quality_image_id: order_by
+    low_quality_video_id: order_by
+    source_camera_id: order_by
+}
+
+"order by var_pop() on columns of table \"event\""
+input event_var_pop_order_by {
+    high_quality_image_id: order_by
+    high_quality_video_id: order_by
+    id: order_by
+    low_quality_image_id: order_by
+    low_quality_video_id: order_by
+    source_camera_id: order_by
+}
+
+"order by var_samp() on columns of table \"event\""
+input event_var_samp_order_by {
+    high_quality_image_id: order_by
+    high_quality_video_id: order_by
+    id: order_by
+    low_quality_image_id: order_by
+    low_quality_video_id: order_by
+    source_camera_id: order_by
+}
+
+"order by variance() on columns of table \"event\""
+input event_variance_order_by {
+    high_quality_image_id: order_by
+    high_quality_video_id: order_by
+    id: order_by
+    low_quality_image_id: order_by
+    low_quality_video_id: order_by
+    source_camera_id: order_by
+}
+
+"expression to compare columns of type float8. All fields are combined with logical 'AND'."
+input float8_comparison_exp {
+    _eq: float8
+    _gt: float8
+    _gte: float8
+    _in: [float8!]
+    _is_null: Boolean
+    _lt: float8
+    _lte: float8
+    _neq: float8
+    _nin: [float8!]
+}
+
+"order by aggregate values of table \"image\""
+input image_aggregate_order_by {
+    avg: image_avg_order_by
+    count: order_by
+    max: image_max_order_by
+    min: image_min_order_by
+    stddev: image_stddev_order_by
+    stddev_pop: image_stddev_pop_order_by
+    stddev_samp: image_stddev_samp_order_by
+    sum: image_sum_order_by
+    var_pop: image_var_pop_order_by
+    var_samp: image_var_samp_order_by
+    variance: image_variance_order_by
+}
+
+"input type for inserting array relation for remote table \"image\""
+input image_arr_rel_insert_input {
+    data: [image_insert_input!]!
+    on_conflict: image_on_conflict
+}
+
+"order by avg() on columns of table \"image\""
+input image_avg_order_by {
+    id: order_by
+    size: order_by
+    source_camera_id: order_by
+}
+
+"Boolean expression to filter rows from the table \"image\". All fields are combined with a logical 'AND'."
+input image_bool_exp {
+    _and: [image_bool_exp]
+    _not: image_bool_exp
+    _or: [image_bool_exp]
+    events: event_bool_exp
+    eventsByLowQualityImageId: event_bool_exp
+    file_path: String_comparison_exp
+    id: Int_comparison_exp
+    is_high_quality: Boolean_comparison_exp
+    size: float8_comparison_exp
+    source_camera: camera_bool_exp
+    source_camera_id: Int_comparison_exp
+    timestamp: timestamptz_comparison_exp
+    uuid: uuid_comparison_exp
+}
+
+"input type for incrementing integer column in table \"image\""
+input image_inc_input {
+    id: Int
+    size: float8
+    source_camera_id: Int
+}
+
+"input type for inserting data into table \"image\""
+input image_insert_input {
+    events: event_arr_rel_insert_input
+    eventsByLowQualityImageId: event_arr_rel_insert_input
+    file_path: String
+    id: Int
+    is_high_quality: Boolean
+    size: float8
+    source_camera: camera_obj_rel_insert_input
+    source_camera_id: Int
+    timestamp: timestamptz
+    uuid: uuid
+}
+
+"order by max() on columns of table \"image\""
+input image_max_order_by {
+    file_path: order_by
+    id: order_by
+    size: order_by
+    source_camera_id: order_by
+    timestamp: order_by
+    uuid: order_by
+}
+
+"order by min() on columns of table \"image\""
+input image_min_order_by {
+    file_path: order_by
+    id: order_by
+    size: order_by
+    source_camera_id: order_by
+    timestamp: order_by
+    uuid: order_by
+}
+
+"input type for inserting object relation for remote table \"image\""
+input image_obj_rel_insert_input {
+    data: image_insert_input!
+    on_conflict: image_on_conflict
+}
+
+"on conflict condition type for table \"image\""
+input image_on_conflict {
+    constraint: image_constraint!
+    update_columns: [image_update_column!]!
+    where: image_bool_exp
+}
+
+"ordering options when selecting data from \"image\""
+input image_order_by {
+    eventsByLowQualityImageId_aggregate: event_aggregate_order_by
+    events_aggregate: event_aggregate_order_by
+    file_path: order_by
+    id: order_by
+    is_high_quality: order_by
+    size: order_by
+    source_camera: camera_order_by
+    source_camera_id: order_by
+    timestamp: order_by
+    uuid: order_by
+}
+
+"primary key columns input for table: \"image\""
+input image_pk_columns_input {
+    id: Int!
+}
+
+"input type for updating data in table \"image\""
+input image_set_input {
+    file_path: String
+    id: Int
+    is_high_quality: Boolean
+    size: float8
+    source_camera_id: Int
+    timestamp: timestamptz
+    uuid: uuid
+}
+
+"order by stddev() on columns of table \"image\""
+input image_stddev_order_by {
+    id: order_by
+    size: order_by
+    source_camera_id: order_by
+}
+
+"order by stddev_pop() on columns of table \"image\""
+input image_stddev_pop_order_by {
+    id: order_by
+    size: order_by
+    source_camera_id: order_by
+}
+
+"order by stddev_samp() on columns of table \"image\""
+input image_stddev_samp_order_by {
+    id: order_by
+    size: order_by
+    source_camera_id: order_by
+}
+
+"order by sum() on columns of table \"image\""
+input image_sum_order_by {
+    id: order_by
+    size: order_by
+    source_camera_id: order_by
+}
+
+"order by var_pop() on columns of table \"image\""
+input image_var_pop_order_by {
+    id: order_by
+    size: order_by
+    source_camera_id: order_by
+}
+
+"order by var_samp() on columns of table \"image\""
+input image_var_samp_order_by {
+    id: order_by
+    size: order_by
+    source_camera_id: order_by
+}
+
+"order by variance() on columns of table \"image\""
+input image_variance_order_by {
+    id: order_by
+    size: order_by
+    source_camera_id: order_by
+}
+
+"expression to compare columns of type timestamptz. All fields are combined with logical 'AND'."
+input timestamptz_comparison_exp {
+    _eq: timestamptz
+    _gt: timestamptz
+    _gte: timestamptz
+    _in: [timestamptz!]
+    _is_null: Boolean
+    _lt: timestamptz
+    _lte: timestamptz
+    _neq: timestamptz
+    _nin: [timestamptz!]
+}
+
+"expression to compare columns of type uuid. All fields are combined with logical 'AND'."
+input uuid_comparison_exp {
+    _eq: uuid
+    _gt: uuid
+    _gte: uuid
+    _in: [uuid!]
+    _is_null: Boolean
+    _lt: uuid
+    _lte: uuid
+    _neq: uuid
+    _nin: [uuid!]
+}
+
+"order by aggregate values of table \"video\""
+input video_aggregate_order_by {
+    avg: video_avg_order_by
+    count: order_by
+    max: video_max_order_by
+    min: video_min_order_by
+    stddev: video_stddev_order_by
+    stddev_pop: video_stddev_pop_order_by
+    stddev_samp: video_stddev_samp_order_by
+    sum: video_sum_order_by
+    var_pop: video_var_pop_order_by
+    var_samp: video_var_samp_order_by
+    variance: video_variance_order_by
+}
+
+"input type for inserting array relation for remote table \"video\""
+input video_arr_rel_insert_input {
+    data: [video_insert_input!]!
+    on_conflict: video_on_conflict
+}
+
+"order by avg() on columns of table \"video\""
+input video_avg_order_by {
+    id: order_by
+    size: order_by
+    source_camera_id: order_by
+}
+
+"Boolean expression to filter rows from the table \"video\". All fields are combined with a logical 'AND'."
+input video_bool_exp {
+    _and: [video_bool_exp]
+    _not: video_bool_exp
+    _or: [video_bool_exp]
+    end_timestamp: timestamptz_comparison_exp
+    events: event_bool_exp
+    eventsByLowQualityVideoId: event_bool_exp
+    file_path: String_comparison_exp
+    id: Int_comparison_exp
+    is_high_quality: Boolean_comparison_exp
+    size: float8_comparison_exp
+    source_camera: camera_bool_exp
+    source_camera_id: Int_comparison_exp
+    start_timestamp: timestamptz_comparison_exp
+    uuid: uuid_comparison_exp
+}
+
+"input type for incrementing integer column in table \"video\""
+input video_inc_input {
+    id: Int
+    size: float8
+    source_camera_id: Int
+}
+
+"input type for inserting data into table \"video\""
+input video_insert_input {
+    end_timestamp: timestamptz
+    events: event_arr_rel_insert_input
+    eventsByLowQualityVideoId: event_arr_rel_insert_input
+    file_path: String
+    id: Int
+    is_high_quality: Boolean
+    size: float8
+    source_camera: camera_obj_rel_insert_input
+    source_camera_id: Int
+    start_timestamp: timestamptz
+    uuid: uuid
+}
+
+"order by max() on columns of table \"video\""
+input video_max_order_by {
+    end_timestamp: order_by
+    file_path: order_by
+    id: order_by
+    size: order_by
+    source_camera_id: order_by
+    start_timestamp: order_by
+    uuid: order_by
+}
+
+"order by min() on columns of table \"video\""
+input video_min_order_by {
+    end_timestamp: order_by
+    file_path: order_by
+    id: order_by
+    size: order_by
+    source_camera_id: order_by
+    start_timestamp: order_by
+    uuid: order_by
+}
+
+"input type for inserting object relation for remote table \"video\""
+input video_obj_rel_insert_input {
+    data: video_insert_input!
+    on_conflict: video_on_conflict
+}
+
+"on conflict condition type for table \"video\""
+input video_on_conflict {
+    constraint: video_constraint!
+    update_columns: [video_update_column!]!
+    where: video_bool_exp
+}
+
+"ordering options when selecting data from \"video\""
+input video_order_by {
+    end_timestamp: order_by
+    eventsByLowQualityVideoId_aggregate: event_aggregate_order_by
+    events_aggregate: event_aggregate_order_by
+    file_path: order_by
+    id: order_by
+    is_high_quality: order_by
+    size: order_by
+    source_camera: camera_order_by
+    source_camera_id: order_by
+    start_timestamp: order_by
+    uuid: order_by
+}
+
+"primary key columns input for table: \"video\""
+input video_pk_columns_input {
+    id: Int!
+}
+
+"input type for updating data in table \"video\""
+input video_set_input {
+    end_timestamp: timestamptz
+    file_path: String
+    id: Int
+    is_high_quality: Boolean
+    size: float8
+    source_camera_id: Int
+    start_timestamp: timestamptz
+    uuid: uuid
+}
+
+"order by stddev() on columns of table \"video\""
+input video_stddev_order_by {
+    id: order_by
+    size: order_by
+    source_camera_id: order_by
+}
+
+"order by stddev_pop() on columns of table \"video\""
+input video_stddev_pop_order_by {
+    id: order_by
+    size: order_by
+    source_camera_id: order_by
+}
+
+"order by stddev_samp() on columns of table \"video\""
+input video_stddev_samp_order_by {
+    id: order_by
+    size: order_by
+    source_camera_id: order_by
+}
+
+"order by sum() on columns of table \"video\""
+input video_sum_order_by {
+    id: order_by
+    size: order_by
+    source_camera_id: order_by
+}
+
+"order by var_pop() on columns of table \"video\""
+input video_var_pop_order_by {
+    id: order_by
+    size: order_by
+    source_camera_id: order_by
+}
+
+"order by var_samp() on columns of table \"video\""
+input video_var_samp_order_by {
+    id: order_by
+    size: order_by
+    source_camera_id: order_by
+}
+
+"order by variance() on columns of table \"video\""
+input video_variance_order_by {
+    id: order_by
+    size: order_by
+    source_camera_id: order_by
+}
+
+
+scalar float8
+
+scalar timestamptz
+
+scalar uuid

@@ -1,0 +1,8 @@
+.header {
+  text-align: center;
+}
+
+thead, th, tbody, td {
+  text-align: center;
+  font-size: 8pt;
+}
