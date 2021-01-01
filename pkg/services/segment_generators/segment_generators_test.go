@@ -57,7 +57,7 @@ func TestNewSegmentGenerators(t *testing.T) {
 	segmentGenerators := NewSegmentGenerators(
 		[]segment_generator.Feed{
 			{
-				NetCamURL:       "rtsp://localhost:8554/Streaming/Channels/101",
+				NetCamURL:       "rtsp://host.docker.internal:8554/Streaming/Channels/101",
 				DestinationPath: dir,
 				CameraName:      "Testing",
 				Duration:        5,

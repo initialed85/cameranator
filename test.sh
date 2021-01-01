@@ -19,7 +19,7 @@ CCTV_SEGMENTS_QUOTA=1
 CCTV_SEGMENTS_PATH="$(pwd)/temp_data/segments"
 CCTV_SEGMENT_DURATION=30
 
-CCTV_MOTION_CONFIGS="$(pwd)/motion-configs"
+CCTV_MOTION_CONFIGS="$(pwd)/motion-configs-testing"
 
 DISABLE_NVIDIA=1
 
@@ -63,7 +63,7 @@ popd
 docker run --rm -d --name rtsp-simple-server -e RTSP_PROTOCOLS=tcp -p 8554:8554 aler9/rtsp-simple-server
 
 docker run --rm -d --name ffmpeg -v "$(pwd)/test_data/segments/":/srv/ jrottenberg/ffmpeg:4.3.1-ubuntu1804 \
-  -re -stream_loop -1 -i /srv/Segment_2020-12-25T08:45:04_Driveway.mp4 -c copy -f rtsp rtsp://localhost:8554/Streaming/Channels/101
+  -re -stream_loop -1 -i /srv/Segment_2020-12-25T08:45:04_Driveway.mp4 -c copy -f rtsp rtsp://host.docker.internal:8554/Streaming/Channels/101
 
 #
 # run tests (serially, because of the shared database)

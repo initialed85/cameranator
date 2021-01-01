@@ -72,7 +72,13 @@ func (r *EventReceiver) callback(addr *net.UDPAddr, data []byte) {
 		", ",
 	)
 
-	receivedTimestamp, err := iso8601.ParseString(strings.ReplaceAll(parts[0], ",", "."))
+	receivedTimestamp, err := iso8601.ParseString(
+		strings.ReplaceAll(
+			parts[0],
+			",",
+			".",
+			),
+		)
 	if err != nil {
 		log.Printf("warning: %v", err)
 		return

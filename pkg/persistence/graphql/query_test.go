@@ -39,9 +39,7 @@ func TestGetManyQuery(t *testing.T) {
 }
 
 func TestGetManyQuery_Nested(t *testing.T) {
-	event := model.Event{
-
-	}
+	event := model.Event{}
 
 	query, err := GetManyQuery("event", event, "id", "asc")
 	if err != nil {
@@ -337,8 +335,7 @@ mutation {
 
 func TestDeleteQuery(t *testing.T) {
 	camera := model.Camera{
-		UUID:
-		uuid.UUID{0x64, 0xdb, 0xac, 0x5a, 0x29, 0xc7, 0x42, 0x44, 0xb2, 0x97, 0xc, 0x54, 0xa, 0xf3, 0x29, 0xf9}, Name: "model.Camera", StreamURL: "rtsp://192.168.137.34:554/Streaming/Channels/101/",
+		UUID: uuid.UUID{0x64, 0xdb, 0xac, 0x5a, 0x29, 0xc7, 0x42, 0x44, 0xb2, 0x97, 0xc, 0x54, 0xa, 0xf3, 0x29, 0xf9}, Name: "model.Camera", StreamURL: "rtsp://192.168.137.34:554/Streaming/Channels/101/",
 	}
 
 	query, err := DeleteQuery("camera", camera)

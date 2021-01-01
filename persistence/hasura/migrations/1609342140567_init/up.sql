@@ -52,7 +52,7 @@ ALTER SEQUENCE public.image_id_seq OWNED BY public.image.id;
 CREATE TABLE public.video (
     id integer NOT NULL,
     uuid uuid DEFAULT public.gen_random_uuid() NOT NULL,
-    start_timestamp timestamp without time zone NOT NULL,
+    start_timestamp timestamp with time zone NOT NULL,
     end_timestamp timestamp with time zone NOT NULL,
     size double precision NOT NULL,
     is_high_quality boolean NOT NULL,

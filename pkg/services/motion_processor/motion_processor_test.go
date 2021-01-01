@@ -54,7 +54,7 @@ func TestNewMotionProcessor(t *testing.T) {
 
 	camera := model.NewCamera(
 		"Testing",
-		"rtsp://localhost:8554/Streaming/Channels/101",
+		"rtsp://host.docker.internal:8554/Streaming/Channels/101",
 	)
 
 	err = cameraModelAndClient.Add(camera, []model.Camera{})

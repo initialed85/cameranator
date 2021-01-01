@@ -72,6 +72,8 @@ Each service below deploys as a Docker container:
 
 - extend the persistence piece to be able to subscribe to push events
     - implied: work out how hasura does subscriptions (WebSockets?) 
+- support timezones properly
+- have a configuration system that extends out to motion and the other services
 
 ## Technical debt
 
