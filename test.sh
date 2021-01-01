@@ -71,6 +71,7 @@ docker run --rm -d --name ffmpeg -v "$(pwd)/test_data/segments/":/srv/ jrottenbe
 
 go test -v ./pkg/filesystem
 
+go test -v ./pkg/front_end/legacy/page_render_utils
 go test -v ./pkg/front_end/legacy/page_renderer
 
 go test -v ./pkg/media/converter
@@ -93,9 +94,11 @@ go test -v ./pkg/segments/event_receiver
 go test -v ./pkg/segments/segment_generator
 
 go test -v ./pkg/services/motion_processor
+go test -v ./pkg/services/page_renderers
 go test -v ./pkg/services/segment_generators
 go test -v ./pkg/services/segment_processor
 
+go test -v ./pkg/test_utils
 go test -v ./pkg/utils
 
 echo ""

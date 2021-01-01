@@ -10,6 +10,9 @@ import (
 	"github.com/initialed85/cameranator/pkg/persistence/model"
 )
 
+// TODO: expose this via config
+const timezone = "Australia/Perth"
+
 type Event struct {
 	EventID          uuid.UUID `json:"event_id"`
 	Timestamp        time.Time `json:"timestamp"`
@@ -21,6 +24,11 @@ type Event struct {
 }
 
 func GetEvents(application *application.Application, isSegment bool) ([]Event, error) {
+	loc, err := time.LoadLocation(timezone)
+	if err != nil {
+		return []Event{}, err
+	}
+
 	eventModelAndClient, err := application.GetModelAndClient("event")
 	if err != nil {
 		return []Event{}, err
@@ -41,7 +49,7 @@ func GetEvents(application *application.Application, isSegment bool) ([]Event, e
 
 		legacyEvent := Event{
 			EventID:          event.UUID,
-			Timestamp:        event.StartTimestamp.Time,
+			Timestamp:        event.StartTimestamp.Time.In(loc),
 			CameraName:       event.SourceCamera.Name,
 			HighResImagePath: event.HighQualityImage.FilePath,
 			LowResImagePath:  event.LowQualityImage.FilePath,

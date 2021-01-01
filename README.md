@@ -74,6 +74,16 @@ Each service below deploys as a Docker container:
     - implied: work out how hasura does subscriptions (WebSockets?) 
 - support timezones properly
 - have a configuration system that extends out to motion and the other services
+    - items to expose via config
+        - disable nvidia
+        - timezone for the system
+        - nginx port
+        - camera definitions
+        - event quota
+        - event path
+        - segment quota
+        - segment path
+        - segment duration
 
 ## Technical debt
 
