@@ -1,17 +1,15 @@
 version: '3.6'
 
 networks:
-
   cctv-internal:
     internal: true
   cctv-external:
 
 volumes:
-
   cctv-data:
+  front-end:
 
 services:
-
   postgres:
     image: postgres:12
     networks:
@@ -142,6 +140,22 @@ services:
       - motion-processor
       - segment-processor
 
+  front-end:
+    build:
+      context: ./
+      dockerfile: docker/front-end/Dockerfile
+    networks:
+      - cctv-internal
+      - cctv-external
+    ports:
+      - 3001:3000
+    volumes:
+      - front-end:/srv/build
+    restart: always
+    depends_on:
+      - hasura
+      - motion
+
   nginx:
     image: nginx:1.18
     networks:
@@ -153,7 +167,7 @@ services:
       - NGINX_ENTRYPOINT_QUIET_LOGS=1
     volumes:
       - ./docker/nginx/empty_folder:/docker-entrypoint.d:ro
-      - ./docker/nginx/root:/srv/root:ro
+      - front-end:/srv/root:ro
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - ${CCTV_EVENTS_PATH}:/srv/target_dir/events
       - ${CCTV_SEGMENTS_PATH}:/srv/target_dir/segments
@@ -161,3 +175,4 @@ services:
     depends_on:
       - hasura
       - motion
+      - front-end

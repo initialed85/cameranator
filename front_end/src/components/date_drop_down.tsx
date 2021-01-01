@@ -20,6 +20,7 @@ export class DateDropdown extends React.Component<DateDropdownProps, any> {
 
             items.push(
                 <NavDropdown.Item
+                    style={{fontSize: "10pt"}}
                     href={`#date/${friendlyDate}`}
                     key={friendlyDate}
                     onClick={() => {

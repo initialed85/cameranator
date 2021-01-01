@@ -34,6 +34,10 @@ class App extends React.Component<AppProps, AppState> {
             date: null,
             camera: null,
         };
+
+        setInterval(() => {
+            this.update()
+        }, 1000);
     }
 
     update() {

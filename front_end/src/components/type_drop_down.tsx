@@ -17,6 +17,7 @@ export class TypeDropdown extends React.Component<TypeDropdownProps, any> {
         return (
             <NavDropdown title="Type" id="camera-dropdown">
                 <NavDropdown.Item
+                    style={{fontSize: "10pt"}}
                     href={`#type/${EVENTS}`}
                     key={EVENTS}
                     onClick={() => {
@@ -26,6 +27,7 @@ export class TypeDropdown extends React.Component<TypeDropdownProps, any> {
                     Events
                 </NavDropdown.Item>
                 <NavDropdown.Item
+                    style={{fontSize: "10pt"}}
                     href={`#type/${SEGMENTS}`}
                     key={SEGMENTS}
                     onClick={() => {
