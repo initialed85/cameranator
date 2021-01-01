@@ -13,8 +13,10 @@ Held together with the following languages / frameworks:
  
 - [Go](https://github.com/golang)
 - [glue](https://github.com/initialed85/glue)
-- [TypeScript](https://github.com/microsoft/TypeScript) (TODO)
-- [React](https://github.com/facebook/react) (TODO)
+- [TypeScript](https://github.com/microsoft/TypeScript)
+- [React](https://github.com/facebook/react)
+- [React Bootstrap](https://react-bootstrap.github.io/)
+- [Apollo](https://www.apollographql.com/docs/react/)
 
 Deployed using the following pieces of software:  
 

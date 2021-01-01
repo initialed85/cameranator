@@ -3,8 +3,11 @@ import React from "react";
 import { Image, Table } from "react-bootstrap";
 import moment from "moment";
 
+// TODO: make this configurable
+const urlPrefix = "http://192.168.137.253/";
+
 function adjustPath(path: string): string {
-    return "http://192.168.137.253/" + path.split("/srv/target_dir/")[1];
+    return urlPrefix + path.split("/srv/target_dir/")[1];
 }
 
 interface EventTableProps {

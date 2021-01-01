@@ -76,13 +76,16 @@ func (s *SegmentGenerator) onFileCreate(file filesystem.File) {
 			log.Printf("warning: attempt to get thumbnail for %#+v raisd %#+v", lastCreatedPath, err)
 		}
 
-		rawVideoStartTimestamp := strings.Split(
+		// TODO: nasty hack for local timezone
+		rawVideoStartTimestamp := fmt.Sprintf(
+			"%v+08:00",
 			strings.Split(
-				lastCreatedPath,
-				"/Segment_",
-			)[1],
-			fmt.Sprintf("_%v", s.feed.CameraName),
-		)[0]
+				strings.Split(
+					lastCreatedPath,
+					"/Segment_",
+				)[1],
+				fmt.Sprintf("_%v", s.feed.CameraName),
+			)[0])
 
 		videoStartTimestamp := utils.GetISO8601Time(rawVideoStartTimestamp)
 
