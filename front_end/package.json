@@ -49,6 +49,5 @@
     },
     "prettier": {
         "tabWidth": 4
-    },
-    "homepage": "/cameranator"
+    }
 }
