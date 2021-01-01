@@ -39,7 +39,7 @@ export function getDates(
 
             let dates: moment.Moment[] = [];
             data.forEach((item: any) => {
-                dates.push(getDate(item));
+                dates.push(getDate(item).local());
             });
 
             let dateByShortDate = new Map<string, moment.Moment>();
