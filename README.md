@@ -104,7 +104,6 @@ are some things that need attention:
 - there's a lot of repetition between the motion_processor and the segment_processor
 - need to DRY up the Dockerfiles
 - need to throw away the page render stuff (maybe not though? handy as an alternate path to see the data)
-- front-end badly needs to be config driven- stuff hard pointed at my home server throughout
 
 ## Usage
 

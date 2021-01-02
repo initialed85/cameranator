@@ -1,10 +1,8 @@
-import { Event } from "../persistence/event";
+import {Event} from "../persistence/event";
 import React from "react";
-import { Image, Table } from "react-bootstrap";
+import {Image, Table} from "react-bootstrap";
 import moment from "moment";
-
-// TODO: make this configurable
-const urlPrefix = "/";
+import {urlPrefix} from "../config";
 
 function adjustPath(path: string): string {
     return urlPrefix + path.split("/srv/target_dir/")[1];

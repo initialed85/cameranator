@@ -1,7 +1,7 @@
 import React from "react";
 
 import "./App.css";
-import { Container, Nav, Navbar } from "react-bootstrap";
+import { Alert, Breadcrumb, Container, Nav, Navbar } from "react-bootstrap";
 import { Camera, getCameras } from "./persistence/camera";
 import { CameraDropdown } from "./components/camera_drop_down";
 import { getDates } from "./persistence/date";
@@ -9,11 +9,12 @@ import moment from "moment/moment";
 import { DateDropdown } from "./components/date_drop_down";
 import { Event, getEvents } from "./persistence/event";
 import { EventTable } from "./components/event_table";
-import { SEGMENTS, TypeDropdown } from "./components/type_drop_down";
+import { EVENTS, SEGMENTS, TypeDropdown } from "./components/type_drop_down";
 
 interface AppProps {}
 
 interface AppState {
+    connected: boolean;
     dates: moment.Moment[];
     cameras: Camera[];
     events: Event[];
@@ -22,11 +23,26 @@ interface AppState {
     camera: Camera | null;
 }
 
+function getFriendlyStringForType(type: string | null): string {
+    if (type === EVENTS) {
+        return "Events";
+    } else if (type === SEGMENTS) {
+        return "Segments";
+    } else {
+        return "No type";
+    }
+}
+
 class App extends React.Component<AppProps, AppState> {
+    mounted: boolean;
+
     constructor(props: AppProps, state: AppState) {
         super(props, state);
 
+        this.mounted = false;
+
         this.state = {
+            connected: false,
             dates: [] as moment.Moment[],
             cameras: [] as Camera[],
             events: [] as Event[],
@@ -36,11 +52,15 @@ class App extends React.Component<AppProps, AppState> {
         };
 
         setInterval(() => {
-            this.update()
+            this.update();
         }, 1000);
     }
 
     update() {
+        if (this.mounted) {
+            this.setState({ connected: !!this.state.cameras });
+        }
+
         if (!(this.state.type && this.state.date && this.state.camera)) {
             return;
         }
@@ -56,6 +76,8 @@ class App extends React.Component<AppProps, AppState> {
     }
 
     componentDidMount() {
+        this.mounted = true;
+
         getDates((dates) => {
             this.setState({ dates: dates });
         });
@@ -63,6 +85,10 @@ class App extends React.Component<AppProps, AppState> {
         getCameras((cameras) => {
             this.setState({ cameras: cameras });
         });
+    }
+
+    componentWillUnmount() {
+        this.mounted = false;
     }
 
     render() {
@@ -102,6 +128,42 @@ class App extends React.Component<AppProps, AppState> {
                         </Nav>
                     </Navbar.Collapse>
                 </Navbar>
+
+                <Breadcrumb style={{ fontSize: "10pt" }}>
+                    <Breadcrumb.Item active>
+                        <Alert
+                            style={{
+                                paddingTop: 0,
+                                paddingBottom: 0,
+                                paddingLeft: 5,
+                                paddingRight: 5,
+                                margin: 0,
+                                width: 75,
+                                textAlign: "center"
+                            }}
+                            variant={
+                                this.state.connected ? "success" : "danger"
+                            }
+                        >
+                            {this.state.connected
+                                ? "Online"
+                                : "Offline"}
+                        </Alert>
+                    </Breadcrumb.Item>
+                    <Breadcrumb.Item active>
+                        {getFriendlyStringForType(this.state.type)}
+                    </Breadcrumb.Item>
+                    <Breadcrumb.Item active>
+                        {this.state.date
+                            ? this.state.date.local().format("YYYY-MM-DD")
+                            : "No date"}
+                    </Breadcrumb.Item>
+                    <Breadcrumb.Item active>
+                        {this.state.camera
+                            ? this.state.camera.name
+                            : "No camera"}
+                    </Breadcrumb.Item>
+                </Breadcrumb>
 
                 <EventTable events={this.state.events} />
             </Container>

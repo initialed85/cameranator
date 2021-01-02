@@ -1,7 +1,5 @@
-import { ApolloClient, InMemoryCache } from "@apollo/client";
-
-// TODO: make this configurable
-const uri = "/api/v1/graphql";
+import {ApolloClient, InMemoryCache} from "@apollo/client";
+import {uri} from "../config";
 
 export function getClient() {
     return new ApolloClient({
