@@ -36,6 +36,10 @@ export DOCKER_BUILDKIT=1
 
 export HASURA_GRAPHQL_ENDPOINT="http://localhost:8082/"
 
+docker-compose down --remove-orphans || true
+
+docker volume rm cameranator_front-end || true
+
 docker-compose up -d nginx postgres hasura motion
 
 cd persistence/hasura

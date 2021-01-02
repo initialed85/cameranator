@@ -4,7 +4,7 @@ import { Image, Table } from "react-bootstrap";
 import moment from "moment";
 
 // TODO: make this configurable
-const urlPrefix = "http://192.168.137.253/";
+const urlPrefix = "/";
 
 function adjustPath(path: string): string {
     return urlPrefix + path.split("/srv/target_dir/")[1];
