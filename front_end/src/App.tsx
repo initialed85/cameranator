@@ -139,15 +139,13 @@ class App extends React.Component<AppProps, AppState> {
                                 paddingRight: 5,
                                 margin: 0,
                                 width: 75,
-                                textAlign: "center"
+                                textAlign: "center",
                             }}
                             variant={
                                 this.state.connected ? "success" : "danger"
                             }
                         >
-                            {this.state.connected
-                                ? "Online"
-                                : "Offline"}
+                            {this.state.connected ? "Online" : "Offline"}
                         </Alert>
                     </Breadcrumb.Item>
                     <Breadcrumb.Item active>
