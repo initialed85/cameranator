@@ -1,4 +1,4 @@
-import { getClient } from "../utils";
+import {getClient, handleResultPromise} from "../utils";
 import { gql } from "@apollo/client";
 
 export interface Camera {
@@ -7,7 +7,7 @@ export interface Camera {
 }
 
 export interface GetCamerasHandler {
-    (cameras: Camera[]): void;
+    (cameras: Camera[] | null): void;
 }
 
 const query = gql(`
@@ -29,22 +29,25 @@ export function getCamera(item: any): Camera {
 export function getCameras(handler: GetCamerasHandler) {
     const client = getClient();
 
-    client
-        .query({
-            query: query,
-        })
-        .catch((e) => {
-            console.error(e);
-        })
-        .then((r) => {
-            let cameras: Camera[] = [];
+    handleResultPromise(
+        "camera",
+        client
+            .query({
+                query: query,
+            }),
+        (data: any | null) => {
+            if (data === null) {
+                handler(null);
+                return;
+            }
 
-            const data = (r as any).data["camera"].slice();
+            let cameras: Camera[] = [];
 
             data.forEach((item: any) => {
                 cameras.push(getCamera(item));
             });
 
             handler(cameras);
-        });
+        }
+    )
 }

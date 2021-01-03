@@ -2,7 +2,7 @@ import moment from "moment/moment";
 import { getVideo, Video } from "./video";
 import { getImage, Image } from "./image";
 import { DocumentNode, gql } from "@apollo/client";
-import { getClient } from "../utils";
+import { getClient, handleResultPromise } from "../utils";
 import { Camera, getCamera } from "./camera";
 
 export interface Event {
@@ -18,7 +18,7 @@ export interface Event {
 }
 
 export interface GetEventsHandler {
-    (events: Event[]): void;
+    (events: Event[] | null): void;
 }
 
 function getQuery(
@@ -94,6 +94,27 @@ export function getEvents(
     handler: GetEventsHandler
 ) {
     const client = getClient();
+
+    handleResultPromise(
+        "event",
+        client.query({
+            query: getQuery(isSegment, date, cameraName),
+        }),
+        (data: any | null) => {
+            if (data === null) {
+                handler(null);
+                return;
+            }
+
+            let events: Event[] = [];
+
+            data.forEach((item: any) => {
+                events.push(getEvent(item));
+            });
+
+            handler(events);
+        }
+    );
 
     client
         .query({

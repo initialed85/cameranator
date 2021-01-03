@@ -37,32 +37,50 @@ export class AppLogic {
 
     updateDates() {
         getDates((dates) => {
-            this.dates = dates;
-            this.connected = !!this.dates || !!this.cameras;
+            if (dates === null) {
+                this.connected = false;
+            } else {
+                this.dates = dates;
+                this.connected = true;
+            }
+
             this.handler(this.getAppProps());
         });
     }
 
     updateCameras() {
         getCameras((cameras) => {
-            this.cameras = cameras;
-            this.connected = !!this.dates || !!this.cameras;
+            if (cameras === null) {
+                this.connected = false;
+            } else {
+                this.cameras = cameras;
+                this.connected = true;
+            }
+
             this.handler(this.getAppProps());
         });
     }
 
     updateEvents() {
-        if (this.type && this.date && this.camera) {
-            getEvents(
-                this.type === SEGMENTS,
-                this.date,
-                this.camera.name,
-                (events) => {
-                    this.events = events;
-                    this.handler(this.getAppProps());
-                }
-            );
+        if (!(this.connected && this.type && this.date && this.camera)) {
+            return;
         }
+
+        getEvents(
+            this.type === SEGMENTS,
+            this.date,
+            this.camera.name,
+            (events) => {
+                if (events === null) {
+                    this.connected = false;
+                } else {
+                    this.events = events;
+                    this.connected = true;
+                }
+
+                this.handler(this.getAppProps());
+            }
+        );
     }
 
     update() {
