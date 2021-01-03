@@ -31,11 +31,15 @@ export class AppLogic {
         this.handler = handler;
 
         setInterval(() => {
-            this.update();
-        }, 1000);
+            this.updatePrerequisites();
+        }, 5000);
+
+        setInterval(() => {
+            this.updateMain();
+        }, 30000);
     }
 
-    updateDates() {
+    private updateDates() {
         getDates((dates) => {
             if (dates === null) {
                 this.connected = false;
@@ -48,7 +52,7 @@ export class AppLogic {
         });
     }
 
-    updateCameras() {
+    private updateCameras() {
         getCameras((cameras) => {
             if (cameras === null) {
                 this.connected = false;
@@ -61,7 +65,7 @@ export class AppLogic {
         });
     }
 
-    updateEvents() {
+    private updateEvents() {
         if (!(this.connected && this.type && this.date && this.camera)) {
             return;
         }
@@ -83,27 +87,33 @@ export class AppLogic {
         );
     }
 
-    update() {
+    private updatePrerequisites() {
         this.updateDates();
-
         this.updateCameras();
+    }
 
+    private updateMain() {
         this.updateEvents();
+    }
+
+    public updateAll() {
+        this.updatePrerequisites();
+        this.updateMain();
     }
 
     public setType(type: string) {
         this.type = type;
-        this.update();
+        this.updateMain();
     }
 
     public setDate(date: moment.Moment) {
         this.date = date;
-        this.update();
+        this.updateMain();
     }
 
     public setCamera(camera: Camera) {
         this.camera = camera;
-        this.update();
+        this.updateMain();
     }
 
     getAppProps(): AppProps {

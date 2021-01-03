@@ -41,6 +41,7 @@ class Index extends React.Component<any, IndexState> {
 
     componentDidMount() {
         this.mounted = true;
+        this.appModel.updateAll();
     }
 
     componentWillUnmount() {
