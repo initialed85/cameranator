@@ -2,11 +2,11 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import React from "react";
 import ReactDOM from "react-dom";
 import App from "./components/app/app";
-import { AppModel } from "./components/app/app_logic";
+import { AppLogic } from "./components/app/app_logic";
 import { AppProps } from "./components/app/app_props";
 import { Alert, Container, Row, Spinner } from "react-bootstrap";
 
-new AppModel((props) => {
+new AppLogic((props) => {
     ReactDOM.render(<App {...props} />, document.getElementById("root"));
 });
 
@@ -16,7 +16,7 @@ interface IndexState {
 
 class Index extends React.Component<any, IndexState> {
     mounted: boolean;
-    appModel: AppModel;
+    appModel: AppLogic;
 
     constructor(props: any, state: IndexState) {
         super(props, state);
@@ -26,7 +26,7 @@ class Index extends React.Component<any, IndexState> {
         };
 
         this.mounted = false;
-        this.appModel = new AppModel((appProps) => {
+        this.appModel = new AppLogic((appProps) => {
             this.appUpdateHandler(appProps);
         });
     }
