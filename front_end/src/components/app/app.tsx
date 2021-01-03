@@ -58,7 +58,15 @@ class App extends React.Component<AppProps> {
     getNavbar() {
         return (
             <Navbar bg="light" expand="lg" style={{ fontSize: "10pt" }}>
-                <Navbar.Brand href="#home" style={{ fontSize: "14pt" }}>
+                <Navbar.Brand
+                    href="#home"
+                    style={{ fontSize: "14pt" }}
+                    onClick={() => {
+                        this.props.typeChangeHandler(null);
+                        this.props.dateChangeHandler(null);
+                        this.props.cameraChangeHandler(null);
+                    }}
+                >
                     Cameranator
                 </Navbar.Brand>
 

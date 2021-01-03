@@ -67,6 +67,7 @@ export class AppLogic {
 
     private updateEvents() {
         if (!(this.connected && this.type && this.date && this.camera)) {
+            this.handler(this.getAppProps());
             return;
         }
 
@@ -101,17 +102,29 @@ export class AppLogic {
         this.updateMain();
     }
 
-    public setType(type: string) {
+    public setType(type: string | null) {
+        if (type === null) {
+            this.events = [];
+        }
+
         this.type = type;
         this.updateMain();
     }
 
-    public setDate(date: moment.Moment) {
+    public setDate(date: moment.Moment | null) {
+        if (date === null) {
+            this.events = [];
+        }
+
         this.date = date;
         this.updateMain();
     }
 
-    public setCamera(camera: Camera) {
+    public setCamera(camera: Camera | null) {
+        if (camera === null) {
+            this.events = [];
+        }
+
         this.camera = camera;
         this.updateMain();
     }
