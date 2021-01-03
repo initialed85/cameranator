@@ -32,11 +32,11 @@ export class AppLogic {
 
         setInterval(() => {
             this.updatePrerequisites();
-        }, 5000);
+        }, 1000);
 
         setInterval(() => {
             this.updateMain();
-        }, 30000);
+        }, 10000);
     }
 
     private updateDates() {
