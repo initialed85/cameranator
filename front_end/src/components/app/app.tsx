@@ -11,6 +11,7 @@ import {
     TypeDropdown,
 } from "../type_drop_down/type_drop_down";
 import { AppProps } from "./app_props";
+import { StreamDropdown } from "../stream_drop_down/stream_drop_down";
 
 function getFriendlyStringForType(type: string | null): string {
     if (type === EVENTS) {
@@ -55,6 +56,10 @@ class App extends React.Component<AppProps> {
         );
     }
 
+    getStreamDropdown() {
+        return <StreamDropdown cameras={this.props.cameras} />;
+    }
+
     getNavbar() {
         return (
             <Navbar bg="light" expand="lg" style={{ fontSize: "10pt" }}>
@@ -77,6 +82,7 @@ class App extends React.Component<AppProps> {
                         {this.getTypeDropdown()}
                         {this.getDateDropdown()}
                         {this.getCameraDropdown()}
+                        {this.getStreamDropdown()}
                     </Nav>
                 </Navbar.Collapse>
             </Navbar>
@@ -126,6 +132,7 @@ class App extends React.Component<AppProps> {
     }
 
     render() {
+        console.log("render");
         return (
             <Container style={{ width: "100%" }}>
                 {this.getNavbar()}

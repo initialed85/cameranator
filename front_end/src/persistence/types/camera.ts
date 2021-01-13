@@ -1,9 +1,11 @@
-import {getClient, handleResultPromise} from "../utils";
+import { getClient, handleResultPromise } from "../utils";
 import { gql } from "@apollo/client";
 
 export interface Camera {
     uuid: string;
     name: string;
+    stream_url: string;
+    external_id: string;
 }
 
 export interface GetCamerasHandler {
@@ -15,6 +17,8 @@ query {
   camera(order_by: {name: asc}) {
     uuid
     name
+    stream_url
+    external_id
   }
 }
 `);
@@ -23,6 +27,8 @@ export function getCamera(item: any): Camera {
     return {
         uuid: item["uuid"],
         name: item["name"],
+        stream_url: item["stream_url"],
+        external_id: item["external_id"],
     };
 }
 
@@ -31,10 +37,9 @@ export function getCameras(handler: GetCamerasHandler) {
 
     handleResultPromise(
         "camera",
-        client
-            .query({
-                query: query,
-            }),
+        client.query({
+            query: query,
+        }),
         (data: any | null) => {
             if (data === null) {
                 handler(null);
@@ -49,5 +54,5 @@ export function getCameras(handler: GetCamerasHandler) {
 
             handler(cameras);
         }
-    )
+    );
 }

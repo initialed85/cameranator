@@ -11,6 +11,7 @@ function getQuery(): DocumentNode {
 {
   event(
     order_by: {start_timestamp: desc}
+    distinct_on: start_timestamp
   ) {
     start_timestamp
   }
