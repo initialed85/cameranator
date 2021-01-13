@@ -1,4 +1,8 @@
-.DS_Store
-quotanizer
 .idea
+.DS_Store
+front_end/.eslintcache
+front_end/build
+front_end/node_modules
+quotanizer/
 test_data/*/*lowres.*
+temp_data/

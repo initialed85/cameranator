@@ -125,6 +125,20 @@ services:
       - quotanizer
       - segment-processor
 
+  event-pruner:
+    build:
+      context: ./
+      dockerfile: docker/event-pruner/Dockerfile
+    networks:
+      - cctv-internal
+    volumes:
+      - ${CCTV_EVENTS_PATH}:/srv/target_dir/events
+      - ${CCTV_SEGMENTS_PATH}:/srv/target_dir/segments
+    command: "-url http://hasura:8080/v1/graphql"
+    depends_on:
+      - motion-processor
+      - segment-processor
+
   page-renderer:
     build:
       context: ./
