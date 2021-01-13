@@ -1,9 +1,10 @@
 import { Camera } from "../../persistence/types/camera";
 import React from "react";
 import { NavDropdown } from "react-bootstrap";
+import { urlPrefix } from "../../config/config";
 
 function getMJPEGPath(camera: Camera): string {
-    return `/motion-stream/${camera.external_id}/stream`;
+    return `${urlPrefix}motion-stream/${camera.external_id}/stream`;
 }
 
 interface StreamDropdownProps {
