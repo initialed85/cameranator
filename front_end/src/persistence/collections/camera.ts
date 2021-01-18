@@ -1,13 +1,6 @@
 import { gql } from "@apollo/client";
 import Collection from "../collection";
 
-export interface Camera {
-    uuid: string;
-    name: string;
-    stream_url: string;
-    external_id: string;
-}
-
 function getQuery(args: any) {
     return gql(`
 query {
@@ -19,6 +12,13 @@ query {
   }
 }
 `);
+}
+
+export interface Camera {
+    uuid: string;
+    name: string;
+    stream_url: string;
+    external_id: string;
 }
 
 export function getCamera(item: any): Camera {

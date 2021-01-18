@@ -1,31 +1,7 @@
 import moment from "moment/moment";
-import { Camera, getCamera } from "../types/camera";
 import { DocumentNode, gql } from "@apollo/client";
-import { getVideo } from "../types/video";
-import { getImage } from "../types/image";
 import Collection from "../collection";
-
-export interface Video {
-    uuid: string;
-    file_path: string;
-}
-
-export interface Image {
-    uuid: string;
-    file_path: string;
-}
-
-export interface Event {
-    uuid: string;
-    start_timestamp: moment.Moment;
-    end_timestamp: moment.Moment;
-    is_segment: boolean;
-    high_quality_video: Video;
-    high_quality_image: Image;
-    low_quality_video: Video;
-    low_quality_image: Image;
-    source_camera: Camera;
-}
+import { Camera, getCamera } from "./camera";
 
 function getQuery(args: any): DocumentNode {
     const startTimestamp = moment(
@@ -73,6 +49,42 @@ function getQuery(args: any): DocumentNode {
   }
 }
 `);
+}
+
+export interface Video {
+    uuid: string;
+    file_path: string;
+}
+
+export interface Image {
+    uuid: string;
+    file_path: string;
+}
+
+export interface Event {
+    uuid: string;
+    start_timestamp: moment.Moment;
+    end_timestamp: moment.Moment;
+    is_segment: boolean;
+    high_quality_video: Video;
+    high_quality_image: Image;
+    low_quality_video: Video;
+    low_quality_image: Image;
+    source_camera: Camera;
+}
+
+function getImage(item: any): Image {
+    return {
+        uuid: item["uuid"],
+        file_path: item["file_path"],
+    };
+}
+
+export function getVideo(item: any): Video {
+    return {
+        uuid: item["uuid"],
+        file_path: item["file_path"],
+    };
 }
 
 export function getEvent(item: any): Event {
