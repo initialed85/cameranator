@@ -1,4 +1,4 @@
-import { Event } from "../../persistence/types/event";
+import { Event } from "../../persistence/collections/event";
 import React from "react";
 import { Image, Table } from "react-bootstrap";
 import moment from "moment";

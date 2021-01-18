@@ -1,11 +1,9 @@
 import moment from "moment/moment";
-import { Camera } from "../../persistence/types/camera";
-import { Event } from "../../persistence/types/event";
 import { SEGMENTS } from "../type_drop_down/type_drop_down";
 import { AppProps } from "./app_props";
 import DateCollection from "../../persistence/collections/date";
-import CameraCollection from "../../persistence/collections/camera";
-import { EventCollection } from "../../persistence/collections/event";
+import CameraCollection, { Camera } from "../../persistence/collections/camera";
+import { Event, EventCollection } from "../../persistence/collections/event";
 
 type AppLogicUpdateHandler = {
     (props: AppProps): void;

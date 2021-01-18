@@ -1,6 +1,6 @@
 import moment from "moment/moment";
-import { Camera } from "../../persistence/types/camera";
-import { Event } from "../../persistence/types/event";
+import { Camera } from "../../persistence/collections/camera";
+import { Event } from "../../persistence/collections/event";
 
 export interface AppProps {
     connected: boolean;

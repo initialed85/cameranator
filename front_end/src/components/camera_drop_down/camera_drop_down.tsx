@@ -1,4 +1,4 @@
-import { Camera } from "../../persistence/types/camera";
+import { Camera } from "../../persistence/collections/camera";
 import React from "react";
 import { NavDropdown } from "react-bootstrap";
 
