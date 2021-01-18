@@ -122,17 +122,17 @@ services:
       - ${CCTV_SEGMENTS_PATH}:/srv/target_dir/segments
     command: "-url http://hasura:8080/v1/graphql"
 
-  page-renderer:
-    build:
-      context: ./
-      dockerfile: docker/page-renderer/Dockerfile
-    networks:
-      - cctv-internal
-      - cctv-external
-    volumes:
-      - ${CCTV_EVENTS_PATH}:/srv/target_dir/events
-      - ${CCTV_SEGMENTS_PATH}:/srv/target_dir/segments
-    command: "-url http://hasura:8080/v1/graphql -eventsPath /srv/target_dir/events -segmentsPath /srv/target_dir/segments"
+  # page-renderer:
+  #   build:
+  #     context: ./
+  #     dockerfile: docker/page-renderer/Dockerfile
+  #   networks:
+  #     - cctv-internal
+  #     - cctv-external
+  #   volumes:
+  #     - ${CCTV_EVENTS_PATH}:/srv/target_dir/events
+  #     - ${CCTV_SEGMENTS_PATH}:/srv/target_dir/segments
+  #   command: "-url http://hasura:8080/v1/graphql -eventsPath /srv/target_dir/events -segmentsPath /srv/target_dir/segments"
 
   front-end:
     build:

@@ -15,7 +15,7 @@ func main() {
 
 	urlFlag := flag.String("url", "http://localhost:8080/v1/graphql", "")
 	timeoutFlag := flag.Duration("timeout", time.Second*30, "")
-	intervalFlag := flag.Duration("interval", time.Second*5, "")
+	intervalFlag := flag.Duration("interval", time.Minute*5, "")
 
 	flag.Parse()
 
