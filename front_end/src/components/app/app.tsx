@@ -132,7 +132,6 @@ class App extends React.Component<AppProps> {
     }
 
     render() {
-        console.log("render");
         return (
             <Container style={{ width: "100%" }}>
                 {this.getNavbar()}

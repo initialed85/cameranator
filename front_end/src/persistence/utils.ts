@@ -8,6 +8,12 @@ export function getClient() {
     });
 }
 
+export function getResultPromise(query: any): Promise<ApolloQueryResult<any>> {
+    return getClient().query({
+        query: query,
+    });
+}
+
 export function handleResultPromise(
     key: string,
     result: Promise<ApolloQueryResult<any>>,

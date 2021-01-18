@@ -33,8 +33,6 @@ services:
       HASURA_GRAPHQL_DEV_MODE: "true"
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
     restart: always
-    depends_on:
-      - postgres
 
   quotanizer:
     networks:
@@ -62,9 +60,6 @@ services:
       - DISABLE_NVIDIA=${DISABLE_NVIDIA:-0}
     command: "-url http://hasura:8080/v1/graphql"
     restart: always
-    depends_on:
-      - quotanizer
-      - hasura
 
   motion:
     build:
@@ -82,9 +77,6 @@ services:
     environment:
       UDP_HOST: motion-processor
     restart: always
-    depends_on:
-      - quotanizer
-      - motion-processor
 
   segment-processor:
     build:
@@ -100,9 +92,6 @@ services:
     environment:
       - DISABLE_NVIDIA=${DISABLE_NVIDIA:-0}
     command: "-url http://hasura:8080/v1/graphql"
-    depends_on:
-      - quotanizer
-      - hasura
 
   segment-generator:
     build:
@@ -121,9 +110,6 @@ services:
       -netCamURL rtsp://192.168.137.31:554/Streaming/Channels/101 -cameraName Driveway
       -netCamURL rtsp://192.168.137.32:554/Streaming/Channels/101 -cameraName FrontDoor
       -netCamURL rtsp://192.168.137.33:554/Streaming/Channels/101 -cameraName SideGate
-    depends_on:
-      - quotanizer
-      - segment-processor
 
   event-pruner:
     build:
@@ -135,9 +121,6 @@ services:
       - ${CCTV_EVENTS_PATH}:/srv/target_dir/events
       - ${CCTV_SEGMENTS_PATH}:/srv/target_dir/segments
     command: "-url http://hasura:8080/v1/graphql"
-    depends_on:
-      - motion-processor
-      - segment-processor
 
   page-renderer:
     build:
@@ -150,9 +133,6 @@ services:
       - ${CCTV_EVENTS_PATH}:/srv/target_dir/events
       - ${CCTV_SEGMENTS_PATH}:/srv/target_dir/segments
     command: "-url http://hasura:8080/v1/graphql -eventsPath /srv/target_dir/events -segmentsPath /srv/target_dir/segments"
-    depends_on:
-      - motion-processor
-      - segment-processor
 
   front-end:
     build:
@@ -166,9 +146,6 @@ services:
     volumes:
       - front-end:/srv/build
     restart: always
-    depends_on:
-      - hasura
-      - motion
 
   nginx:
     image: nginx:1.18
@@ -186,7 +163,3 @@ services:
       - ${CCTV_EVENTS_PATH}:/srv/target_dir/events
       - ${CCTV_SEGMENTS_PATH}:/srv/target_dir/segments
     restart: always
-    depends_on:
-      - hasura
-      - motion
-      - front-end

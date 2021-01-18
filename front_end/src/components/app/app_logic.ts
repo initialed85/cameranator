@@ -1,15 +1,20 @@
 import moment from "moment/moment";
-import { Camera, getCameras } from "../../persistence/types/camera";
-import { Event, getEvents } from "../../persistence/types/event";
-import { getDates } from "../../persistence/types/date";
+import { Camera } from "../../persistence/types/camera";
+import { Event } from "../../persistence/types/event";
 import { SEGMENTS } from "../type_drop_down/type_drop_down";
 import { AppProps } from "./app_props";
+import DateCollection from "../../persistence/collections/date";
+import CameraCollection from "../../persistence/collections/camera";
+import { EventCollection } from "../../persistence/collections/event";
 
 type AppLogicUpdateHandler = {
     (props: AppProps): void;
 };
 
 export class AppLogic {
+    dateCollection: DateCollection;
+    cameraCollection: CameraCollection;
+    eventCollection: EventCollection;
     connected: boolean;
     dates: moment.Moment[];
     cameras: Camera[];
@@ -20,6 +25,9 @@ export class AppLogic {
     handler: AppLogicUpdateHandler;
 
     constructor(handler: AppLogicUpdateHandler) {
+        this.dateCollection = new DateCollection();
+        this.cameraCollection = new CameraCollection();
+        this.eventCollection = new EventCollection();
         this.connected = false;
         this.dates = [] as moment.Moment[];
         this.cameras = [] as Camera[];
@@ -31,75 +39,54 @@ export class AppLogic {
         this.handler = handler;
 
         setInterval(() => {
-            this.updatePrerequisites();
-        }, 5000);
-
-        setInterval(() => {
-            this.updateMain();
-        }, 5000);
-    }
-
-    private updateDates() {
-        getDates((dates) => {
-            if (dates === null) {
-                this.connected = false;
-            } else {
-                this.dates = dates;
-                this.connected = true;
-            }
-
-            this.handler(this.getAppProps());
-        });
-    }
-
-    private updateCameras() {
-        getCameras((cameras) => {
-            if (cameras === null) {
-                this.connected = false;
-            } else {
-                this.cameras = cameras;
-                this.connected = true;
-            }
-
-            this.handler(this.getAppProps());
-        });
-    }
-
-    private updateEvents() {
-        if (!(this.connected && this.type && this.date && this.camera)) {
-            this.handler(this.getAppProps());
-            return;
-        }
-
-        getEvents(
-            this.type === SEGMENTS,
-            this.date,
-            this.camera.name,
-            (events) => {
-                if (events === null) {
-                    this.connected = false;
-                } else {
-                    this.events = events;
-                    this.connected = true;
-                }
-
-                this.handler(this.getAppProps());
-            }
-        );
-    }
-
-    private updatePrerequisites() {
-        this.updateDates();
-        this.updateCameras();
-    }
-
-    private updateMain() {
-        this.updateEvents();
+            this.updateAll();
+        }, 60000);
     }
 
     public updateAll() {
-        this.updatePrerequisites();
-        this.updateMain();
+        this.cameraCollection
+            .get({})
+            .catch((e) => {
+                this.connected = false;
+                console.error(e);
+            })
+            .then((cameras) => {
+                if (!cameras) {
+                    return;
+                }
+
+                this.connected = true;
+                this.cameras = cameras;
+
+                return this.dateCollection.get({});
+            })
+            .then((dates) => {
+                if (!dates) {
+                    return;
+                }
+
+                this.dates = dates;
+
+                if (!(this.type && this.camera && this.date)) {
+                    return;
+                }
+
+                return this.eventCollection.get({
+                    isSegment: this.type === SEGMENTS,
+                    date: this.date,
+                    cameraName: this.camera.name,
+                });
+            })
+            .then((events) => {
+                if (!events) {
+                    return;
+                }
+
+                this.events = events;
+            })
+            .then(() => {
+                this.handler(this.getAppProps());
+            });
     }
 
     public setType(type: string | null) {
@@ -108,7 +95,7 @@ export class AppLogic {
         }
 
         this.type = type;
-        this.updateMain();
+        this.updateAll();
     }
 
     public setDate(date: moment.Moment | null) {
@@ -117,7 +104,7 @@ export class AppLogic {
         }
 
         this.date = date;
-        this.updateMain();
+        this.updateAll();
     }
 
     public setCamera(camera: Camera | null) {
@@ -126,7 +113,7 @@ export class AppLogic {
         }
 
         this.camera = camera;
-        this.updateMain();
+        this.updateAll();
     }
 
     getAppProps(): AppProps {
