@@ -21,6 +21,7 @@ export class StreamDropdown extends React.Component<StreamDropdownProps, any> {
                     style={{ fontSize: "10pt" }}
                     href={getMJPEGPath(camera)}
                     target={"_blank"}
+                    rel={"noreferrer"}
                     key={camera.uuid}
                 >
                     {camera.name}

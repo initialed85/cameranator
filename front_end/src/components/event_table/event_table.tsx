@@ -32,6 +32,7 @@ export class EventTable extends React.Component<EventTableProps, any> {
                     <td style={{ width: 320 }}>
                         <a
                             target={"_blank"}
+                            rel={"noreferrer"}
                             href={adjustPath(
                                 event.high_quality_image.file_path
                             )}
@@ -48,6 +49,7 @@ export class EventTable extends React.Component<EventTableProps, any> {
                     <td>
                         <a
                             target="_blank"
+                            rel={"noreferrer"}
                             href={adjustPath(
                                 event.high_quality_video.file_path
                             )}
@@ -57,6 +59,7 @@ export class EventTable extends React.Component<EventTableProps, any> {
                         <br />
                         <a
                             target="_blank"
+                            rel={"noreferrer"}
                             href={adjustPath(event.low_quality_video.file_path)}
                         >
                             Low-res
