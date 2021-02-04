@@ -92,6 +92,7 @@ services:
     environment:
       - DISABLE_NVIDIA=${DISABLE_NVIDIA:-0}
     command: "-url http://hasura:8080/v1/graphql"
+    restart: always
 
   segment-generator:
     build:
@@ -110,6 +111,7 @@ services:
       -netCamURL rtsp://192.168.137.31:554/Streaming/Channels/101 -cameraName Driveway
       -netCamURL rtsp://192.168.137.32:554/Streaming/Channels/101 -cameraName FrontDoor
       -netCamURL rtsp://192.168.137.33:554/Streaming/Channels/101 -cameraName SideGate
+    restart: always
 
   event-pruner:
     build:
@@ -121,6 +123,7 @@ services:
       - ${CCTV_EVENTS_PATH}:/srv/target_dir/events
       - ${CCTV_SEGMENTS_PATH}:/srv/target_dir/segments
     command: "-url http://hasura:8080/v1/graphql"
+    restart: always
 
   # page-renderer:
   #   build:
@@ -133,6 +136,7 @@ services:
   #     - ${CCTV_EVENTS_PATH}:/srv/target_dir/events
   #     - ${CCTV_SEGMENTS_PATH}:/srv/target_dir/segments
   #   command: "-url http://hasura:8080/v1/graphql -eventsPath /srv/target_dir/events -segmentsPath /srv/target_dir/segments"
+  #   restart: always
 
   front-end:
     build:

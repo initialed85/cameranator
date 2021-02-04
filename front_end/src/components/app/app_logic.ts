@@ -1,9 +1,9 @@
 import moment from "moment/moment";
-import { SEGMENTS } from "../type_drop_down/type_drop_down";
-import { AppProps } from "./app_props";
+import {SEGMENTS} from "../type_drop_down/type_drop_down";
+import {AppProps} from "./app_props";
 import DateCollection from "../../persistence/collections/date";
-import CameraCollection, { Camera } from "../../persistence/collections/camera";
-import { Event, EventCollection } from "../../persistence/collections/event";
+import CameraCollection, {Camera} from "../../persistence/collections/camera";
+import {Event, EventCollection} from "../../persistence/collections/event";
 
 type AppLogicUpdateHandler = {
     (props: AppProps): void;
@@ -37,8 +37,23 @@ export class AppLogic {
         this.handler = handler;
 
         setInterval(() => {
-            this.updateAll();
-        }, 60000);
+            if (!(this.type && this.date && this.camera)) {
+                return;
+            }
+
+            this.eventCollection.get({
+                isSegment: this.type === SEGMENTS,
+                date: this.date,
+                cameraName: this.camera.name,
+            }).then((events) => {
+                if (!events) {
+                    return;
+                }
+
+                this.events = events;
+                this.handler(this.getAppProps());
+            })
+        }, 10000);
     }
 
     public updateAll() {
