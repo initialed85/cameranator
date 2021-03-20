@@ -14,8 +14,9 @@ func main() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
 
 	urlFlag := flag.String("url", "http://localhost:8080/v1/graphql", "")
-	timeoutFlag := flag.Duration("timeout", time.Second*30, "")
-	intervalFlag := flag.Duration("interval", time.Minute*5, "")
+	timeoutFlag := flag.Duration("timeout", time.Minute*5, "")
+	intervalFlag := flag.Duration("interval", time.Minute*30, "")
+	runOnceFlag := flag.Bool("runOnce", false, "")
 
 	flag.Parse()
 
@@ -38,6 +39,12 @@ func main() {
 	eventPruner, err := event_pruner.NewEventPruner(url, timeout, interval)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if *runOnceFlag {
+		log.Printf("Running once...")
+		eventPruner.RunOnce()
+		return
 	}
 
 	eventPruner.Start()

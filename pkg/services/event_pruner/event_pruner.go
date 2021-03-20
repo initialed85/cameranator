@@ -83,6 +83,10 @@ func (e *EventPruner) work() {
 	}
 }
 
+func (e *EventPruner) RunOnce() {
+	e.work()
+}
+
 func (e *EventPruner) Start() {
 	e.scheduledWorker.Start()
 }
