@@ -1,4 +1,4 @@
-FROM linuxserver/ffmpeg AS base
+FROM linuxserver/ffmpeg:4.3-cli-ls14 AS base
 
 RUN apt-get update && apt-get upgrade -y libfontconfig1 && apt-get install -y --reinstall \
     libfontconfig1 libfontconfig1-dev fontconfig-config
@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
     libmicrohttpd-dev libjpeg8-dev libavutil-dev libavformat-dev libavcodec-dev libswscale-dev libavdevice-dev
 
 WORKDIR /srv/
-RUN git clone https://github.com/Motion-Project/motion.git
+RUN git clone https://github.com/Motion-Project/motion.git && cd motion && git checkout 'release-4.3.2' && cd ..
 
 WORKDIR /srv/motion
 RUN autoreconf -fiv
