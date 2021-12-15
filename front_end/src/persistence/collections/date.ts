@@ -1,6 +1,7 @@
 import Collection from "../collection";
 import { DocumentNode, gql } from "@apollo/client";
 import moment from "moment/moment";
+import { info } from "../..//common/utils";
 
 function getQuery(args: any): DocumentNode {
     return gql(`
@@ -25,6 +26,7 @@ export class DateCollection extends Collection {
     }
 
     get(args: any): Promise<any> {
+        info(`${this.constructor.name}.get fired`);
         return new Promise((resolve, reject) => {
             this.handleResultPromise(this.getResultPromise(args))
                 .catch((e) => {

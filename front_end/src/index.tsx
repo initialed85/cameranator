@@ -5,6 +5,7 @@ import App from "./components/app/app";
 import { AppLogic } from "./components/app/app_logic";
 import { AppProps } from "./components/app/app_props";
 import { Alert, Container, Row, Spinner } from "react-bootstrap";
+import { info } from "./common/utils";
 
 new AppLogic((props) => {
     ReactDOM.render(<App {...props} />, document.getElementById("root"));
@@ -32,6 +33,8 @@ class Index extends React.Component<any, IndexState> {
     }
 
     appUpdateHandler(appProps: AppProps) {
+        info(`${this.constructor.name}.appUpdateHandler fired`);
+
         if (!this.mounted) {
             return;
         }
@@ -39,17 +42,26 @@ class Index extends React.Component<any, IndexState> {
         this.setState({ appProps: appProps });
     }
 
-    componentDidMount() {
+    async componentDidMount() {
+        info(`${this.constructor.name} mounted`);
+
         this.mounted = true;
-        this.appModel.updateAll();
+        await this.appModel.updateAll();
     }
 
     componentWillUnmount() {
+        info(`${this.constructor.name} unmounted`);
+
         this.mounted = false;
     }
 
     render() {
+        info(`${this.constructor.name}.appUpdateHandler rendering`);
+
         if (this.state.appProps == null) {
+            info(
+                `${this.constructor.name}.appUpdateHandler showing loading banner`
+            );
             return (
                 <Container>
                     <Row className="justify-content-md-center">
@@ -64,6 +76,7 @@ class Index extends React.Component<any, IndexState> {
             );
         }
 
+        info(`${this.constructor.name}.appUpdateHandler showing App`);
         return <App {...this.state.appProps} />;
     }
 }

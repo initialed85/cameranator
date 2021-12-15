@@ -12,6 +12,7 @@ import {
 } from "../type_drop_down/type_drop_down";
 import { AppProps } from "./app_props";
 import { StreamDropdown } from "../stream_drop_down/stream_drop_down";
+import { info } from "../../common/utils";
 
 function getFriendlyStringForType(type: string | null): string {
     if (type === EVENTS) {
@@ -132,6 +133,7 @@ class App extends React.Component<AppProps> {
     }
 
     render() {
+        info(`${this.constructor.name} rendering`);
         return (
             <Container style={{ width: "100%" }}>
                 {this.getNavbar()}

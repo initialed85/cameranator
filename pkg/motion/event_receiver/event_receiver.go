@@ -77,8 +77,8 @@ func (r *EventReceiver) callback(addr *net.UDPAddr, data []byte) {
 			parts[0],
 			",",
 			".",
-			),
-		)
+		),
+	)
 	if err != nil {
 		log.Printf("warning: %v", err)
 		return

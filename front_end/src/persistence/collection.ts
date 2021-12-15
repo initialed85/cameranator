@@ -1,5 +1,6 @@
 import { ApolloClient, ApolloQueryResult } from "@apollo/client";
 import { getClient } from "./utils";
+import { info, warn } from "../common/utils";
 
 export abstract class Collection {
     client: ApolloClient<any>;
@@ -13,6 +14,7 @@ export abstract class Collection {
     }
 
     getResultPromise(args: any): Promise<ApolloQueryResult<any>> {
+        info(`${this.constructor.name}.getResultPromise fired`);
         return this.client.query({
             query: this.getQuery(args),
         });
@@ -21,33 +23,48 @@ export abstract class Collection {
     handleResultPromise(
         resultPromise: Promise<ApolloQueryResult<any>>
     ): Promise<any> {
+        info(`${this.constructor.name}.handleResultPromise fired`);
         return new Promise((resolve, reject) => {
             resultPromise
                 .catch((e) => {
-                    console.warn(
-                        `warning: attempt to get ${this.key} caused: `,
-                        e
+                    warn(
+                        `${this.constructor.name}.handleResultPromise attempt to get ${this.key} caused: ${e}`
                     );
                     reject(e);
                 })
                 .then((r) => {
                     if (!r) {
+                        warn(
+                            `${this.constructor.name}.handleResultPromise had no result`
+                        );
                         reject(new Error("no result"));
                         return;
                     }
 
                     if (!r.data) {
+                        warn(
+                            `${this.constructor.name}.handleResultPromise had no result.data`
+                        );
                         reject(new Error("no result.data"));
                         return;
                     }
 
                     const data = (r as any).data[this.key].slice();
                     if (!data) {
+                        warn(
+                            `${this.constructor.name}.handleResultPromise had no result.data[${this.key}]`
+                        );
                         reject(`no result.data[${this.key}]`);
                         return;
                     }
 
+                    info(
+                        `${this.constructor.name}.handleResultPromise resolving`
+                    );
                     resolve(data);
+                    info(
+                        `${this.constructor.name}.handleResultPromise resolved`
+                    );
                 });
         });
     }

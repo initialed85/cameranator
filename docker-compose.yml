@@ -21,12 +21,12 @@ services:
     restart: always
 
   hasura:
-    image: hasura/graphql-engine:v1.3.3
+    image: hasura/graphql-engine:v2.1.0
     networks:
       - cctv-internal
       - cctv-external
     ports:
-      - 8082:8080
+      - "8082:8080"
     environment:
       HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
@@ -72,8 +72,8 @@ services:
       - ${CCTV_MOTION_CONFIGS}:/etc/motion
       - ${CCTV_EVENTS_PATH}:/srv/target_dir/events
     ports:
-      - 8080:8080
-      - 8081:8081
+      - "8080:8080"
+      - "8081:8081"
     environment:
       UDP_HOST: motion-processor
     restart: always
@@ -146,7 +146,7 @@ services:
       - cctv-internal
       - cctv-external
     ports:
-      - 3001:3000
+      - "3001:3000"
     volumes:
       - front-end:/srv/build
     restart: always
