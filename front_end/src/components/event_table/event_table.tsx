@@ -1,11 +1,11 @@
-import { Event } from "../../persistence/collections/event";
+import {Event} from "../../persistence/collections/event";
 import React from "react";
-import { Image, Table } from "react-bootstrap";
+import {Image, Table} from "react-bootstrap";
 import moment from "moment";
-import { urlPrefix } from "../../config/config";
+import {baseUrl} from "../../config/config";
 
 function adjustPath(path: string): string {
-    return urlPrefix + path.split("/srv/target_dir/")[1];
+    return baseUrl + path.split("/srv/target_dir/")[1];
 }
 
 interface EventTableProps {
@@ -29,7 +29,7 @@ export class EventTable extends React.Component<EventTableProps, any> {
                         {duration.seconds().toString().padStart(2, "0")}
                     </td>
                     <td>{event.source_camera.name}</td>
-                    <td style={{ width: 320 }}>
+                    <td style={{width: 320}}>
                         <a
                             target={"_blank"}
                             rel={"noreferrer"}
@@ -42,7 +42,7 @@ export class EventTable extends React.Component<EventTableProps, any> {
                                     event.low_quality_image.file_path
                                 )}
                                 rounded
-                                style={{ width: "100%" }}
+                                style={{width: "100%"}}
                             />
                         </a>
                     </td>
@@ -56,7 +56,7 @@ export class EventTable extends React.Component<EventTableProps, any> {
                         >
                             High-res
                         </a>
-                        <br />
+                        <br/>
                         <a
                             target="_blank"
                             rel={"noreferrer"}
@@ -76,14 +76,14 @@ export class EventTable extends React.Component<EventTableProps, any> {
         return (
             <Table striped bordered hover size="sm">
                 <thead>
-                    <tr>
-                        <th>Start</th>
-                        <th>End</th>
-                        <th>Duration</th>
-                        <th>Camera</th>
-                        <th>Image</th>
-                        <th>Download</th>
-                    </tr>
+                <tr>
+                    <th>Start</th>
+                    <th>End</th>
+                    <th>Duration</th>
+                    <th>Camera</th>
+                    <th>Image</th>
+                    <th>Download</th>
+                </tr>
                 </thead>
                 {this.getEvents()}
             </Table>

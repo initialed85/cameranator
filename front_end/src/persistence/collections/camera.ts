@@ -1,6 +1,6 @@
-import { gql } from "@apollo/client";
+import {gql} from "@apollo/client";
 import Collection from "../collection";
-import { info } from "../..//common/utils";
+import {info} from "../../common/utils";
 
 function getQuery(args: any) {
     return gql(`

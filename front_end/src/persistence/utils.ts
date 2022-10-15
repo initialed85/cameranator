@@ -1,12 +1,12 @@
-import { ApolloClient, InMemoryCache } from "@apollo/client";
-import { uri } from "../config/config";
+import {ApolloClient, InMemoryCache} from "@apollo/client";
+import {apiUrl} from "../config/config";
 
 let client: undefined | ApolloClient<any>;
 
 export function getClient(): ApolloClient<any> {
     if (!client) {
         client = new ApolloClient({
-            uri: uri,
+            uri: apiUrl,
             cache: new InMemoryCache(),
         });
     }

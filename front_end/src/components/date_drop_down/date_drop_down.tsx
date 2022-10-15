@@ -1,5 +1,5 @@
 import React from "react";
-import { NavDropdown } from "react-bootstrap";
+import {NavDropdown} from "react-bootstrap";
 import moment from "moment/moment";
 
 export interface DateDropDownChangeHandler {
@@ -20,7 +20,7 @@ export class DateDropdown extends React.Component<DateDropdownProps, any> {
 
             items.push(
                 <NavDropdown.Item
-                    style={{ fontSize: "10pt" }}
+                    style={{fontSize: "10pt"}}
                     href={`#date/${friendlyDate}`}
                     key={friendlyDate}
                     onClick={() => {

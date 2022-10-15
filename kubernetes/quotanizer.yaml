@@ -1,0 +1,56 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: cameranator
+  name: quotanizer-config-map
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: cameranator
+  name: quotanizer-deployment
+  labels:
+    app: quotanizer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: quotanizer
+  template:
+    metadata:
+      labels:
+        app: quotanizer
+    spec:
+      volumes:
+        - name: shared-volume
+          persistentVolumeClaim:
+            claimName: cameranator-pvc
+            readOnly: false
+      containers:
+        - name: quotanizer
+          image: initialed85/cameranator-quotanizer:latest
+          volumeMounts:
+            - name: shared-volume
+              subPath: media-volume/srv/events
+              mountPath: /srv/target_dir/events
+            - name: shared-volume
+              subPath: media-volume/srv/segments
+              mountPath: /srv/target_dir/segments
+          command: [
+            "/srv/quotanizer",
+            "-path",
+            "/srv/target_dir/events",
+            "-quota",
+            "200",
+            "-path",
+            "/srv/target_dir/segments",
+            "-quota",
+            "700",
+            "-suffix",
+            ".mp4",
+            "-suffix",
+            ".jpg",
+            "-period",
+            "60"
+          ]

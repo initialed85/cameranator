@@ -1,18 +1,14 @@
 import React from "react";
 
 import "./app.css";
-import { Alert, Breadcrumb, Container, Nav, Navbar } from "react-bootstrap";
-import { CameraDropdown } from "../camera_drop_down/camera_drop_down";
-import { DateDropdown } from "../date_drop_down/date_drop_down";
-import { EventTable } from "../event_table/event_table";
-import {
-    EVENTS,
-    SEGMENTS,
-    TypeDropdown,
-} from "../type_drop_down/type_drop_down";
-import { AppProps } from "./app_props";
-import { StreamDropdown } from "../stream_drop_down/stream_drop_down";
-import { info } from "../../common/utils";
+import {Alert, Breadcrumb, Container, Nav, Navbar} from "react-bootstrap";
+import {CameraDropdown} from "../camera_drop_down/camera_drop_down";
+import {DateDropdown} from "../date_drop_down/date_drop_down";
+import {EventTable} from "../event_table/event_table";
+import {EVENTS, SEGMENTS, TypeDropdown,} from "../type_drop_down/type_drop_down";
+import {AppProps} from "./app_props";
+import {StreamDropdown} from "../stream_drop_down/stream_drop_down";
+import {info} from "../../common/utils";
 
 function getFriendlyStringForType(type: string | null): string {
     if (type === EVENTS) {
@@ -58,15 +54,15 @@ class App extends React.Component<AppProps> {
     }
 
     getStreamDropdown() {
-        return <StreamDropdown cameras={this.props.cameras} />;
+        return <StreamDropdown cameras={this.props.cameras}/>;
     }
 
     getNavbar() {
         return (
-            <Navbar bg="light" expand="lg" style={{ fontSize: "10pt" }}>
+            <Navbar bg="light" expand="lg" style={{fontSize: "10pt"}}>
                 <Navbar.Brand
                     href="#home"
-                    style={{ fontSize: "14pt" }}
+                    style={{fontSize: "14pt"}}
                     onClick={() => {
                         this.props.typeChangeHandler(null);
                         this.props.dateChangeHandler(null);
@@ -76,7 +72,7 @@ class App extends React.Component<AppProps> {
                     Cameranator
                 </Navbar.Brand>
 
-                <Navbar.Toggle aria-controls="basic-navbar-nav" />
+                <Navbar.Toggle aria-controls="basic-navbar-nav"/>
 
                 <Navbar.Collapse id="basic-navbar-nav">
                     <Nav className="mr-auto">
@@ -111,7 +107,7 @@ class App extends React.Component<AppProps> {
 
     getBreadcrumb() {
         return (
-            <Breadcrumb style={{ fontSize: "10pt" }}>
+            <Breadcrumb style={{fontSize: "10pt"}}>
                 <Breadcrumb.Item active>{this.getAlert()}</Breadcrumb.Item>
                 <Breadcrumb.Item active>
                     {getFriendlyStringForType(this.props.type)}
@@ -129,13 +125,13 @@ class App extends React.Component<AppProps> {
     }
 
     getEventTable() {
-        return <EventTable events={this.props.events} />;
+        return <EventTable events={this.props.events}/>;
     }
 
     render() {
         info(`${this.constructor.name} rendering`);
         return (
-            <Container style={{ width: "100%" }}>
+            <Container style={{width: "100%"}}>
                 {this.getNavbar()}
                 {this.getBreadcrumb()}
                 {this.getEventTable()}

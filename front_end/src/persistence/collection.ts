@@ -1,6 +1,6 @@
-import { ApolloClient, ApolloQueryResult } from "@apollo/client";
-import { getClient } from "./utils";
-import { info, warn } from "../common/utils";
+import {ApolloClient, ApolloQueryResult} from "@apollo/client";
+import {getClient} from "./utils";
+import {info, warn} from "../common/utils";
 
 export abstract class Collection {
     client: ApolloClient<any>;

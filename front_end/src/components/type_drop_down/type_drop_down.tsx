@@ -1,5 +1,5 @@
 import React from "react";
-import { NavDropdown } from "react-bootstrap";
+import {NavDropdown} from "react-bootstrap";
 
 export const EVENTS = "events";
 export const SEGMENTS = "segments";
@@ -17,7 +17,7 @@ export class TypeDropdown extends React.Component<TypeDropdownProps, any> {
         return (
             <NavDropdown title="Type" id="camera-dropdown">
                 <NavDropdown.Item
-                    style={{ fontSize: "10pt" }}
+                    style={{fontSize: "10pt"}}
                     href={`#type/${EVENTS}`}
                     key={EVENTS}
                     onClick={() => {
@@ -27,7 +27,7 @@ export class TypeDropdown extends React.Component<TypeDropdownProps, any> {
                     Events
                 </NavDropdown.Item>
                 <NavDropdown.Item
-                    style={{ fontSize: "10pt" }}
+                    style={{fontSize: "10pt"}}
                     href={`#type/${SEGMENTS}`}
                     key={SEGMENTS}
                     onClick={() => {

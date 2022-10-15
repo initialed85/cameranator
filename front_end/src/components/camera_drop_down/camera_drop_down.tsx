@@ -1,6 +1,6 @@
-import { Camera } from "../../persistence/collections/camera";
+import {Camera} from "../../persistence/collections/camera";
 import React from "react";
-import { NavDropdown } from "react-bootstrap";
+import {NavDropdown} from "react-bootstrap";
 
 export interface CameraDropDownChangeHandler {
     (camera: Camera): void;
@@ -18,7 +18,7 @@ export class CameraDropdown extends React.Component<CameraDropdownProps, any> {
         this.props.cameras.forEach((camera: Camera) => {
             items.push(
                 <NavDropdown.Item
-                    style={{ fontSize: "10pt" }}
+                    style={{fontSize: "10pt"}}
                     href={`#camera/${camera.uuid}`}
                     key={camera.uuid}
                     onClick={() => {

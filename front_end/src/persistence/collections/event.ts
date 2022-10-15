@@ -1,8 +1,8 @@
 import moment from "moment/moment";
-import { DocumentNode, gql } from "@apollo/client";
+import {DocumentNode, gql} from "@apollo/client";
 import Collection from "../collection";
-import { Camera, getCamera } from "./camera";
-import { info } from "../..//common/utils";
+import {Camera, getCamera} from "./camera";
+import {info} from "../../common/utils";
 
 function getQuery(args: any): DocumentNode {
     const startTimestamp = moment(

@@ -1,0 +1,102 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: cameranator
+  name: segment-config-map
+data:
+  segment-statefulset-0: "-netCamURL rtsp://192.168.137.31:554/Streaming/Channels/101 -cameraName Driveway"
+  segment-statefulset-1: "-netCamURL rtsp://192.168.137.32:554/Streaming/Channels/101 -cameraName FrontDoor"
+  segment-statefulset-2: "-netCamURL rtsp://192.168.137.33:554/Streaming/Channels/101 -cameraName SideGate"
+  segment-duration: "300"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: cameranator
+  name: segment-statefulset
+  labels:
+    app: segment
+spec:
+  serviceName: segment
+  replicas: 3
+  selector:
+    matchLabels:
+      app: segment
+  template:
+    metadata:
+      labels:
+        app: segment
+    spec:
+      nodeSelector:
+        gpu: "yes"
+      runtimeClassName: nvidia
+      volumes:
+        - name: segment-config-map
+          configMap:
+            name: segment-config-map
+        - name: segment-conf-d
+          emptyDir: { }
+        - name: shared-volume
+          persistentVolumeClaim:
+            claimName: cameranator-pvc
+            readOnly: false
+      initContainers:
+        - name: move-config-for-ordinal
+          image: busybox:1.28
+          volumeMounts:
+            - name: segment-config-map
+              mountPath: /tmp/segment-config-map
+            - name: segment-conf-d
+              mountPath: /etc/segment/conf.d/
+          env:
+            - name: CCTV_SEGMENT_DURATION
+              valueFrom:
+                configMapKeyRef:
+                  name: segment-config-map
+                  key: segment-duration
+          command: [
+            "sh",
+            "-c",
+            'set -x && mkdir -p /etc/segment/conf.d/ && echo "/srv/segment_generator -destinationPath /srv/target_dir/segments -duration ${CCTV_SEGMENT_DURATION} $(cat /tmp/segment-config-map/${HOSTNAME})" > /etc/segment/conf.d/docker-command.sh && find /etc/segment/conf.d/ && cat /etc/segment/conf.d/docker-command.sh'
+          ]
+      containers:
+        - name: segment-processor
+          image: initialed85/cameranator-segment-processor:latest
+          volumeMounts:
+            - name: shared-volume
+              mountPath: /srv/target_dir/segments
+              subPath: media-volume/srv/segments
+          env:
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: all
+            - name: NVIDIA_DRIVER_CAPABILITIES
+              value: all
+          command: [
+            "/srv/segment_processor",
+            "-url",
+            "http://hasura:8080/v1/graphql"
+          ]
+        - name: segment-generator
+          image: initialed85/cameranator-segment-generator:latest
+          volumeMounts:
+            - name: segment-config-map
+              subPath: segment-conf
+              mountPath: /etc/segment/segment.conf
+            - name: segment-conf-d
+              mountPath: /etc/segment/conf.d
+            - name: shared-volume
+              mountPath: /srv/target_dir/segments
+              subPath: media-volume/srv/segments
+          env:
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: all
+            - name: NVIDIA_DRIVER_CAPABILITIES
+              value: all
+          ports:
+            - containerPort: 8080
+            - containerPort: 8081
+          command: [
+            "bash",
+            "/etc/segment/conf.d/docker-command.sh"
+          ]

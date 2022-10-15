@@ -1,0 +1,44 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: cameranator
+  name: pruner-config-map
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: cameranator
+  name: pruner-deployment
+  labels:
+    app: pruner
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pruner
+  template:
+    metadata:
+      labels:
+        app: pruner
+    spec:
+      volumes:
+        - name: shared-volume
+          persistentVolumeClaim:
+            claimName: cameranator-pvc
+            readOnly: false
+      containers:
+        - name: pruner
+          image: initialed85/cameranator-event-pruner:latest
+          volumeMounts:
+            - name: shared-volume
+              subPath: media-volume/srv/events
+              mountPath: /srv/target_dir/events
+            - name: shared-volume
+              subPath: media-volume/srv/segments
+              mountPath: /srv/target_dir/segments
+          command: [
+            "/srv/event_pruner",
+            "-url",
+            "http://hasura:8080/v1/graphql",
+          ]

@@ -2,10 +2,10 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import React from "react";
 import ReactDOM from "react-dom";
 import App from "./components/app/app";
-import { AppLogic } from "./components/app/app_logic";
-import { AppProps } from "./components/app/app_props";
-import { Alert, Container, Row, Spinner } from "react-bootstrap";
-import { info } from "./common/utils";
+import {AppLogic} from "./components/app/app_logic";
+import {AppProps} from "./components/app/app_props";
+import {Alert, Container, Row, Spinner} from "react-bootstrap";
+import {info} from "./common/utils";
 
 new AppLogic((props) => {
     ReactDOM.render(<App {...props} />, document.getElementById("root"));
@@ -39,7 +39,7 @@ class Index extends React.Component<any, IndexState> {
             return;
         }
 
-        this.setState({ appProps: appProps });
+        this.setState({appProps: appProps});
     }
 
     async componentDidMount() {
@@ -81,4 +81,4 @@ class Index extends React.Component<any, IndexState> {
     }
 }
 
-ReactDOM.render(<Index />, document.getElementById("root"));
+ReactDOM.render(<Index/>, document.getElementById("root"));

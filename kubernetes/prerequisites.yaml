@@ -1,0 +1,21 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cameranator
+  labels:
+    name: cameranator
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cameranator-pvc
+  namespace: cameranator
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1T
+  storageClassName: rook-cephfs
+  volumeMode: Filesystem
