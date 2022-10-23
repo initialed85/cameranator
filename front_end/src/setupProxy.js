@@ -4,7 +4,7 @@ module.exports = function (app) {
     app.use(
         "/api/",
         createProxyMiddleware({
-            target: "http://cameranator.chronos/",
+            target: "http://cameranator.initialed85.cc/",
             changeOrigin: true,
         })
     );
@@ -12,7 +12,7 @@ module.exports = function (app) {
     app.use(
         "/events/",
         createProxyMiddleware({
-            target: "http://cameranator.chronos/",
+            target: "http://cameranator.initialed85.cc/",
             changeOrigin: true,
         })
     );
@@ -20,7 +20,7 @@ module.exports = function (app) {
     app.use(
         "/segments/",
         createProxyMiddleware({
-            target: "http://cameranator.chronos/",
+            target: "http://cameranator.initialed85.cc/",
             changeOrigin: true,
         })
     );
@@ -28,7 +28,7 @@ module.exports = function (app) {
     app.use(
         "/motion-stream/",
         createProxyMiddleware({
-            target: "http://cameranator.chronos/",
+            target: "http://cameranator.initialed85.cc/",
             changeOrigin: true,
         })
     );

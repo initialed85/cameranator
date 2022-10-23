@@ -30,6 +30,7 @@ spec:
       containers:
         - name: quotanizer
           image: initialed85/cameranator-quotanizer:latest
+          imagePullPolicy: Always
           volumeMounts:
             - name: shared-volume
               subPath: media-volume/srv/events

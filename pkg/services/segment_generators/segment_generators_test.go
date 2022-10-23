@@ -73,7 +73,15 @@ func TestNewSegmentGenerators(t *testing.T) {
 		log.Fatal(err)
 	}
 
+	assert.True(t, test_utils.IsLive("localhost", 8080))
+
 	time.Sleep(time.Second * 15)
+
+	segmentGenerators.Stop()
+
+	time.Sleep(time.Second * 15)
+
+	assert.False(t, test_utils.IsLive("localhost", 8080))
 
 	assert.Greater(t, len(events), 0)
 

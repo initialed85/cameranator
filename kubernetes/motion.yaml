@@ -127,6 +127,7 @@ spec:
       containers:
         - name: motion-processor
           image: initialed85/cameranator-motion-processor:latest
+          imagePullPolicy: Always
           volumeMounts:
             - name: shared-volume
               mountPath: /srv/target_dir/events
@@ -143,6 +144,7 @@ spec:
           ]
         - name: motion
           image: initialed85/cameranator-motion:latest
+          imagePullPolicy: Always
           volumeMounts:
             - name: motion-config-map
               subPath: motion-conf

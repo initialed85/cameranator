@@ -3,6 +3,7 @@ package segment_generators
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/initialed85/cameranator/pkg/liveness"
 	"log"
 	"sync"
 
@@ -18,6 +19,7 @@ type SegmentGenerators struct {
 	port                   int64
 	sender                 *network.Sender
 	segmentGeneratorByFeed map[segment_generator.Feed]*segment_generator.SegmentGenerator
+	livenessAgent          *liveness.Agent
 }
 
 func NewSegmentGenerators(feeds []segment_generator.Feed, host string, port int64) *SegmentGenerators {
@@ -56,6 +58,14 @@ func (s *SegmentGenerators) Start() error {
 		return err
 	}
 
+	s.livenessAgent, err = liveness.Open(
+		[]liveness.HasLiveness{s},
+		8080, // TODO
+	)
+	if err != nil {
+		return err
+	}
+
 	for _, feed := range s.feeds {
 		s.segmentGeneratorByFeed[feed] = segment_generator.NewSegmentGenerator(
 			feed,
@@ -79,4 +89,18 @@ func (s *SegmentGenerators) Stop() {
 	}
 
 	s.sender.Close()
+	s.livenessAgent.Close()
+}
+
+func (s *SegmentGenerators) IsLive() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	for _, segmentGenerator := range s.segmentGeneratorByFeed {
+		if !segmentGenerator.IsLive() {
+			return false
+		}
+	}
+
+	return true
 }

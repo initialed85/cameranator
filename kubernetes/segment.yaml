@@ -63,6 +63,7 @@ spec:
       containers:
         - name: segment-processor
           image: initialed85/cameranator-segment-processor:latest
+          imagePullPolicy: Always
           volumeMounts:
             - name: shared-volume
               mountPath: /srv/target_dir/segments
@@ -79,6 +80,7 @@ spec:
           ]
         - name: segment-generator
           image: initialed85/cameranator-segment-generator:latest
+          imagePullPolicy: Always
           volumeMounts:
             - name: segment-config-map
               subPath: segment-conf
@@ -93,10 +95,13 @@ spec:
               value: all
             - name: NVIDIA_DRIVER_CAPABILITIES
               value: all
-          ports:
-            - containerPort: 8080
-            - containerPort: 8081
           command: [
             "bash",
             "/etc/segment/conf.d/docker-command.sh"
           ]
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 5

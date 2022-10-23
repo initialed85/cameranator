@@ -1,7 +1,9 @@
 package test_utils
 
 import (
+	"fmt"
 	"io/ioutil"
+	"net/http"
 )
 
 const (
@@ -11,4 +13,19 @@ const (
 
 func GetTempDir() (string, error) {
 	return ioutil.TempDir("", "cameranator")
+}
+
+func IsLive(host string, port int64) bool {
+	resp, err := http.Get(
+		fmt.Sprintf(
+			"http://%v:%v/healthz",
+			host,
+			port,
+		),
+	)
+	if err != nil {
+		return false
+	}
+
+	return resp.StatusCode == http.StatusOK
 }

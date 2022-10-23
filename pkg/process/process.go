@@ -93,8 +93,9 @@ func RunBackgroundProcess(executable string, arguments ...string) (process *Back
 
 			waitErr := process.Cmd.Wait()
 			if waitErr != nil {
-				log.Printf("failed to Wait because: %v; trying again...; stdout=%+v, stderr=%#+v", startErr, process.Cmd.Stdout, process.Cmd.Stderr)
-
+				if !process.stop {
+					log.Printf("failed to Wait because: %v; trying again...; stdout=%+v, stderr=%#+v", startErr, process.Cmd.Stdout, process.Cmd.Stderr)
+				}
 				_ = process.Cmd.Process.Kill()
 
 				time.Sleep(time.Second)

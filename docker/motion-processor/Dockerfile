@@ -9,10 +9,12 @@ WORKDIR /srv/
 
 COPY ./go.mod /srv/go.mod
 COPY ./go.sum /srv/go.sum
+RUN --mount=type=cache,target=/root/.cache/go-build go mod download
+
 COPY ./cmd /srv/cmd
 COPY ./pkg /srv/pkg
 
-RUN go build -v -o motion_processor ./cmd/motion_processor/main.go
+RUN --mount=type=cache,target=/root/.cache/go-build go build -v -o motion_processor ./cmd/motion_processor/main.go
 
 FROM base AS run
 

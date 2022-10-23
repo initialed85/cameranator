@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/relvacode/iso8601"
 
@@ -34,12 +35,13 @@ type Feed struct {
 }
 
 type SegmentGenerator struct {
-	feed              Feed
-	completeFn        func(event Event)
-	mu                sync.Mutex
-	backgroundProcess *process.BackgroundProcess
-	watcher           *filesystem.Watcher
-	lastCreatedPath   string
+	feed                 Feed
+	completeFn           func(event Event)
+	mu                   sync.Mutex
+	backgroundProcess    *process.BackgroundProcess
+	watcher              *filesystem.Watcher
+	lastCreatedPath      string
+	lastCreatedTimestamp time.Time
 }
 
 func NewSegmentGenerator(
@@ -47,8 +49,9 @@ func NewSegmentGenerator(
 	completeFn func(Event),
 ) *SegmentGenerator {
 	s := SegmentGenerator{
-		feed:       feed,
-		completeFn: completeFn,
+		feed:                 feed,
+		completeFn:           completeFn,
+		lastCreatedTimestamp: time.Now(),
 	}
 
 	return &s
@@ -111,6 +114,10 @@ func (s *SegmentGenerator) onFileCreate(file filesystem.File) {
 		log.Printf("onFileCreate; complete event=%#+v", event)
 
 		s.completeFn(event)
+
+		s.mu.Lock()
+		s.lastCreatedTimestamp = time.Now()
+		s.mu.Unlock()
 	}
 
 	s.mu.Lock()
@@ -158,4 +165,14 @@ func (s *SegmentGenerator) Stop() {
 
 	s.backgroundProcess.Stop()
 	s.watcher.Stop()
+}
+
+func (s *SegmentGenerator) IsLive() bool {
+	s.mu.Lock()
+	lastCreatedTimestamp := s.lastCreatedTimestamp
+	s.mu.Unlock()
+
+	expiry := lastCreatedTimestamp.Add(time.Second * time.Duration(float64(s.feed.Duration)*1.5))
+
+	return time.Now().Before(expiry)
 }

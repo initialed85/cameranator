@@ -125,19 +125,6 @@ services:
     command: "-url http://hasura:8080/v1/graphql"
     restart: always
 
-  # page-renderer:
-  #   build:
-  #     context: ./
-  #     dockerfile: docker/page-renderer/Dockerfile
-  #   networks:
-  #     - cctv-internal
-  #     - cctv-external
-  #   volumes:
-  #     - ${CCTV_EVENTS_PATH}:/srv/target_dir/events
-  #     - ${CCTV_SEGMENTS_PATH}:/srv/target_dir/segments
-  #   command: "-url http://hasura:8080/v1/graphql -eventsPath /srv/target_dir/events -segmentsPath /srv/target_dir/segments"
-  #   restart: always
-
   front-end:
     build:
       context: ./
