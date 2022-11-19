@@ -30,6 +30,7 @@ spec:
     spec:
       nodeSelector:
         gpu: "yes"
+        home-role: "storage"
       runtimeClassName: nvidia
       volumes:
         - name: segment-config-map

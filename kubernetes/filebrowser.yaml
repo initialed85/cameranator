@@ -32,6 +32,8 @@ spec:
       labels:
         app: filebrowser
     spec:
+      nodeSelector:
+        home-role: "storage"
       volumes:
         - name: filebrowser-config-map
           configMap:

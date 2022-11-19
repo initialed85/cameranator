@@ -9,3 +9,11 @@ td {
     text-align: center;
     font-size: 8pt;
 }
+
+video {
+    display: inline-block;
+    font-size: 0;
+    margin: 0;
+    padding: 0;
+    border: 1px solid red;
+}

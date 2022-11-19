@@ -1,143 +1,63 @@
-import React from "react";
+import "bootstrap/dist/css/bootstrap.min.css";
+import React, { useState } from "react";
+import "./App.css";
+import { CAMERAS } from "../../hasura/camera";
+import { useQuery } from "@apollo/client";
+import {Container, Row} from "react-bootstrap";
+import { EVENT_DATES, getDeduplicatedDates } from "../../hasura/event_date";
+import { Menu } from "./Menu";
+import { TYPES } from "../../hasura/type";
+import { Content } from "./Content";
 
-import "./app.css";
-import {Alert, Breadcrumb, Container, Nav, Navbar} from "react-bootstrap";
-import {CameraDropdown} from "../camera_drop_down/camera_drop_down";
-import {DateDropdown} from "../date_drop_down/date_drop_down";
-import {EventTable} from "../event_table/event_table";
-import {EVENTS, SEGMENTS, TypeDropdown,} from "../type_drop_down/type_drop_down";
-import {AppProps} from "./app_props";
-import {StreamDropdown} from "../stream_drop_down/stream_drop_down";
-import {info} from "../../common/utils";
+function App() {
+  const camerasQuery = useQuery(CAMERAS);
+  const datesQuery = useQuery(EVENT_DATES);
+  const types = TYPES;
 
-function getFriendlyStringForType(type: string | null): string {
-    if (type === EVENTS) {
-        return "Events";
-    } else if (type === SEGMENTS) {
-        return "Segments";
-    } else {
-        return "No type";
-    }
-}
+  const deduplicatedDates = getDeduplicatedDates(datesQuery?.data);
 
-class App extends React.Component<AppProps> {
-    getTypeDropdown() {
-        return (
-            <TypeDropdown
-                changeHandler={(type) => {
-                    this.props.typeChangeHandler(type);
-                }}
-            />
-        );
-    }
+  const [camera, setCamera] = useState(null);
+  const [date, setDate] = useState(null);
+  const [type, setType] = useState(null);
 
-    getDateDropdown() {
-        return (
-            <DateDropdown
-                dates={this.props.dates}
-                changeHandler={(date) => {
-                    this.props.dateChangeHandler(date);
-                }}
-            />
-        );
-    }
+  if (!camera && camerasQuery?.data?.camera) {
+    setCamera(camerasQuery?.data?.camera[0]);
+  }
 
-    getCameraDropdown() {
-        return (
-            <CameraDropdown
-                cameras={this.props.cameras}
-                changeHandler={(camera) => {
-                    this.props.cameraChangeHandler(camera);
-                }}
-            />
-        );
-    }
+  if (!date && deduplicatedDates?.length) {
+    setDate(deduplicatedDates[0] as any);
+  }
 
-    getStreamDropdown() {
-        return <StreamDropdown cameras={this.props.cameras}/>;
-    }
+  if (!type && types?.length) {
+    setType(types[0] as any);
+  }
 
-    getNavbar() {
-        return (
-            <Navbar bg="light" expand="lg" style={{fontSize: "10pt"}}>
-                <Navbar.Brand
-                    href="#home"
-                    style={{fontSize: "14pt"}}
-                    onClick={() => {
-                        this.props.typeChangeHandler(null);
-                        this.props.dateChangeHandler(null);
-                        this.props.cameraChangeHandler(null);
-                    }}
-                >
-                    Cameranator
-                </Navbar.Brand>
-
-                <Navbar.Toggle aria-controls="basic-navbar-nav"/>
-
-                <Navbar.Collapse id="basic-navbar-nav">
-                    <Nav className="mr-auto">
-                        {this.getTypeDropdown()}
-                        {this.getDateDropdown()}
-                        {this.getCameraDropdown()}
-                        {this.getStreamDropdown()}
-                    </Nav>
-                </Navbar.Collapse>
-            </Navbar>
-        );
-    }
-
-    getAlert() {
-        return (
-            <Alert
-                style={{
-                    paddingTop: 0,
-                    paddingBottom: 0,
-                    paddingLeft: 5,
-                    paddingRight: 5,
-                    margin: 0,
-                    width: 75,
-                    textAlign: "center",
-                }}
-                variant={this.props.connected ? "success" : "danger"}
-            >
-                {this.props.connected ? "Online" : "Offline"}
-            </Alert>
-        );
-    }
-
-    getBreadcrumb() {
-        return (
-            <Breadcrumb style={{fontSize: "10pt"}}>
-                <Breadcrumb.Item active>{this.getAlert()}</Breadcrumb.Item>
-                <Breadcrumb.Item active>
-                    {getFriendlyStringForType(this.props.type)}
-                </Breadcrumb.Item>
-                <Breadcrumb.Item active>
-                    {this.props.date
-                        ? this.props.date.local().format("YYYY-MM-DD")
-                        : "No date"}
-                </Breadcrumb.Item>
-                <Breadcrumb.Item active>
-                    {this.props.camera ? this.props.camera.name : "No camera"}
-                </Breadcrumb.Item>
-            </Breadcrumb>
-        );
-    }
-
-    getEventTable() {
-        return <EventTable events={this.props.events}/>;
-    }
-
-    render() {
-        info(`${this.constructor.name} rendering`);
-        return (
-            <Container style={{width: "100%"}}>
-                {this.getNavbar()}
-                {this.getBreadcrumb()}
-                {this.getEventTable()}
-            </Container>
-        );
-    }
+  return (
+    <Container style={{ width: "100%", height: "100%" }}>
+      <Row>
+        <Menu
+          cameras={camerasQuery?.data?.camera}
+          camera={camera}
+          setCamera={(x) => {
+            setCamera(x);
+          }}
+          dates={deduplicatedDates}
+          date={date}
+          setDate={(x) => {
+            setDate(x);
+          }}
+          types={types}
+          type={type}
+          setType={(x) => {
+            setType(x);
+          }}
+        />
+      </Row>
+      <Row>
+        <Content camera={camera} date={date} type={type} />
+      </Row>
+    </Container>
+  );
 }
 
 export default App;

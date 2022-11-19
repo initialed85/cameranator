@@ -22,6 +22,8 @@ spec:
       labels:
         app: ubuntu
     spec:
+      nodeSelector:
+        home-role: "storage"
       volumes:
         - name: shared-volume
           persistentVolumeClaim:

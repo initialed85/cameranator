@@ -97,6 +97,7 @@ spec:
     spec:
       nodeSelector:
         gpu: "yes"
+        home-role: "storage"
       runtimeClassName: nvidia
       volumes:
         - name: motion-config-map
@@ -169,13 +170,42 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: motion
+  name: motion-stream-0
   namespace: cameranator
 spec:
   selector:
     app: motion
+    statefulset.kubernetes.io/pod-name: motion-statefulset-0
   ports:
-    - name: motion-stream
+    - name: motion-stream-0
+      port: 8081
+      targetPort: 8081
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: motion-stream-1
+  namespace: cameranator
+spec:
+  selector:
+    app: motion
+    statefulset.kubernetes.io/pod-name: motion-statefulset-1
+  ports:
+    - name: motion-stream-1
+      port: 8081
+      targetPort: 8081
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: motion-stream-2
+  namespace: cameranator
+spec:
+  selector:
+    app: motion
+    statefulset.kubernetes.io/pod-name: motion-statefulset-2
+  ports:
+    - name: motion
       port: 8081
       targetPort: 8081
 ---
@@ -203,14 +233,46 @@ apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
   namespace: cameranator
-  name: motion-stream-ingressroute
+  name: motion-stream-ingressroute-0
 spec:
   routes:
-    - match: HostRegexp(`{subdomain:cameranator}.{any:.*}`) && PathPrefix(`/motion-stream`)
+    - match: HostRegexp(`{subdomain:cameranator}.{any:.*}`) && PathPrefix(`/motion-stream/101`)
       kind: Rule
       middlewares:
         - name: motion-stream-middleware-stripprefix
         - name: motion-stream-middleware-stripreferer
       services:
-        - name: motion
+        - name: motion-stream-0
+          port: 8081
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  namespace: cameranator
+  name: motion-stream-ingressroute-1
+spec:
+  routes:
+    - match: HostRegexp(`{subdomain:cameranator}.{any:.*}`) && PathPrefix(`/motion-stream/102`)
+      kind: Rule
+      middlewares:
+        - name: motion-stream-middleware-stripprefix
+        - name: motion-stream-middleware-stripreferer
+      services:
+        - name: motion-stream-1
+          port: 8081
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  namespace: cameranator
+  name: motion-stream-ingressroute-2
+spec:
+  routes:
+    - match: HostRegexp(`{subdomain:cameranator}.{any:.*}`) && PathPrefix(`/motion-stream/103`)
+      kind: Rule
+      middlewares:
+        - name: motion-stream-middleware-stripprefix
+        - name: motion-stream-middleware-stripreferer
+      services:
+        - name: motion-stream-2
           port: 8081

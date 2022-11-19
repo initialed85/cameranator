@@ -22,6 +22,8 @@ spec:
       labels:
         app: quotanizer
     spec:
+      nodeSelector:
+        home-role: "storage"
       volumes:
         - name: shared-volume
           persistentVolumeClaim:

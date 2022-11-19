@@ -42,6 +42,8 @@ spec:
       labels:
         app: nginx
     spec:
+      nodeSelector:
+        home-role: "storage"
       volumes:
         - name: frontend-build
           emptyDir: { }
