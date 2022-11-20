@@ -28,6 +28,13 @@ spec:
       labels:
         app: segment
     spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: segment
       nodeSelector:
         gpu: "yes"
         home-role: "storage"
@@ -37,7 +44,7 @@ spec:
           configMap:
             name: segment-config-map
         - name: segment-conf-d
-          emptyDir: { }
+          emptyDir: {}
         - name: shared-volume
           persistentVolumeClaim:
             claimName: cameranator-pvc
@@ -56,11 +63,12 @@ spec:
                 configMapKeyRef:
                   name: segment-config-map
                   key: segment-duration
-          command: [
-            "sh",
-            "-c",
-            'set -x && mkdir -p /etc/segment/conf.d/ && echo "/srv/segment_generator -destinationPath /srv/target_dir/segments -duration ${CCTV_SEGMENT_DURATION} $(cat /tmp/segment-config-map/${HOSTNAME})" > /etc/segment/conf.d/docker-command.sh && find /etc/segment/conf.d/ && cat /etc/segment/conf.d/docker-command.sh'
-          ]
+          command:
+            [
+              "sh",
+              "-c",
+              'set -x && mkdir -p /etc/segment/conf.d/ && echo "/srv/segment_generator -destinationPath /srv/target_dir/segments -duration ${CCTV_SEGMENT_DURATION} $(cat /tmp/segment-config-map/${HOSTNAME})" > /etc/segment/conf.d/docker-command.sh && find /etc/segment/conf.d/ && cat /etc/segment/conf.d/docker-command.sh',
+            ]
       containers:
         - name: segment-processor
           image: initialed85/cameranator-segment-processor:latest
@@ -74,11 +82,8 @@ spec:
               value: all
             - name: NVIDIA_DRIVER_CAPABILITIES
               value: all
-          command: [
-            "/srv/segment_processor",
-            "-url",
-            "http://hasura:8080/v1/graphql"
-          ]
+          command:
+            ["/srv/segment_processor", "-url", "http://hasura:8080/v1/graphql"]
         - name: segment-generator
           image: initialed85/cameranator-segment-generator:latest
           imagePullPolicy: Always
@@ -96,10 +101,7 @@ spec:
               value: all
             - name: NVIDIA_DRIVER_CAPABILITIES
               value: all
-          command: [
-            "bash",
-            "/etc/segment/conf.d/docker-command.sh"
-          ]
+          command: ["bash", "/etc/segment/conf.d/docker-command.sh"]
           livenessProbe:
             httpGet:
               path: /healthz

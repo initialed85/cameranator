@@ -95,6 +95,13 @@ spec:
       labels:
         app: motion
     spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: motion
       nodeSelector:
         gpu: "yes"
         home-role: "storage"
@@ -104,7 +111,7 @@ spec:
           configMap:
             name: motion-config-map
         - name: motion-conf-d
-          emptyDir: { }
+          emptyDir: {}
         - name: shared-volume
           persistentVolumeClaim:
             claimName: cameranator-pvc
@@ -118,13 +125,13 @@ spec:
             - name: motion-conf-d
               mountPath: /etc/motion/conf.d/
           command: [
-            "sh",
-            "-c",
-            "mkdir -p /etc/motion/conf.d/ && \
+              "sh",
+              "-c",
+              "mkdir -p /etc/motion/conf.d/ && \
               cp /tmp/motion-config-map/${HOSTNAME} /etc/motion/conf.d/${HOSTNAME}.conf && \
               find /etc/motion && \
-              cat /etc/motion/conf.d/${HOSTNAME}.conf"
-          ]
+              cat /etc/motion/conf.d/${HOSTNAME}.conf",
+            ]
       containers:
         - name: motion-processor
           image: initialed85/cameranator-motion-processor:latest
@@ -138,11 +145,8 @@ spec:
               value: all
             - name: NVIDIA_DRIVER_CAPABILITIES
               value: all
-          command: [
-            "/srv/motion_processor",
-            "-url",
-            "http://hasura:8080/v1/graphql"
-          ]
+          command:
+            ["/srv/motion_processor", "-url", "http://hasura:8080/v1/graphql"]
         - name: motion
           image: initialed85/cameranator-motion:latest
           imagePullPolicy: Always
