@@ -7,6 +7,7 @@ export interface ContentProps {
   camera: Camera | null;
   date: moment.Moment | null;
   type: Type | null;
+  responsive: boolean;
 }
 
 export function Content(props: ContentProps) {
@@ -18,5 +19,12 @@ export function Content(props: ContentProps) {
     return null;
   }
 
-  return <Events camera={props.camera} date={props.date} type={props.type} />;
+  return (
+    <Events
+      camera={props.camera}
+      date={props.date}
+      type={props.type}
+      responsive={props.responsive}
+    />
+  );
 }

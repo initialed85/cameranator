@@ -1,7 +1,7 @@
 import { gql } from "@apollo/client";
 
 export const CAMERAS = gql`
-  query cameras {
+  subscription cameras {
     camera(order_by: { name: asc }) {
       uuid
       name

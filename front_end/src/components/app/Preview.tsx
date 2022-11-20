@@ -13,7 +13,7 @@ export interface PreviewProps {
 }
 
 export function Preview(props: PreviewProps) {
-  // TODO: unwanted margin
+  // TODO
   // if (props?.confirmedFocusEventUUID === props.event.uuid) {
   //   return (
   //     <video width={640} height={480} autoPlay={true}>

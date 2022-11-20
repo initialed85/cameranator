@@ -2,7 +2,7 @@ import { gql } from "@apollo/client";
 import moment from "moment/moment";
 
 export const EVENT_DATES = gql`
-  query dates {
+  subscription dates {
     event(order_by: { start_timestamp: desc }, distinct_on: start_timestamp) {
       start_timestamp
     }

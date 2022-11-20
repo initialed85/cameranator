@@ -11,7 +11,7 @@ td {
 }
 
 video {
-    display: inline-block;
+    display: flex;
     font-size: 0;
     margin: 0;
     padding: 0;

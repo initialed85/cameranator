@@ -1,16 +1,15 @@
-let protocol = window?.location?.protocol || "http:";
-let host = window?.location?.host || "cameranator.initialed85.cc";
+const httpProtocol = window?.location?.protocol || "http:";
+const wsProtocol = httpProtocol === "https:" ? "wss:" : "ws:";
 
-if (window?.location?.port === "3000") {
-  host = "cameranator.chronos";
-}
+const host =
+  window?.location?.port === "3000"
+    ? "cameranator.initialed85.cc"
+    : window?.location?.host;
 
-const apiUrlPath = `/api/v1/graphql/`;
+const apiUrlPath = `/api/v1/graphql`;
 
-export const apiHttpUrl = `${protocol}//${host}${apiUrlPath}`;
+export const apiHttpUrl = `${httpProtocol}//${host}${apiUrlPath}/`; // trailing slash
 
-export const apiWsUrl = `${
-  protocol === "https:" ? "wss" : "ws"
-}://${host}${apiUrlPath}`;
+export const apiWsUrl = `${wsProtocol}//${host}${apiUrlPath}`;
 
-export const fileHttpUrl = `${protocol}//${host}/`;
+export const fileHttpUrl = `${httpProtocol}//${host}/`;

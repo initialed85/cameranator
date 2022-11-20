@@ -24,7 +24,7 @@ export const getEventsQuery = (
   );
 
   return gql`
-        query {
+        subscription {
             event(
                 order_by: {start_timestamp: desc},
                 where: {

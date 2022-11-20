@@ -26,7 +26,7 @@ function getTypeButtons(
 
   const buttons: JSX.Element[] = [];
 
-  types.map((item) => {
+  types.forEach((item) => {
     buttons.push(
       <ToggleButton
         size="sm"
@@ -55,26 +55,6 @@ function getTypeButtons(
   );
 }
 
-function getStreamButton(camera: Camera | null) {
-  return (
-    <ButtonGroup style={{ paddingRight: "5px" }}>
-      <Button
-        size="sm"
-        variant={"outline-primary"}
-        disabled={!camera}
-        href={
-          camera
-            ? `${fileHttpUrl}motion-stream/${camera.external_id}/stream/`
-            : "#"
-        }
-        target={"_stream"}
-      >
-        Stream
-      </Button>
-    </ButtonGroup>
-  );
-}
-
 function getCameraButtons(
   cameras: Camera[] | null,
   camera: Camera | null,
@@ -86,7 +66,7 @@ function getCameraButtons(
 
   const buttons: JSX.Element[] = [];
 
-  cameras.map((item) => {
+  cameras.forEach((item) => {
     buttons.push(
       <ToggleButton
         size="sm"
@@ -115,6 +95,26 @@ function getCameraButtons(
   );
 }
 
+function getStreamButton(camera: Camera | null) {
+  return (
+    <ButtonGroup style={{ paddingRight: "5px" }}>
+      <Button
+        size="sm"
+        variant={"outline-primary"}
+        disabled={!camera}
+        href={
+          camera
+            ? `${fileHttpUrl}motion-stream/${camera.external_id}/stream/`
+            : "#"
+        }
+        target={"_stream"}
+      >
+        Stream
+      </Button>
+    </ButtonGroup>
+  );
+}
+
 function getDateDropdown(
   dates: moment.Moment[] | null,
   date: moment.Moment | null,
@@ -126,7 +126,7 @@ function getDateDropdown(
 
   const eventDates: JSX.Element[] = [];
 
-  dates.map((item) => {
+  dates.forEach((item) => {
     const dateFriendly = item.format("YYYY-MM-DD");
     eventDates.push(
       <Dropdown.Item
@@ -146,16 +146,12 @@ function getDateDropdown(
   });
 
   return (
-    <Dropdown
-      style={{ paddingRight: "5px" }}
-      as={ButtonGroup}
-      variant={"outline-primary"}
-    >
+    <Dropdown style={{ paddingRight: "5px", width: "100%" }}>
       <Dropdown.Toggle
         variant={"outline-primary"}
         id="date"
         size="sm"
-        // active={!!date}
+        style={{ width: "100%" }}
       >
         {date ? date.format("YYYY-MM-DD") : "Date"}
       </Dropdown.Toggle>
@@ -188,13 +184,13 @@ export function Menu(props: MenuProps) {
         Cameranator
       </Navbar.Brand>
 
-      <Navbar.Toggle aria-controls="basic-navbar-nav" />
+      <Navbar.Toggle />
 
       <Navbar.Collapse>
         <Nav>
           {getTypeButtons(props.types, props.type, props.setType)}
-          {getStreamButton(props.camera)}
           {getCameraButtons(props.cameras, props.camera, props.setCamera)}
+          {getStreamButton(props.camera)}
           {getDateDropdown(props.dates, props.date, props.setDate)}
         </Nav>
       </Navbar.Collapse>

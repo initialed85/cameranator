@@ -1,17 +1,17 @@
 import "bootstrap/dist/css/bootstrap.min.css";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css";
 import { CAMERAS } from "../../hasura/camera";
-import { useQuery } from "@apollo/client";
-import {Container, Row} from "react-bootstrap";
+import { useSubscription } from "@apollo/client";
+import { Container, Row } from "react-bootstrap";
 import { EVENT_DATES, getDeduplicatedDates } from "../../hasura/event_date";
 import { Menu } from "./Menu";
 import { TYPES } from "../../hasura/type";
 import { Content } from "./Content";
 
 function App() {
-  const camerasQuery = useQuery(CAMERAS);
-  const datesQuery = useQuery(EVENT_DATES);
+  const camerasQuery = useSubscription(CAMERAS);
+  const datesQuery = useSubscription(EVENT_DATES);
   const types = TYPES;
 
   const deduplicatedDates = getDeduplicatedDates(datesQuery?.data);
@@ -19,6 +19,21 @@ function App() {
   const [camera, setCamera] = useState(null);
   const [date, setDate] = useState(null);
   const [type, setType] = useState(null);
+  const [responsive, setResponsive] = useState(window.innerWidth < 992);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setResponsive(window.innerWidth < 992);
+    };
+
+    window.addEventListener("resize", () => {
+      handleResize();
+    });
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   if (!camera && camerasQuery?.data?.camera) {
     setCamera(camerasQuery?.data?.camera[0]);
@@ -54,7 +69,12 @@ function App() {
         />
       </Row>
       <Row>
-        <Content camera={camera} date={date} type={type} />
+        <Content
+          camera={camera}
+          date={date}
+          type={type}
+          responsive={responsive}
+        />
       </Row>
     </Container>
   );
