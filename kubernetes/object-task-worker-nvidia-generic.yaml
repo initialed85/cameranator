@@ -1,0 +1,60 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: cameranator
+  name: object-task-worker-nvidia-generic-config-map
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: cameranator
+  name: object-task-worker-nvidia-generic-deployment
+  labels:
+    app: object-task-worker-nvidia-generic
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: object-task-worker-nvidia-generic
+  template:
+    metadata:
+      labels:
+        app: object-task-worker-nvidia-generic
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: object-task-worker-nvidia-generic
+      nodeSelector:
+        gpu: "yes"
+        gpu-vendor: "nvidia"
+        gpu-class: "nvidia-generic"
+        home-role: "storage"
+      runtimeClassName: nvidia
+      volumes:
+        - name: shared-volume
+          persistentVolumeClaim:
+            claimName: cameranator-pvc-resized
+            readOnly: false
+      containers:
+        - name: object-task-worker-nvidia-generic
+          image: kube-registry:5000/cameranator-object-task-worker-nvidia-generic:latest
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: shared-volume
+              mountPath: /srv/target_dir/events
+              subPath: media-volume/srv/events
+            - name: shared-volume
+              mountPath: /srv/target_dir/segments
+              subPath: media-volume/srv/segments
+          env:
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: all
+            - name: NVIDIA_DRIVER_CAPABILITIES
+              value: all
+            - name: AMQP_HOST
+              value: rabbitmq

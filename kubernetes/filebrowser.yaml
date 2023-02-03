@@ -40,7 +40,7 @@ spec:
             name: filebrowser-config-map
         - name: shared-volume
           persistentVolumeClaim:
-            claimName: cameranator-pvc
+            claimName: cameranator-pvc-resized
             readOnly: false
       containers:
         - name: filebrowser

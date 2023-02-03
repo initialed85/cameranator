@@ -54,7 +54,7 @@ spec:
             name: nginx-config-map
         - name: shared-volume
           persistentVolumeClaim:
-            claimName: cameranator-pvc
+            claimName: cameranator-pvc-resized
             readOnly: false
       initContainers:
         - name: frontend

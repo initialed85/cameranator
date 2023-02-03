@@ -6,3 +6,7 @@ front_end/node_modules
 quotanizer/
 test_data/*/*lowres.*
 temp_data/
+*.iml
+**/__pycache__/
+**/*.pyc
+

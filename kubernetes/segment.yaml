@@ -37,6 +37,7 @@ spec:
               app: segment
       nodeSelector:
         gpu: "yes"
+        gpu-vendor: "nvidia"
         home-role: "storage"
       runtimeClassName: nvidia
       volumes:
@@ -47,7 +48,7 @@ spec:
           emptyDir: {}
         - name: shared-volume
           persistentVolumeClaim:
-            claimName: cameranator-pvc
+            claimName: cameranator-pvc-resized
             readOnly: false
       initContainers:
         - name: move-config-for-ordinal

@@ -104,6 +104,7 @@ spec:
               app: motion
       nodeSelector:
         gpu: "yes"
+        gpu-vendor: "nvidia"
         home-role: "storage"
       runtimeClassName: nvidia
       volumes:
@@ -111,10 +112,10 @@ spec:
           configMap:
             name: motion-config-map
         - name: motion-conf-d
-          emptyDir: {}
+          emptyDir: { }
         - name: shared-volume
           persistentVolumeClaim:
-            claimName: cameranator-pvc
+            claimName: cameranator-pvc-resized
             readOnly: false
       initContainers:
         - name: move-config-for-ordinal
@@ -125,13 +126,13 @@ spec:
             - name: motion-conf-d
               mountPath: /etc/motion/conf.d/
           command: [
-              "sh",
-              "-c",
-              "mkdir -p /etc/motion/conf.d/ && \
+            "sh",
+            "-c",
+            "mkdir -p /etc/motion/conf.d/ && \
               cp /tmp/motion-config-map/${HOSTNAME} /etc/motion/conf.d/${HOSTNAME}.conf && \
               find /etc/motion && \
               cat /etc/motion/conf.d/${HOSTNAME}.conf",
-            ]
+          ]
       containers:
         - name: motion-processor
           image: initialed85/cameranator-motion-processor:latest
@@ -146,7 +147,7 @@ spec:
             - name: NVIDIA_DRIVER_CAPABILITIES
               value: all
           command:
-            ["/srv/motion_processor", "-url", "http://hasura:8080/v1/graphql"]
+            [ "/srv/motion_processor", "-url", "http://hasura:8080/v1/graphql" ]
         - name: motion
           image: initialed85/cameranator-motion:latest
           imagePullPolicy: Always

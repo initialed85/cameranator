@@ -9,7 +9,7 @@ metadata:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: cameranator-pvc
+  name: cameranator-pvc-resized
   namespace: cameranator
 spec:
   accessModes:

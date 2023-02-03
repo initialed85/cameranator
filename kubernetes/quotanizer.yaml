@@ -27,7 +27,7 @@ spec:
       volumes:
         - name: shared-volume
           persistentVolumeClaim:
-            claimName: cameranator-pvc
+            claimName: cameranator-pvc-resized
             readOnly: false
       containers:
         - name: quotanizer

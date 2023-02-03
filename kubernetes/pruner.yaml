@@ -27,11 +27,12 @@ spec:
       volumes:
         - name: shared-volume
           persistentVolumeClaim:
-            claimName: cameranator-pvc
+            claimName: cameranator-pvc-resized
             readOnly: false
       containers:
         - name: pruner
           image: initialed85/cameranator-event-pruner:latest
+          imagePullPolicy: Always
           volumeMounts:
             - name: shared-volume
               subPath: media-volume/srv/events

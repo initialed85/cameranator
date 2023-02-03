@@ -1,0 +1,20 @@
+FROM rocm/pytorch:rocm5.3.2_ubuntu20.04_py3.7_pytorch_1.10.2
+
+RUN apt-get update || true && apt-get install ffmpeg libsm6 libxext6  -y
+
+RUN python3 -m pip install --upgrade pip
+
+WORKDIR /srv/
+
+COPY requirements.txt /srv/requirements.txt
+RUN --mount=type=cache,target=/root/.cache python3 -m pip install -r requirements.txt
+
+COPY object_task_worker /srv/object_task_worker
+
+ENV AMQP_HOST="localhost"
+ENV AMQP_PORT="5672"
+ENV AMQP_USERID="guest"
+ENV AMQP_PASSWORD="guest"
+
+ENTRYPOINT ["/opt/conda/bin/python3", "-m", "object_task_worker"]
+CMD []
