@@ -15,7 +15,7 @@ metadata:
   labels:
     app: object-task-worker-nvidia-generic
 spec:
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
       app: object-task-worker-nvidia-generic
