@@ -1,6 +1,9 @@
+import os
 from typing import Optional
 
+import psycopg2
 from amqpy import Connection, Message, Timeout, Channel
+from dateutil.parser import parse
 from orjson import loads
 
 from object_task_worker.object_tracker import (
@@ -9,11 +12,57 @@ from object_task_worker.object_tracker import (
     DEFAULT_IOU_THRESHOLD,
     DEFAULT_IMAGE_SIZE,
     DEFAULT_STRIDE_FRAMES,
+    ProcessedVideo,
 )
 
 _AMQP_IDENTIFIER = "object_tasks"
 _CONNECT_TIMEOUT = 5
 _HEARTBEAT = 5
+
+_INSERT_VIDEO_QUERY = """
+INSERT INTO video (
+    start_timestamp, end_timestamp, size, is_high_quality, file_path, source_camera_id
+) VALUES (
+    %s,
+    %s,
+    %s,
+    true,
+    %s,
+    %s
+)
+RETURNING id;
+"""
+
+_INSERT_OBJECT_QUERY = """
+INSERT INTO object (
+    start_timestamp, end_timestamp, detected_class_id, detected_class_name, tracked_object_id, event_id, processed_video_id
+) VALUES (
+    %s,
+    %s,
+    %s,
+    %s,
+    %s,
+    %s,
+    %s
+);
+"""
+
+_UPDATE_EVENT_QUERY = """
+UPDATE event SET needs_object_processing = false WHERE id = %s;
+"""
+
+_DB_HOST = (os.getenv("DB_HOST") or "").strip()
+_DB_PORT = (os.getenv("DB_PORT") or "").strip()
+_DB_USER = (os.getenv("DB_USER") or "").strip()
+_DB_PASSWORD = (os.getenv("DB_PASSWORD") or "").strip()
+_DB_NAME = (os.getenv("DB_NAME") or "").strip()
+
+if not all([_DB_HOST, _DB_PASSWORD, _DB_PORT, _DB_USER]):
+    raise ValueError(
+        "one or more of DB_HOST, DB_PASSWORD, DB_PORT, DB_USER empty or unset"
+    )
+
+_DSN = f"dbname={_DB_NAME} user={_DB_USER} host={_DB_HOST} port={_DB_PORT} password={_DB_PASSWORD}"
 
 
 class Consumer(object):
@@ -30,7 +79,8 @@ class Consumer(object):
         self._password = password
 
         self._conn: Optional[Connection] = None
-        self._ch: Optional[Channel] = None
+        self._consume_ch: Optional[Channel] = None
+        self._produce_ch: Optional[Channel] = None
 
         print("created object tracker..")
         self._object_tracker = ObjectTracker(
@@ -45,26 +95,81 @@ class Consumer(object):
         print("created {}".format(repr(self._object_tracker)))
 
     def _handler(self, message: Message):
-        # event = {
-        #     "uuid": "9c9c7858-230f-41f4-9fe0-1450c53c666a",
-        #     "start_timestamp": "2023-01-31T09:01:48Z",
-        #     "end_timestamp": "2023-01-31T09:02:03Z",
-        #     "high_quality_video": {
-        #         "file_path": "/srv/target_dir/events/Event_2023-01-31T17:01:44__102__FrontDoor__2710.mp4"
-        #     },
-        # }
+        # example event
+        _ = {
+            "id": 69,
+            "high_quality_video": {
+                "file_path": "/srv/target_dir/events/Event_2023-01-31T17:01:44__102__FrontDoor__2710.mp4",
+                "source_camera_id": 3,
+                "start_timestamp": "2023-01-31T09:01:48Z",
+                "end_timestamp": "2023-01-31T09:02:03Z",
+            },
+        }
+
         event = loads(message.body)
         print(f"received event={repr(event)}")
 
-        input_path = event.get("high_quality_video", {}).get("file_path")
-        if not input_path:
-            raise ValueError(
-                "failed to find high_quality_video::file_path in event={}".format(event)
-            )
+        event_id = event.get("id")
+        file_path = event.get("high_quality_video", {}).get("file_path")
+        source_camera_id = event.get("high_quality_video", {}).get("source_camera_id")
+        start_timestamp = event.get("high_quality_video", {}).get("start_timestamp")
+        end_timestamp = event.get("high_quality_video", {}).get("end_timestamp")
 
-        processed_video = self._object_tracker(input_path)
+        if not all(
+            [event_id, file_path, source_camera_id, start_timestamp, end_timestamp]
+        ):
+            raise ValueError("unexpectedly Falsey field in event={}".format(event))
 
-        _ = processed_video.to_json()
+        start_timestamp = parse(start_timestamp)
+        end_timestamp = parse(end_timestamp)
+
+        print("processing video...")
+        processed_video: ProcessedVideo = self._object_tracker(
+            file_path
+        )  # slow, blocking call to do the processing
+
+        size = os.stat(processed_video.output_path).st_size / 1024 / 1024
+
+        with psycopg2.connect(_DSN) as conn:
+            with conn.cursor() as cur:
+                print("insert video row...")
+                cur.execute(
+                    _INSERT_VIDEO_QUERY,
+                    (
+                        start_timestamp.isoformat(),
+                        end_timestamp.isoformat(),
+                        size,
+                        processed_video.output_path,
+                        source_camera_id,
+                    ),
+                )
+
+                processed_video_id = cur.fetchone()[0]
+
+                for detected_object in processed_video.detected_objects:
+                    print(
+                        f"insert object row for object_id={detected_object.object_id}..."
+                    )
+                    cur.execute(
+                        _INSERT_OBJECT_QUERY,
+                        (
+                            start_timestamp + detected_object.start_timedelta,
+                            start_timestamp + detected_object.end_timedelta,
+                            detected_object.class_id,
+                            detected_object.class_name,
+                            detected_object.object_id,
+                            event_id,
+                            processed_video_id,
+                        ),
+                    )
+
+                print("updating event row...")
+                cur.execute(
+                    _UPDATE_EVENT_QUERY,
+                    (event_id,),
+                )
+
+        print("done.")
 
     def open(self):
         print("connecting to {}:{}".format(self._host, self._port))
@@ -77,17 +182,26 @@ class Consumer(object):
             heartbeat=_HEARTBEAT,
         )
 
-        print("opening channel and declaring exchange and queue")
-        self._ch = self._conn.channel()
-        self._ch.exchange_declare(_AMQP_IDENTIFIER, "direct")
-        self._ch.queue_declare(_AMQP_IDENTIFIER)
-        self._ch.queue_bind(
+        print("opening consume channel and declaring exchange and queue")
+        self._consume_ch = self._conn.channel()
+        self._consume_ch.exchange_declare(_AMQP_IDENTIFIER, "direct")
+        self._consume_ch.queue_declare(_AMQP_IDENTIFIER)
+        self._consume_ch.queue_bind(
             _AMQP_IDENTIFIER,
             exchange=_AMQP_IDENTIFIER,
             routing_key=_AMQP_IDENTIFIER,
         )
+        self._consume_ch.basic_consume(_AMQP_IDENTIFIER, callback=self._handler)
 
-        self._ch.basic_consume(_AMQP_IDENTIFIER, callback=self._handler)
+        print("opening produce channel and declaring exchange and queue")
+        self._produce_ch = self._conn.channel()
+        self._produce_ch.exchange_declare(_AMQP_IDENTIFIER, "direct")
+        self._produce_ch.queue_declare(_AMQP_IDENTIFIER)
+        self._produce_ch.queue_bind(
+            _AMQP_IDENTIFIER,
+            exchange=_AMQP_IDENTIFIER,
+            routing_key=_AMQP_IDENTIFIER,
+        )
 
         print("waiting for events...")
 
@@ -100,8 +214,11 @@ class Consumer(object):
                 break
 
     def close(self):
-        if self._ch:
-            self._ch.close()
+        if self._consume_ch:
+            self._consume_ch.close()
+
+        if self._produce_ch:
+            self._produce_ch.close()
 
         if self._conn:
             self._conn.close()

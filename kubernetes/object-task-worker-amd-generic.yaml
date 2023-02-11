@@ -4,6 +4,8 @@ kind: ConfigMap
 metadata:
   namespace: cameranator
   name: object-task-worker-amd-generic-config-map
+data:
+  DB_PASSWORD: "postgrespassword"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -13,7 +15,7 @@ metadata:
   labels:
     app: object-task-worker-amd-generic
 spec:
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
       app: object-task-worker-amd-generic
@@ -51,6 +53,11 @@ spec:
               mountPath: /srv/target_dir/segments
               subPath: media-volume/srv/segments
           env:
+            - name: DB_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: object-task-worker-amd-generic-config-map
+                  key: DB_PASSWORD
             - name: GPU_DEVICE_ORDINAL
               value: "0"
             - name: HIP_VISIBLE_DEVICES

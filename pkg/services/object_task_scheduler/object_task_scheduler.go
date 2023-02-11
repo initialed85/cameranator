@@ -13,11 +13,12 @@ import (
 const query = `
 query LiveEvents {
   event(where: {needs_object_processing: {_eq: true}}, order_by: {start_timestamp: desc}) {
-    uuid
-    start_timestamp
-    end_timestamp
+    id
     high_quality_video {
       file_path
+      source_camera_id
+      start_timestamp
+      end_timestamp
     }
   }
 }
@@ -26,11 +27,12 @@ query LiveEvents {
 const subscription = `
 subscription LiveEvents {
   event(where: {needs_object_processing: {_eq: true}, start_timestamp: {_gte: "__timestamp__"}}, order_by: {start_timestamp: desc}) {
-    uuid
-    start_timestamp
-    end_timestamp
+    id
     high_quality_video {
       file_path
+      source_camera_id
+      start_timestamp
+      end_timestamp
     }
   }
 }

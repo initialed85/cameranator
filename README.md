@@ -153,3 +153,14 @@ docker run --rm -it --name ffmpeg -v "$(pwd)/test_data/segments/":/srv/ jrottenb
 
 At this point, you'll have a looping RTSP stream of the folks who come and look after our cats when we're
 away [at this URL](rtsp://localhost:8554/Streaming/Channels/101).
+
+### Scratch
+
+```
+shell
+docker build -t kube-registry:5000/cameranator-object-task-worker-nvidia-generic:latest -f docker/object-task-worker/Dockerfile.nvidia-generic . && docker push kube-registry:5000/cameranator-object-task-worker-nvidia-generic:latest
+docker build -t kube-registry:5000/cameranator-object-task-worker-nvidia-sm30:latest -f docker/object-task-worker/Dockerfile.nvidia-sm30 . && docker push kube-registry:5000/cameranator-object-task-worker-nvidia-sm30:latest
+docker build -t kube-registry:5000/cameranator-object-task-worker-amd-generic:latest -f docker/object-task-worker/Dockerfile.amd-generic . && docker push kube-registry:5000/cameranator-object-task-worker-amd-generic:latest
+docker build -t kube-registry:5000/cameranator-object-task-scheduler:latest -f docker/object-task-scheduler/Dockerfile . && docker push kube-registry:5000/cameranator-object-task-scheduler:latest
+
+```

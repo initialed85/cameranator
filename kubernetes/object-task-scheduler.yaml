@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: object-task-scheduler
-          image: initialed85/cameranator-object-task-scheduler:latest
+          image: kube-registry:5000/cameranator-object-task-scheduler:latest
           imagePullPolicy: Always
           command: [
             "/srv/object_task_scheduler",

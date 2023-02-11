@@ -4,6 +4,8 @@ kind: ConfigMap
 metadata:
   namespace: cameranator
   name: object-task-worker-nvidia-generic-config-map
+data:
+  DB_PASSWORD: "postgrespassword"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -52,6 +54,11 @@ spec:
               mountPath: /srv/target_dir/segments
               subPath: media-volume/srv/segments
           env:
+            - name: DB_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: object-task-worker-nvidia-generic-config-map
+                  key: DB_PASSWORD
             - name: NVIDIA_VISIBLE_DEVICES
               value: all
             - name: NVIDIA_DRIVER_CAPABILITIES
