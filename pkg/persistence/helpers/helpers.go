@@ -59,7 +59,7 @@ func AddEvent(
 		return model.Event{}, err
 	}
 
-	lowQualityVideoSize := 0.0
+	lowQualityVideoSize := 0.1
 	if converter.IsConversionEnabled() {
 		lowQualityVideoSize, err = metadata.GetFileSize(lowQualityVideoPath)
 		if err != nil {
