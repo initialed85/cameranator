@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"fmt"
+	"github.com/initialed85/cameranator/pkg/media/converter"
 
 	"github.com/relvacode/iso8601"
 
@@ -58,9 +59,12 @@ func AddEvent(
 		return model.Event{}, err
 	}
 
-	lowQualityVideoSize, err := metadata.GetFileSize(lowQualityVideoPath)
-	if err != nil {
-		return model.Event{}, err
+	lowQualityVideoSize := 0.0
+	if converter.IsConversionEnabled() {
+		lowQualityVideoSize, err = metadata.GetFileSize(lowQualityVideoPath)
+		if err != nil {
+			return model.Event{}, err
+		}
 	}
 
 	lowQualityImageSize, err := metadata.GetFileSize(lowQualityImagePath)

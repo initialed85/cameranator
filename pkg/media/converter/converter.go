@@ -19,9 +19,17 @@ func DisableNvidia() {
 	log.Printf("warning: Nvidia support disabled at user request")
 }
 
+func IsNvidiaDisabled() bool {
+	return disableNvidia
+}
+
 func EnableConversion() {
 	enableConversion = true
 	log.Printf("warning: conversion support disabled at user request")
+}
+
+func IsConversionEnabled() bool {
+	return enableConversion
 }
 
 func init() {
@@ -35,7 +43,7 @@ func init() {
 }
 
 func ConvertVideo(sourcePath, destinationPath string, width, height int) (string, string, error) {
-	if !enableConversion {
+	if !IsConversionEnabled() {
 		_ = os.WriteFile(destinationPath, []byte{}, 0644)
 		return "warning: conversion support disabled at user request\n", "", nil
 	}
@@ -59,7 +67,7 @@ func ConvertVideo(sourcePath, destinationPath string, width, height int) (string
 
 	arguments := make([]string, 0)
 
-	if !disableNvidia {
+	if !IsNvidiaDisabled() {
 		arguments = append(
 			arguments,
 			"-hwaccel",
@@ -84,7 +92,7 @@ func ConvertVideo(sourcePath, destinationPath string, width, height int) (string
 		fmt.Sprintf("%vx%v", width, height),
 	)
 
-	if !disableNvidia {
+	if !IsNvidiaDisabled() {
 		arguments = append(
 			arguments,
 			"-c:v",
