@@ -3,18 +3,18 @@ FROM linuxserver/ffmpeg AS base
 RUN apt-get update && apt-get upgrade -y libfontconfig1 && apt-get install -y --reinstall \
     libfontconfig1 libfontconfig1-dev fontconfig-config
 
-FROM golang:1.15 AS build
+FROM golang:1.20 AS build
 
 WORKDIR /srv/
 
 COPY ./go.mod /srv/go.mod
 COPY ./go.sum /srv/go.sum
-RUN --mount=type=cache,target=/root/.cache/go-build go mod download
+RUN go mod download
 
 COPY ./cmd /srv/cmd
 COPY ./pkg /srv/pkg
 
-RUN --mount=type=cache,target=/root/.cache/go-build go build -v -o segment_generator ./cmd/segment_generator/main.go
+RUN go build -v -o segment_generator ./cmd/segment_generator/main.go
 
 FROM base AS run
 

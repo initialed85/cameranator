@@ -7,7 +7,7 @@ RUN python3 -m pip install --upgrade pip
 WORKDIR /srv/
 
 COPY requirements.txt /srv/requirements.txt
-RUN --mount=type=cache,target=/root/.cache python3 -m pip install -r requirements.txt
+RUN python3 -m pip install -r requirements.txt
 
 COPY object_task_worker /srv/object_task_worker
 

@@ -9,11 +9,11 @@ WORKDIR /srv/
 
 COPY ./go.mod /srv/go.mod
 COPY ./go.sum /srv/go.sum
-RUN --mount=type=cache,target=/root/.cache/go-build go mod download
+RUN go mod download
 
 COPY ./cmd /srv/cmd
 COPY ./pkg /srv/pkg
-RUN --mount=type=cache,target=/root/.cache/go-build go build -v -o object_task_scheduler ./cmd/object_task_scheduler/main.go
+RUN go build -v -o object_task_scheduler ./cmd/object_task_scheduler/main.go
 
 FROM base AS run
 

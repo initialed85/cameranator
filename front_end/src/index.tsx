@@ -1,19 +1,19 @@
 import React from "react";
 import "./index.css";
-import App from "./components/app/App";
 import reportWebVitals from "./reportWebVitals";
-import { ApolloProvider } from "@apollo/client";
-import { client } from "./hasura/client";
-import { createRoot } from "react-dom/client";
+import {ApolloProvider} from "@apollo/client";
+import {client} from "./hasura/client";
+import {createRoot} from "react-dom/client";
+import App from "./components/app/App";
 
 const root = createRoot(document.getElementById("root")!);
 
 root.render(
-  <React.StrictMode>
-    <ApolloProvider client={client}>
-      <App />
-    </ApolloProvider>
-  </React.StrictMode>
+    <React.StrictMode>
+        <ApolloProvider client={client}>
+            <App/>
+        </ApolloProvider>
+    </React.StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function

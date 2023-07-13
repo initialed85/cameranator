@@ -12,19 +12,34 @@ import (
 )
 
 var disableNvidia = false
+var enableConversion = false
 
 func DisableNvidia() {
 	disableNvidia = true
 	log.Printf("warning: Nvidia support disabled at user request")
 }
 
+func EnableConversion() {
+	enableConversion = true
+	log.Printf("warning: conversion support disabled at user request")
+}
+
 func init() {
 	if os.Getenv("DISABLE_NVIDIA") == "1" {
 		DisableNvidia()
 	}
+
+	if os.Getenv("ENABLE_CONVERSION") == "1" {
+		EnableConversion()
+	}
 }
 
 func ConvertVideo(sourcePath, destinationPath string, width, height int) (string, string, error) {
+	if !enableConversion {
+		_ = os.WriteFile(destinationPath, []byte{}, 0644)
+		return "warning: conversion support disabled at user request\n", "", nil
+	}
+
 	var err error
 
 	sourcePath, err = filepath.Abs(sourcePath)

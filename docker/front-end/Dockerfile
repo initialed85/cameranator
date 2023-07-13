@@ -4,10 +4,10 @@ WORKDIR /srv
 
 COPY front_end/package.json ./
 COPY front_end/package-lock.json ./
-RUN --mount=type=cache,target=/usr/src/app/.npm npm set cache /usr/src/app/.npm && npm install
+RUN npm install
 
 COPY front_end ./
-RUN --mount=type=cache,target=/usr/src/app/.npm npm set cache /usr/src/app/.npm && npm run build
+RUN npm run build
 
 # start app
 CMD ["npm", "start"]
