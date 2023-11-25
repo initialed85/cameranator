@@ -57,13 +57,13 @@ sleep 0.1
 
 wait
 
-docker push initialed85/cameranator-quotanizer:latest &
+# docker push initialed85/cameranator-quotanizer:latest &
 docker push initialed85/cameranator-motion-processor:latest &
 docker push initialed85/cameranator-motion:latest &
 docker push initialed85/cameranator-segment-processor:latest &
 docker push initialed85/cameranator-segment-generator:latest &
-docker push initialed85/cameranator-event-pruner:latest &
-docker push initialed85/cameranator-front-end:latest &
+# docker push initialed85/cameranator-event-pruner:latest &
+# docker push initialed85/cameranator-front-end:latest &
 # TODO: if I ever get the AI stuff working
 #docker push initialed85/cameranator-object-task-scheduler:latest &
 #docker push kube-registry:5000/cameranator-object-task-worker-nvidia-sm30:latest &

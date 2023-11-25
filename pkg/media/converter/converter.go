@@ -11,39 +11,28 @@ import (
 	"github.com/initialed85/cameranator/pkg/utils"
 )
 
-var disableNvidia = false
-var enableConversion = false
+var (
+	disableNvidia    = false
+	enableConversion = false
+)
 
 func DisableNvidia() {
 	disableNvidia = true
 	log.Printf("warning: Nvidia support disabled at user request")
 }
 
-func IsNvidiaDisabled() bool {
-	return disableNvidia
-}
-
-func EnableConversion() {
-	enableConversion = true
-	log.Printf("warning: conversion support disabled at user request")
-}
-
-func IsConversionEnabled() bool {
-	return enableConversion
-}
-
 func init() {
 	if os.Getenv("DISABLE_NVIDIA") == "1" {
-		DisableNvidia()
+		disableNvidia = false
 	}
 
 	if os.Getenv("ENABLE_CONVERSION") == "1" {
-		EnableConversion()
+		enableConversion = true
 	}
 }
 
 func ConvertVideo(sourcePath, destinationPath string, width, height int) (string, string, error) {
-	if !IsConversionEnabled() {
+	if !enableConversion {
 		_ = os.WriteFile(destinationPath, []byte{}, 0644)
 		return "warning: conversion support disabled at user request\n", "", nil
 	}
@@ -67,7 +56,7 @@ func ConvertVideo(sourcePath, destinationPath string, width, height int) (string
 
 	arguments := make([]string, 0)
 
-	if !IsNvidiaDisabled() {
+	if !disableNvidia {
 		arguments = append(
 			arguments,
 			"-hwaccel",
@@ -92,7 +81,7 @@ func ConvertVideo(sourcePath, destinationPath string, width, height int) (string
 		fmt.Sprintf("%vx%v", width, height),
 	)
 
-	if !IsNvidiaDisabled() {
+	if !disableNvidia {
 		arguments = append(
 			arguments,
 			"-c:v",

@@ -9,7 +9,10 @@ import (
 	"github.com/initialed85/cameranator/pkg/process"
 )
 
-var disableNvidia = false
+var (
+	disableNvidia     = false
+	enablePassthrough = false
+)
 
 func DisableNvidia() {
 	disableNvidia = true
@@ -18,7 +21,11 @@ func DisableNvidia() {
 
 func init() {
 	if os.Getenv("DISABLE_NVIDIA") == "1" {
-		DisableNvidia()
+		disableNvidia = true
+	}
+
+	if os.Getenv("ENABLE_PASSTHROUGH") == "1" {
+		enablePassthrough = true
 	}
 }
 
@@ -27,20 +34,22 @@ func RecordSegments(netCamURL, destinationPath, cameraName string, duration int)
 
 	arguments := make([]string, 0)
 
-	if !disableNvidia {
-		arguments = append(
-			arguments,
-			"-hwaccel",
-			"cuda",
-			"-c:v",
-			"h264_cuvid",
-		)
-	} else {
-		arguments = append(
-			arguments,
-			"-c:v",
-			"h264",
-		)
+	if !enablePassthrough {
+		if !disableNvidia {
+			arguments = append(
+				arguments,
+				"-hwaccel",
+				"cuda",
+				"-c:v",
+				"h264_cuvid",
+			)
+		} else {
+			arguments = append(
+				arguments,
+				"-c:v",
+				"h264",
+			)
+		}
 	}
 
 	arguments = append(
@@ -75,18 +84,20 @@ func RecordSegments(netCamURL, destinationPath, cameraName string, duration int)
 		"1",
 	)
 
-	if !disableNvidia {
-		arguments = append(
-			arguments,
-			"-c:v",
-			"h264_nvenc",
-		)
-	} else {
-		arguments = append(
-			arguments,
-			"-c:v",
-			"libx264",
-		)
+	if !enablePassthrough {
+		if !disableNvidia {
+			arguments = append(
+				arguments,
+				"-c:v",
+				"h264_nvenc",
+			)
+		} else {
+			arguments = append(
+				arguments,
+				"-c:v",
+				"libx264",
+			)
+		}
 	}
 
 	arguments = append(
