@@ -1,4 +1,4 @@
-FROM linuxserver/ffmpeg AS base
+FROM --platform=linux/amd64 linuxserver/ffmpeg AS base
 
 RUN apt-get update && apt-get upgrade -y libfontconfig1 && apt-get install -y --reinstall \
     libfontconfig1 libfontconfig1-dev fontconfig-config
@@ -15,7 +15,7 @@ COPY ./cmd /srv/cmd
 COPY ./pkg /srv/pkg
 RUN go build -v -o object_task_scheduler ./cmd/object_task_scheduler/main.go
 
-FROM base AS run
+FROM --platform=linux/amd64 base AS run
 
 ENV TZ Australia/Perth
 ENV DEBIAN_FRONTEND noninteractive

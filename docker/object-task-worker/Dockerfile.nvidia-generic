@@ -1,4 +1,4 @@
-FROM pytorch/pytorch:1.10.0-cuda11.3-cudnn8-runtime
+FROM --platform=linux/amd64 pytorch/pytorch:1.10.0-cuda11.3-cudnn8-runtime
 
 RUN apt-get update || true && apt-get install ffmpeg libsm6 libxext6  -y
 

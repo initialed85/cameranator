@@ -1,4 +1,4 @@
-FROM dizcza/pytorch-sm30:v1.10.2
+FROM --platform=linux/amd64 dizcza/pytorch-sm30:v1.10.2
 
 RUN apt-get update || true && apt-get install ffmpeg libsm6 libxext6  -y
 

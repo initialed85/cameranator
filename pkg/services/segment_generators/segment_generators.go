@@ -3,9 +3,10 @@ package segment_generators
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/initialed85/cameranator/pkg/liveness"
 	"log"
 	"sync"
+
+	"github.com/initialed85/cameranator/pkg/liveness"
 
 	"github.com/initialed85/glue/pkg/network"
 

@@ -2,10 +2,11 @@ package main
 
 import (
 	"flag"
-	"github.com/initialed85/cameranator/pkg/services/object_task_scheduler"
-	"github.com/initialed85/cameranator/pkg/utils"
 	"log"
 	"strings"
+
+	"github.com/initialed85/cameranator/pkg/services/object_task_scheduler"
+	"github.com/initialed85/cameranator/pkg/utils"
 )
 
 func main() {

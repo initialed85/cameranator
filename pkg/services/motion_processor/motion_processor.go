@@ -50,6 +50,9 @@ func NewMotionProcessor(
 	}
 
 	m.application, err = application.NewApplication(url, timeout)
+	if err != nil {
+		return nil, err
+	}
 
 	return &m, nil
 }

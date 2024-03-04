@@ -19,7 +19,7 @@ func TestNewWatcher(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	matcher, err := regexp.Compile(".*/file\\.txt")
+	matcher, err := regexp.Compile(`.*/file\.txt`)
 	if err != nil {
 		log.Fatal(err)
 	}

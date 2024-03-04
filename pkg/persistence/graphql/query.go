@@ -139,7 +139,7 @@ func getSortedKeys(
 	valueByField map[string]string,
 ) []string {
 	sortedKeys := make([]string, 0)
-	for k, _ := range valueByField {
+	for k := range valueByField {
 		sortedKeys = append(sortedKeys, k)
 	}
 
@@ -183,7 +183,7 @@ func getObject(
 	}
 
 	sortedKeys := make([]string, 0)
-	for key, _ := range fieldTypeAndValueByName {
+	for key := range fieldTypeAndValueByName {
 		sortedKeys = append(sortedKeys, key)
 	}
 	sort.Strings(sortedKeys)
@@ -192,7 +192,7 @@ func getObject(
 
 	object := ""
 	for _, key := range sortedKeys {
-		fieldTypeAndValue, _ := fieldTypeAndValueByName[key]
+		fieldTypeAndValue := fieldTypeAndValueByName[key]
 		fieldType := fieldTypeAndValue.Type
 		fieldValue := fieldTypeAndValue.Value
 

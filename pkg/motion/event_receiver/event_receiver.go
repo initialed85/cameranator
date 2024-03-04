@@ -151,7 +151,7 @@ func (r *EventReceiver) callback(addr *net.UDPAddr, data []byte) {
 
 	if event.Complete {
 		log.Printf("EventReceiver.callback; complete, invoking handler: event=%#+v", event)
-		r.handler(*&event)
+		r.handler(event)
 		delete(r.eventByEventID, eventID)
 	}
 }

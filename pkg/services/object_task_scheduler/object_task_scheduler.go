@@ -2,31 +2,34 @@ package object_task_scheduler
 
 import (
 	"encoding/json"
-	"github.com/hasura/go-graphql-client"
-	"github.com/initialed85/glue/pkg/worker"
-	"github.com/wagslane/go-rabbitmq"
 	"log"
 	"strings"
 	"time"
+
+	"github.com/hasura/go-graphql-client"
+	"github.com/initialed85/glue/pkg/worker"
+	"github.com/wagslane/go-rabbitmq"
 )
 
-const query = `
-query LiveEvents {
-  event(where: {needs_object_processing: {_eq: true}}, order_by: {start_timestamp: desc}) {
-    id
-    high_quality_video {
-      file_path
-      source_camera_id
-      start_timestamp
-      end_timestamp
-    }
-  }
-}
-`
+// const tickDuration = time.Second * 600
+
+// const query = `
+// query LiveEvents {
+// 	event(where: {needs_object_processing: {_eq: true}, is_segment: {_eq: true}, start_timestamp: {_gte: "__timestamp__"}}, order_by: {start_timestamp: desc}) {
+//     id
+//     high_quality_video {
+//       file_path
+//       source_camera_id
+//       start_timestamp
+//       end_timestamp
+//     }
+//   }
+// }
+// `
 
 const subscription = `
 subscription LiveEvents {
-  event(where: {needs_object_processing: {_eq: true}, start_timestamp: {_gte: "__timestamp__"}}, order_by: {start_timestamp: desc}) {
+  event(where: {needs_object_processing: {_eq: true}, is_segment: {_eq: true}, start_timestamp: {_gte: "__timestamp__"}}, order_by: {start_timestamp: desc}) {
     id
     high_quality_video {
       file_path
@@ -41,12 +44,12 @@ subscription LiveEvents {
 const amqpIdentifier = "object_tasks"
 
 type ObjectTaskScheduler struct {
-	blockedWorker *worker.BlockedWorker
-	amqpConn      *rabbitmq.Conn
-	amqpPublisher *rabbitmq.Publisher
-	graphqlClient *graphql.SubscriptionClient
-	url           string
-	amqp          string
+	scheduledWorker *worker.BlockedWorker
+	amqpConn        *rabbitmq.Conn
+	amqpPublisher   *rabbitmq.Publisher
+	graphqlClient   *graphql.SubscriptionClient
+	url             string
+	amqp            string
 }
 
 func NewObjectTaskScheduler(
@@ -58,10 +61,10 @@ func NewObjectTaskScheduler(
 		amqp: amqp,
 	}
 
-	o.blockedWorker = worker.NewBlockedWorker(
+	o.scheduledWorker = worker.NewBlockedWorker(
 		o.onStart,
 		func() {
-			time.Sleep(time.Second)
+			time.Sleep(time.Second * 1)
 		},
 		o.onStop,
 	)
@@ -81,6 +84,8 @@ func (o *ObjectTaskScheduler) handler(message []byte, err error) error {
 		  }
 		}
 	*/
+
+	log.Printf("handling message=%v", string(message))
 
 	if err != nil {
 		log.Printf("attempt to read message caused %#+v; ignoring", err)
@@ -145,15 +150,7 @@ func (o *ObjectTaskScheduler) onStart() {
 
 	o.graphqlClient = graphql.NewSubscriptionClient(o.url)
 
-	_, err = o.graphqlClient.Exec(query, nil, o.handler)
-	if err != nil {
-		// TODO
-		log.Panicf("attempt to invoke graphqlClient.Exec (for query) caused %#+v; cannot recover", err)
-		return
-	}
-
 	subscription := strings.ReplaceAll(subscription, "__timestamp__", time.Now().UTC().Format(time.RFC3339))
-
 	_, err = o.graphqlClient.Exec(subscription, nil, o.handler)
 	if err != nil {
 		// TODO
@@ -181,9 +178,9 @@ func (o *ObjectTaskScheduler) onStop() {
 }
 
 func (o *ObjectTaskScheduler) Start() {
-	o.blockedWorker.Start()
+	o.scheduledWorker.Start()
 }
 
 func (o *ObjectTaskScheduler) Stop() {
-	o.blockedWorker.Stop()
+	o.scheduledWorker.Stop()
 }

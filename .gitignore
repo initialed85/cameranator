@@ -9,4 +9,5 @@ temp_data/
 *.iml
 **/__pycache__/
 **/*.pyc
-
+object_task_worker/models/
+scratch/

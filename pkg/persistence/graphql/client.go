@@ -129,7 +129,7 @@ func (c *Client) Extract(
 	// try to infer key if none given
 	if key == "" {
 		keys := make([]string, 0)
-		for k, _ := range data {
+		for k := range data {
 			keys = append(keys, k)
 		}
 
