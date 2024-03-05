@@ -1,17 +1,13 @@
-// const host =
-//     window?.location?.port === "3000"
-//         ? "cameranator.local"
-//         : window?.location?.host
+export let apiHttpUrl = `https://cameranator.initialed85.cc/v1/graphql`
+export let apiWsUrl = `wss://cameranator.initialed85.cc/api/v1/graphql`
+export let fileHttpUrl = `https://cameranator.initialed85.cc/`
 
-// const httpProtocol = window?.location?.protocol || "http:"
-// const wsProtocol = httpProtocol === "https:" ? "wss:" : "ws:"
+if (window?.location?.port === "3000") {
+    apiHttpUrl = `http://localhost:8080/v1/graphql`
+    apiWsUrl = `ws://localhost:8080/v1/graphql`
+    fileHttpUrl = `https://cameranator.initialed85.cc/`
+}
 
-// const apiUrlPath = `/api/v1/graphql`
-
-// export const apiHttpUrl = `${httpProtocol}//${host}${apiUrlPath}/`
-// export const apiWsUrl = `${wsProtocol}//${host}${apiUrlPath}`
-// export const fileHttpUrl = `${httpProtocol}//${host}/`
-
-export const apiHttpUrl = `https://cameranator.initialed85.cc/api/v1/graphql`
-export const apiWsUrl = `wss://cameranator.initialed85.cc/api/v1/graphql`
-export const fileHttpUrl = `https://cameranator.initialed85.cc/`
+console.log(`apiHttpUrl = ${apiHttpUrl}`)
+console.log(`apiWsUrl = ${apiWsUrl}`)
+console.log(`fileHttpUrl = ${fileHttpUrl}`)

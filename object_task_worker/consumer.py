@@ -16,8 +16,8 @@ from object_task_worker.object_tracker import (
 )
 
 _AMQP_IDENTIFIER = "object_tasks"
-_CONNECT_TIMEOUT = 5
-_HEARTBEAT = 5
+_CONNECT_TIMEOUT = 60
+_HEARTBEAT = 60
 
 _INSERT_VIDEO_QUERY = """
 INSERT INTO video (
@@ -76,7 +76,7 @@ class Consumer(object):
 
         self._conn: Optional[Connection] = None
         self._consume_ch: Optional[Channel] = None
-        self._produce_ch: Optional[Channel] = None
+        # self._produce_ch: Optional[Channel] = None
 
     def _actual_handler(self, message: Message):
         # example event
@@ -111,7 +111,7 @@ class Consumer(object):
         object_tracker = ObjectTracker(
             model_name="yolov7.pt",
             device="cuda",
-            tracking_mode="centroid",
+            tracking_mode="bbox",
             conf_threshold=DEFAULT_CONF_THRESHOLD,
             iou_threshold=DEFAULT_IOU_THRESHOLD,
             img_size=DEFAULT_IMAGE_SIZE,
@@ -188,30 +188,54 @@ class Consumer(object):
 
         print("opening consume channel and declaring exchange and queue")
         self._consume_ch = self._conn.channel()
-        self._consume_ch.exchange_declare(_AMQP_IDENTIFIER, "direct")
-        self._consume_ch.queue_declare(_AMQP_IDENTIFIER)
+
+        self._consume_ch.exchange_declare(
+            _AMQP_IDENTIFIER,
+            "direct",
+            durable=True,
+            auto_delete=False,
+        )
+
+        self._consume_ch.queue_declare(
+            _AMQP_IDENTIFIER,
+            durable=True,
+            auto_delete=False,
+        )
+
         self._consume_ch.queue_bind(
             _AMQP_IDENTIFIER,
             exchange=_AMQP_IDENTIFIER,
             routing_key=_AMQP_IDENTIFIER,
         )
-        self._consume_ch.basic_consume(_AMQP_IDENTIFIER, callback=self._handler)
 
-        print("opening produce channel and declaring exchange and queue")
-        self._produce_ch = self._conn.channel()
-        self._produce_ch.exchange_declare(_AMQP_IDENTIFIER, "direct")
-        self._produce_ch.queue_declare(_AMQP_IDENTIFIER)
-        self._produce_ch.queue_bind(
+        self._consume_ch.basic_consume(
             _AMQP_IDENTIFIER,
-            exchange=_AMQP_IDENTIFIER,
-            routing_key=_AMQP_IDENTIFIER,
+            callback=self._handler,
         )
+
+        # print("opening produce channel and declaring exchange and queue")
+        # self._produce_ch = self._conn.channel()
+
+        # self._produce_ch.exchange_declare(
+        #     _AMQP_IDENTIFIER,
+        #     "direct",
+        # )
+
+        # self._produce_ch.queue_declare(
+        #     _AMQP_IDENTIFIER,
+        # )
+
+        # self._produce_ch.queue_bind(
+        #     _AMQP_IDENTIFIER,
+        #     exchange=_AMQP_IDENTIFIER,
+        #     routing_key=_AMQP_IDENTIFIER,
+        # )
 
         print("waiting for events...")
 
         while 1:
             try:
-                self._conn.drain_events(timeout=1)
+                self._conn.drain_events(timeout=5)
             except Timeout:
                 pass
             except KeyboardInterrupt:
@@ -221,8 +245,8 @@ class Consumer(object):
         if self._consume_ch:
             self._consume_ch.close()
 
-        if self._produce_ch:
-            self._produce_ch.close()
+        # if self._produce_ch:
+        #     self._produce_ch.close()
 
         if self._conn:
             self._conn.close()

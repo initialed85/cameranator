@@ -1,29 +1,29 @@
-import { gql } from "@apollo/client";
-import moment from "moment";
-import { Camera } from "./camera";
-import { Type } from "./type";
+import { gql } from "@apollo/client"
+import moment from "moment"
+import { Camera } from "./camera"
+import { Type } from "./type"
 
 export const getEventsQuery = (
-  camera: Camera,
-  date: moment.Moment,
-  type: Type
+    camera: Camera,
+    date: moment.Moment,
+    type: Type,
 ) => {
-  if (type.is_stream) {
-    throw Error(
-      `getEventsQuery invoked w/ type.is_stream=true! (camera=${JSON.stringify(
-        camera
-      )}, date=${date?.toISOString()}, type=${JSON.stringify(type)})`
-    );
-  }
+    if (type.is_stream) {
+        throw Error(
+            `getEventsQuery invoked w/ type.is_stream=true! (camera=${JSON.stringify(
+                camera,
+            )}, date=${date?.toISOString()}, type=${JSON.stringify(type)})`,
+        )
+    }
 
-  const startTimestamp = moment(
-    `${date.local().format("YYYY-MM-DD")}T00:00:00+0800`
-  );
-  const endTimestamp = moment(
-    `${date.local().format("YYYY-MM-DD")}T23:59:00+0800`
-  );
+    const startTimestamp = moment(
+        `${date.local().format("YYYY-MM-DD")}T00:00:00+0800`,
+    )
+    const endTimestamp = moment(
+        `${date.local().format("YYYY-MM-DD")}T23:59:00+0800`,
+    )
 
-  return gql`
+    return gql`
         subscription {
             event(
                 order_by: {start_timestamp: desc},
@@ -58,30 +58,46 @@ export const getEventsQuery = (
                     uuid
                     name
                 }
+                objects {
+                  detected_class_id
+                  detected_class_name
+                  start_timestamp
+                  end_timestamp
+                  tracked_object_id
+                }
             }
         }
-    `;
-};
+    `
+}
 
 export interface Video {
-  uuid: string;
-  file_path: string;
+    uuid: string
+    file_path: string
 }
 
 export interface Image {
-  uuid: string;
-  file_path: string;
+    uuid: string
+    file_path: string
+}
+
+export interface Object {
+    detected_class_id: number
+    detected_class_name: string
+    start_timestamp: string
+    end_timestamp: string
+    tracked_object_id: number
 }
 
 export interface Event {
-  __typename: string;
-  uuid: string;
-  start_timestamp: string;
-  end_timestamp: string;
-  is_segment: boolean;
-  high_quality_video: Video;
-  high_quality_image: Image;
-  low_quality_video: Video;
-  low_quality_image: Image;
-  source_camera: Camera;
+    __typename: string
+    uuid: string
+    start_timestamp: string
+    end_timestamp: string
+    is_segment: boolean
+    high_quality_video: Video
+    high_quality_image: Image
+    low_quality_video: Video
+    low_quality_image: Image
+    source_camera: Camera
+    objects: Object[]
 }

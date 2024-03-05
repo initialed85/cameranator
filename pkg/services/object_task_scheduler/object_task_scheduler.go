@@ -10,7 +10,6 @@ import (
 
 	"github.com/hasura/go-graphql-client"
 	"github.com/initialed85/cameranator/pkg/persistence/application"
-	"github.com/initialed85/cameranator/pkg/persistence/model"
 	"github.com/initialed85/glue/pkg/worker"
 	"github.com/wagslane/go-rabbitmq"
 )
@@ -47,7 +46,7 @@ subscription LiveEvents {
 
 const mutation = `
 mutation UpdateEvent {
-	update_event(where: {id: {_eq: __id__}}, _set: {needs_object_processing: false}) {
+	update_event(where: {id: {_in: [__ids__]}}, _set: {needs_object_processing: false}) {
 		returning {
 			id
 		}
@@ -136,36 +135,24 @@ func (o *ObjectTaskScheduler) handler(message []byte, err error) error {
 		return nil
 	}
 
+	eventIDs := make([]string, 0)
 	for _, event := range payload.Event {
-		client := eventModelAndClient.Client()
+		eventIDs = append(eventIDs, fmt.Sprintf("%v", event.ID))
+	}
 
-		updatedEvents := make([]*model.Event, 0)
-		err = eventModelAndClient.GetOne(&updatedEvents, "id", event.ID)
-		if err != nil {
-			log.Printf("attempt to get latest event caused %#+v; ignoring", err)
-			continue
-		}
-		if len(updatedEvents) == 0 {
-			log.Printf("attempt to get latest event resulted in an empty set; ignoring")
-			continue
-		}
+	client := eventModelAndClient.Client()
 
-		updatedEvent := updatedEvents[0]
-		if !updatedEvent.NeedsObjectProcessing {
-			log.Printf("event %v has already been processed; skipping", updatedEvent.ID)
-			continue
-		}
+	mutation := strings.ReplaceAll(mutation, "__ids__", strings.Join(eventIDs, ", "))
+	log.Printf("mutation: %v", mutation)
 
-		mutation := strings.ReplaceAll(mutation, "__id__", fmt.Sprintf("%v", event.ID))
-		log.Printf("mutation: %v", mutation)
+	result, err := client.Mutate(mutation)
+	if err != nil {
+		log.Printf("attempt to run mutation caused %#+v; ignoring", err)
+		return nil
+	}
+	log.Printf("result: %#+v", result)
 
-		result, err := client.Mutate(mutation)
-		if err != nil {
-			log.Printf("attempt to run mutation caused %#+v; ignoring", err)
-			continue
-		}
-		log.Printf("result: %#+v", result)
-
+	for _, event := range payload.Event {
 		eventJSON, err := json.Marshal(event)
 		if err != nil {
 			log.Printf("attempt to marshal event caused %#+v; ignoring", err)
@@ -212,7 +199,7 @@ func (o *ObjectTaskScheduler) onStart() {
 		rabbitmq.WithPublisherOptionsLogging,
 		rabbitmq.WithPublisherOptionsExchangeName(amqpIdentifier),
 		rabbitmq.WithPublisherOptionsExchangeDeclare,
-		rabbitmq.WithPublisherOptionsExchangeAutoDelete,
+		rabbitmq.WithPublisherOptionsExchangeDurable,
 	)
 	if err != nil {
 		// TODO
