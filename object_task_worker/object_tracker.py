@@ -177,8 +177,27 @@ class ObjectTracker(object):
         self._detected_object_by_object_id: Dict[int, RawDetectedObject] = {}
 
     def __del__(self):
-        self._executor.shutdown(wait=True)
-        del self
+        print("tearing down {}".format(self._executor))
+        try:
+            self._executor.shutdown(wait=False)
+        except Exception:
+            pass
+
+        print("tearing down {}".format(self._model))
+        try:
+            del self._model
+        except Exception:
+            pass
+
+        print("tearing down {}".format(self))
+        try:
+            super().__del__()
+        except Exception:
+            pass
+        try:
+            del self
+        except Exception:
+            pass
 
     def _draw_tracking_context_on_frame(
         self,
@@ -190,7 +209,7 @@ class ObjectTracker(object):
             # TODO
             # norfair.draw_points(
             #     frame=frame,
-            #     drawables=detections,
+            #     drawables=tracked_objects,
             #     color="by_label",
             #     thickness=1,
             #     draw_labels=True,
@@ -216,7 +235,7 @@ class ObjectTracker(object):
             # TODO
             # draw_boxes(
             #     frame=frame,
-            #     drawables=detections,
+            #     drawables=tracked_objects,
             #     color="by_label",
             #     thickness=1,
             #     draw_labels=True,

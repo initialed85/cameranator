@@ -124,6 +124,14 @@ func NewModelAndClient(model *Model, client *graphql.Client) *ModelAndClient {
 	return &m
 }
 
+func (m *ModelAndClient) Model() *Model {
+	return m.model
+}
+
+func (m *ModelAndClient) Client() *graphql.Client {
+	return m.client
+}
+
 func (m *ModelAndClient) GetAll(
 	items interface{},
 ) error {

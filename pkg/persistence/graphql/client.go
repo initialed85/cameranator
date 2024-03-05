@@ -196,3 +196,82 @@ func (c *Client) QueryAndExtractMultiple(
 
 	return nil
 }
+
+func (c *Client) Mutate(
+	mutation string,
+) (map[string][]interface{}, error) {
+	requestBody := map[string]interface{}{
+		"query":     strings.TrimSpace(mutation),
+		"variables": nil,
+	}
+
+	requestBodyJSON, err := json.Marshal(requestBody)
+	if err != nil {
+		return map[string][]interface{}{}, err
+	}
+
+	response, err := c.httpClient.Post(
+		c.url,
+		"application/json",
+		bytes.NewBuffer(requestBodyJSON),
+	)
+
+	defer func() {
+		if response == nil || response.Body == nil {
+			return
+		}
+		_ = response.Body.Close()
+	}()
+
+	if err != nil {
+		return map[string][]interface{}{}, err
+	}
+
+	responseBodyJSON, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return map[string][]interface{}{}, err
+	}
+
+	manyResponseBody := ManyResponseBody{}
+	singleResponseBody := SingleResponseBody{}
+
+	many := true
+
+	err = json.Unmarshal(responseBodyJSON, &manyResponseBody)
+	if err != nil {
+		err = json.Unmarshal(responseBodyJSON, &singleResponseBody)
+		if err != nil {
+			return map[string][]interface{}{}, err
+		}
+		many = false
+	}
+
+	var errors []Error
+
+	if many {
+		errors = manyResponseBody.Errors
+	} else {
+		errors = singleResponseBody.Errors
+	}
+
+	if len(errors) > 0 {
+		return map[string][]interface{}{}, fmt.Errorf(
+			"got %#+v attempting query %v",
+			errors,
+			mutation,
+		)
+	}
+
+	data := make(map[string][]interface{})
+
+	if many {
+		data = manyResponseBody.Data
+	} else {
+		for k, v := range singleResponseBody.Data {
+			data[k] = make([]interface{}, 0)
+			data[k] = append(data[k], v)
+		}
+	}
+
+	return data, nil
+}

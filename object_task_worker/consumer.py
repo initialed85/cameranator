@@ -47,10 +47,6 @@ INSERT INTO object (
 );
 """
 
-_UPDATE_EVENT_QUERY = """
-UPDATE event SET needs_object_processing = false WHERE id = %s;
-"""
-
 _DB_HOST = (os.getenv("DB_HOST") or "").strip()
 _DB_PORT = (os.getenv("DB_PORT") or "").strip()
 _DB_USER = (os.getenv("DB_USER") or "").strip()
@@ -82,19 +78,7 @@ class Consumer(object):
         self._consume_ch: Optional[Channel] = None
         self._produce_ch: Optional[Channel] = None
 
-        print("created object tracker..")
-        self._object_tracker = ObjectTracker(
-            model_name="yolov7.pt",
-            device="cuda",
-            tracking_mode="centroid",
-            conf_threshold=DEFAULT_CONF_THRESHOLD,
-            iou_threshold=DEFAULT_IOU_THRESHOLD,
-            img_size=DEFAULT_IMAGE_SIZE,
-            stride_frames=DEFAULT_STRIDE_FRAMES,
-        )
-        print("created {}".format(repr(self._object_tracker)))
-
-    def _handler(self, message: Message):
+    def _actual_handler(self, message: Message):
         # example event
         _ = {
             "id": 69,
@@ -123,8 +107,20 @@ class Consumer(object):
         start_timestamp = parse(start_timestamp)
         end_timestamp = parse(end_timestamp)
 
+        print("creating object tracker..")
+        object_tracker = ObjectTracker(
+            model_name="yolov7.pt",
+            device="cuda",
+            tracking_mode="centroid",
+            conf_threshold=DEFAULT_CONF_THRESHOLD,
+            iou_threshold=DEFAULT_IOU_THRESHOLD,
+            img_size=DEFAULT_IMAGE_SIZE,
+            stride_frames=DEFAULT_STRIDE_FRAMES,
+        )
+        print("created {}".format(repr(object_tracker)))
+
         print("processing video...")
-        processed_video: ProcessedVideo = self._object_tracker(
+        processed_video: ProcessedVideo = object_tracker(
             file_path
         )  # slow, blocking call to do the processing
 
@@ -163,13 +159,21 @@ class Consumer(object):
                         ),
                     )
 
-                print("updating event row...")
-                cur.execute(
-                    _UPDATE_EVENT_QUERY,
-                    (event_id,),
-                )
-
         print("done.")
+
+    def _handler(self, message: Message):
+        try:
+            print(f"handling message={repr(message)}...")
+            self._actual_handler(message)
+            print(f"successfully handled message={repr(message)}, acking...")
+            message.ack()
+            print(f"acked message={repr(message)}.")
+        except Exception as e:
+            print(
+                f"failed to handle message={repr(message)}; e={repr(e)}, rejecting..."
+            )
+            message.reject(requeue=True)
+            print(f"rejecrted message={repr(message)}.")
 
     def open(self):
         print("connecting to {}:{}".format(self._host, self._port))

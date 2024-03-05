@@ -2,11 +2,15 @@ package object_task_scheduler
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/hasura/go-graphql-client"
+	"github.com/initialed85/cameranator/pkg/persistence/application"
+	"github.com/initialed85/cameranator/pkg/persistence/model"
 	"github.com/initialed85/glue/pkg/worker"
 	"github.com/wagslane/go-rabbitmq"
 )
@@ -29,36 +33,60 @@ import (
 
 const subscription = `
 subscription LiveEvents {
-  event(where: {needs_object_processing: {_eq: true}, is_segment: {_eq: true}, start_timestamp: {_gte: "__timestamp__"}}, order_by: {start_timestamp: desc}) {
-    id
-    high_quality_video {
-      file_path
-      source_camera_id
-      start_timestamp
-      end_timestamp
-    }
-  }
+	event(where: {needs_object_processing: {_eq: true}, is_segment: {_eq: true}, start_timestamp: {_gte: "__timestamp__"}}, order_by: {start_timestamp: desc}) {
+		id
+		high_quality_video {
+		file_path
+		source_camera_id
+		start_timestamp
+		end_timestamp
+		}
+  	}
+}
+`
+
+const mutation = `
+mutation UpdateEvent {
+	update_event(where: {id: {_eq: __id__}}, _set: {needs_object_processing: false}) {
+		returning {
+			id
+		}
+	}
 }
 `
 
 const amqpIdentifier = "object_tasks"
 
 type ObjectTaskScheduler struct {
-	scheduledWorker *worker.BlockedWorker
-	amqpConn        *rabbitmq.Conn
-	amqpPublisher   *rabbitmq.Publisher
-	graphqlClient   *graphql.SubscriptionClient
-	url             string
-	amqp            string
+	scheduledWorker           *worker.BlockedWorker
+	amqpConn                  *rabbitmq.Conn
+	amqpPublisher             *rabbitmq.Publisher
+	graphqlSubscriptionClient *graphql.SubscriptionClient
+	application               *application.Application
+	mu                        *sync.Mutex
+	url                       string
+	amqp                      string
+	skipPublish               bool
 }
 
 func NewObjectTaskScheduler(
 	url string,
+	timeout time.Duration,
 	amqp string,
+	skipPublish bool,
 ) (*ObjectTaskScheduler, error) {
 	o := ObjectTaskScheduler{
-		url:  url,
-		amqp: amqp,
+		mu:          new(sync.Mutex),
+		url:         url,
+		amqp:        amqp,
+		skipPublish: skipPublish,
+	}
+
+	var err error
+
+	o.application, err = application.NewApplication(url, timeout)
+	if err != nil {
+		return nil, err
 	}
 
 	o.scheduledWorker = worker.NewBlockedWorker(
@@ -102,14 +130,56 @@ func (o *ObjectTaskScheduler) handler(message []byte, err error) error {
 		return nil
 	}
 
+	eventModelAndClient, err := o.application.GetModelAndClient("event")
+	if err != nil {
+		log.Printf("attempt to get model and client caused %#+v; ignoring", err)
+		return nil
+	}
+
 	for _, event := range payload.Event {
+		client := eventModelAndClient.Client()
+
+		updatedEvents := make([]*model.Event, 0)
+		err = eventModelAndClient.GetOne(&updatedEvents, "id", event.ID)
+		if err != nil {
+			log.Printf("attempt to get latest event caused %#+v; ignoring", err)
+			continue
+		}
+		if len(updatedEvents) == 0 {
+			log.Printf("attempt to get latest event resulted in an empty set; ignoring")
+			continue
+		}
+
+		updatedEvent := updatedEvents[0]
+		if !updatedEvent.NeedsObjectProcessing {
+			log.Printf("event %v has already been processed; skipping", updatedEvent.ID)
+			continue
+		}
+
+		mutation := strings.ReplaceAll(mutation, "__id__", fmt.Sprintf("%v", event.ID))
+		log.Printf("mutation: %v", mutation)
+
+		result, err := client.Mutate(mutation)
+		if err != nil {
+			log.Printf("attempt to run mutation caused %#+v; ignoring", err)
+			continue
+		}
+		log.Printf("result: %#+v", result)
+
 		eventJSON, err := json.Marshal(event)
 		if err != nil {
 			log.Printf("attempt to marshal event caused %#+v; ignoring", err)
 			continue
 		}
 
+		if o.skipPublish {
+			log.Printf("skipped publishing event=%v", string(eventJSON))
+			continue
+		}
+
+		o.mu.Lock()
 		err = o.amqpPublisher.Publish(eventJSON, []string{amqpIdentifier})
+		o.mu.Unlock()
 		if err != nil {
 			log.Printf("attempt to publish event caused %#+v; ignoring", err)
 			continue
@@ -124,6 +194,7 @@ func (o *ObjectTaskScheduler) handler(message []byte, err error) error {
 func (o *ObjectTaskScheduler) onStart() {
 	var err error
 
+	log.Printf("connecting to %v", o.amqp)
 	o.amqpConn, err = rabbitmq.NewConn(
 		o.amqp,
 		rabbitmq.WithConnectionOptionsLogging,
@@ -135,6 +206,7 @@ func (o *ObjectTaskScheduler) onStart() {
 		return
 	}
 
+	log.Printf("creating publisher for %v", amqpIdentifier)
 	o.amqpPublisher, err = rabbitmq.NewPublisher(
 		o.amqpConn,
 		rabbitmq.WithPublisherOptionsLogging,
@@ -148,17 +220,24 @@ func (o *ObjectTaskScheduler) onStart() {
 		return
 	}
 
-	o.graphqlClient = graphql.NewSubscriptionClient(o.url)
+	log.Printf("connecting to %v", o.url)
+	o.graphqlSubscriptionClient = graphql.NewSubscriptionClient(o.url)
 
-	subscription := strings.ReplaceAll(subscription, "__timestamp__", time.Now().UTC().Format(time.RFC3339))
-	_, err = o.graphqlClient.Exec(subscription, nil, o.handler)
+	log.Printf("building subscription...")
+	// timestamp := time.Now().UTC().Format(time.RFC3339)
+	timestamp := time.Time{}.Format(time.RFC3339) // unix epoch (so, forever)
+	subscription := strings.ReplaceAll(subscription, "__timestamp__", timestamp)
+	_, err = o.graphqlSubscriptionClient.Exec(subscription, nil, o.handler)
 	if err != nil {
 		// TODO
 		log.Panicf("attempt to invoke graphqlClient.Exec (for subscription) caused %#+v; cannot recover", err)
 		return
 	}
 
-	err = o.graphqlClient.Run()
+	log.Printf("%v", subscription)
+
+	log.Printf("running graphql client...")
+	err = o.graphqlSubscriptionClient.Run()
 	if err != nil {
 		// TODO
 		log.Panicf("attempt to invoke graphqlClient.Run caused %#+v; cannot recover", err)
@@ -167,8 +246,8 @@ func (o *ObjectTaskScheduler) onStart() {
 }
 
 func (o *ObjectTaskScheduler) onStop() {
-	_ = o.graphqlClient.Close()
-	o.graphqlClient = nil
+	_ = o.graphqlSubscriptionClient.Close()
+	o.graphqlSubscriptionClient = nil
 
 	_ = o.amqpPublisher.Close
 	o.amqpPublisher = nil
