@@ -39,15 +39,16 @@ func NewEvent(
 	randomUUID := utils.GetUUID()
 
 	return Event{
-		UUID:             randomUUID,
-		StartTimestamp:   StartTimestamp,
-		EndTimestamp:     EndTimestamp,
-		IsSegment:        IsSegment,
-		HighQualityVideo: HighQualityVideo,
-		HighQualityImage: HighQualityImage,
-		LowQualityVideo:  LowQualityVideo,
-		LowQualityImage:  LowQualityImage,
-		SourceCamera:     SourceCamera,
+		UUID:                  randomUUID,
+		StartTimestamp:        StartTimestamp,
+		EndTimestamp:          EndTimestamp,
+		IsSegment:             IsSegment,
+		HighQualityVideo:      HighQualityVideo,
+		HighQualityImage:      HighQualityImage,
+		LowQualityVideo:       LowQualityVideo,
+		LowQualityImage:       LowQualityImage,
+		SourceCamera:          SourceCamera,
+		NeedsObjectProcessing: true,
 	}
 }
 
@@ -64,14 +65,15 @@ func NewEventWithIDs(
 	randomUUID := utils.GetUUID()
 
 	return Event{
-		UUID:               randomUUID,
-		StartTimestamp:     StartTimestamp,
-		EndTimestamp:       EndTimestamp,
-		IsSegment:          IsSegment,
-		HighQualityVideoID: HighQualityVideoID,
-		HighQualityImageID: HighQualityImageID,
-		LowQualityVideoID:  LowQualityVideoID,
-		LowQualityImageID:  LowQualityImageID,
-		SourceCameraID:     SourceCameraID,
+		UUID:                  randomUUID,
+		StartTimestamp:        StartTimestamp,
+		EndTimestamp:          EndTimestamp,
+		IsSegment:             IsSegment,
+		HighQualityVideoID:    HighQualityVideoID,
+		HighQualityImageID:    HighQualityImageID,
+		LowQualityVideoID:     LowQualityVideoID,
+		LowQualityImageID:     LowQualityImageID,
+		SourceCameraID:        SourceCameraID,
+		NeedsObjectProcessing: true,
 	}
 }

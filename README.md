@@ -2,6 +2,11 @@
 
 # status: undergoing a hacky change in direction (moving away from motion daemon, towards PyTorch + YOLOv7)
 
+## TODO:
+
+-   Store video file size
+-   Store raw detected object data (class, confidence and bounding box for each detection)
+
 A ghetto CCTV system built on the following pieces of software:
 
 -   [motion](https://github.com/Motion-Project/motion)

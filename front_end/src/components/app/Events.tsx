@@ -192,15 +192,7 @@ export function Events(props: EventsProps) {
                         rel={"noreferrer"}
                         href={adjustPath(event.high_quality_video.file_path)}
                     >
-                        High-res
-                    </a>
-                    <br />
-                    <a
-                        target={`_low_quality_video_${event.uuid}`}
-                        rel={"noreferrer"}
-                        href={adjustPath(event.low_quality_video.file_path)}
-                    >
-                        Low-res
+                        Original
                     </a>
                     <br />
                     <a
@@ -213,7 +205,7 @@ export function Events(props: EventsProps) {
                             ),
                         )}
                     >
-                        Objects
+                        Tracked objects
                     </a>
                 </td>
             </tr>,
@@ -226,7 +218,7 @@ export function Events(props: EventsProps) {
                 <tr>
                     <th>Period</th>
                     <th>Duration</th>
-                    <th>Objects</th>
+                    <th>Tracked objects</th>
                     <th>Image</th>
                     <th>Download</th>
                 </tr>

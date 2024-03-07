@@ -111,7 +111,7 @@ class Consumer(object):
         object_tracker = ObjectTracker(
             model_name="yolov7.pt",
             device="cuda",
-            tracking_mode="bbox",
+            tracking_mode="centroid",  # bbox or centroid
             conf_threshold=DEFAULT_CONF_THRESHOLD,
             iou_threshold=DEFAULT_IOU_THRESHOLD,
             img_size=DEFAULT_IMAGE_SIZE,
