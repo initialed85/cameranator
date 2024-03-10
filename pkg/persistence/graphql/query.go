@@ -224,7 +224,7 @@ func getObject(
 
 				// TODO: hack- relies on this DB
 				parts := strings.Split(key, "_")
-				constraint := fmt.Sprintf("%v_uuid_key", parts[len(parts)-1])
+				constraint := fmt.Sprintf("%v_pkey", parts[len(parts)-1])
 
 				// TODO: hack- use of JSON to get field names
 				nestedItemJSON, err := json.Marshal(nestedItem)

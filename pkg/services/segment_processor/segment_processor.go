@@ -21,7 +21,6 @@ type WorkAndError struct {
 type SegmentProcessor struct {
 	correlator     *utils.Correlator
 	eventReceiver  *event_receiver.EventReceiver
-	videoConverter *converter.Converter
 	imageConverter *converter.Converter
 	application    *application.Application
 }
@@ -35,10 +34,6 @@ func NewSegmentProcessor(
 
 	m := SegmentProcessor{
 		correlator: utils.NewCorrelator(),
-		videoConverter: converter.NewVideoConverter(
-			2,
-			1024,
-		),
 		imageConverter: converter.NewImageConverter(
 			2,
 			1024,
@@ -61,13 +56,6 @@ func NewSegmentProcessor(
 func (s *SegmentProcessor) eventReceiverHandler(event segment_generator.Event) {
 	correlation := s.correlator.NewCorrelation(s.reconcileEvent)
 
-	videoWork := converter.Work{
-		SourcePath:      event.VideoPath,
-		DestinationPath: strings.ReplaceAll(event.VideoPath, ".mp4", "__lowres.mp4"),
-		Width:           640,
-		Height:          360,
-	}
-
 	imageWork := converter.Work{
 		SourcePath:      event.ImagePath,
 		DestinationPath: strings.ReplaceAll(event.ImagePath, ".jpg", "__lowres.jpg"),
@@ -75,23 +63,11 @@ func (s *SegmentProcessor) eventReceiverHandler(event segment_generator.Event) {
 		Height:          360,
 	}
 
-	eventItem := correlation.NewItem("event")
-	videoItem := correlation.NewItem("video")
 	imageItem := correlation.NewItem("image")
 
+	eventItem := correlation.NewItem("event")
 	eventItem.SetValue(event)
 	eventItem.Complete()
-
-	s.videoConverter.Submit(
-		videoWork,
-		func(work converter.Work, err error) {
-			videoItem.SetValue(WorkAndError{
-				Work: work,
-				Err:  err,
-			})
-			videoItem.Complete()
-		},
-	)
 
 	s.imageConverter.Submit(
 		imageWork,
@@ -103,6 +79,7 @@ func (s *SegmentProcessor) eventReceiverHandler(event segment_generator.Event) {
 			imageItem.Complete()
 		},
 	)
+
 }
 
 func (s *SegmentProcessor) reconcileEvent(correlation *utils.Correlation) {
@@ -115,18 +92,6 @@ func (s *SegmentProcessor) reconcileEvent(correlation *utils.Correlation) {
 	}
 
 	originalEvent := eventItem.GetValue().(segment_generator.Event)
-
-	videoWorkItem, err := correlation.GetItem("video")
-	if err != nil {
-		log.Printf("warning: %#+v marked as complete but failed to get video because %v", correlation, err)
-		return
-	}
-
-	videoWork := videoWorkItem.GetValue().(WorkAndError)
-	if videoWork.Err != nil {
-		log.Printf("warning: %#+v marked as complete but failed to get video because %v", correlation, videoWork.Err)
-		return
-	}
 
 	imageWorkItem, err := correlation.GetItem("image")
 	if err != nil {
@@ -145,10 +110,7 @@ func (s *SegmentProcessor) reconcileEvent(correlation *utils.Correlation) {
 		originalEvent.CameraName,
 		originalEvent.VideoStartTimestamp,
 		originalEvent.VideoEndTimestamp,
-		true,
-		videoWork.Work.SourcePath,
-		imageWork.Work.SourcePath,
-		videoWork.Work.DestinationPath,
+		originalEvent.VideoPath,
 		imageWork.Work.DestinationPath,
 	)
 	if err != nil {
@@ -161,12 +123,10 @@ func (s *SegmentProcessor) reconcileEvent(correlation *utils.Correlation) {
 
 func (s *SegmentProcessor) Start() error {
 	s.imageConverter.Start()
-	s.videoConverter.Start()
 	return s.eventReceiver.Open()
 }
 
 func (s *SegmentProcessor) Stop() {
 	s.eventReceiver.Close()
-	s.videoConverter.Stop()
 	s.imageConverter.Stop()
 }

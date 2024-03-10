@@ -35,15 +35,15 @@ func (m *Model) GetAll(
 		"asc", // TODO: tied to database schema
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to invoke GetManyQuery: %v", err)
 	}
 
 	err = c.QueryAndExtract(query, m.name, &item)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to invoke QueryAndExtract: %v", err)
 	}
 
-	return err
+	return nil
 }
 
 func (m *Model) GetOne(
@@ -59,15 +59,15 @@ func (m *Model) GetOne(
 		conditionValue,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to invoke GetOneQuery: %v", err)
 	}
 
 	err = c.QueryAndExtract(query, m.name, &item)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to invoke QueryAndExtract: %v", err)
 	}
 
-	return err
+	return nil
 }
 
 func (m *Model) Add(
@@ -80,14 +80,19 @@ func (m *Model) Add(
 		utils.Dereference(item),
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to invoke InsertQuery: %v", err)
 	}
 
-	return c.QueryAndExtract(
+	err = c.QueryAndExtract(
 		query,
 		fmt.Sprintf("insert_%v_one", m.name),
 		&items,
 	)
+	if err != nil {
+		return fmt.Errorf("failed to invoke QueryAndExtract: %v", err)
+	}
+
+	return nil
 }
 
 func (m *Model) Remove(
@@ -100,14 +105,19 @@ func (m *Model) Remove(
 		utils.Dereference(item),
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to invoke DeleteQuery: %v", err)
 	}
 
-	return c.QueryAndExtract(
+	err = c.QueryAndExtract(
 		query,
 		fmt.Sprintf("delete_%v", m.name),
 		&items,
 	)
+	if err != nil {
+		return fmt.Errorf("failed to invoke QueryAndExtract: %v", err)
+	}
+
+	return nil
 }
 
 type ModelAndClient struct {
@@ -135,7 +145,12 @@ func (m *ModelAndClient) Client() *graphql.Client {
 func (m *ModelAndClient) GetAll(
 	items interface{},
 ) error {
-	return m.model.GetAll(m.client, &items)
+	err := m.model.GetAll(m.client, &items)
+	if err != nil {
+		return fmt.Errorf("failed to invoke GetAll: %v", err)
+	}
+
+	return nil
 }
 
 func (m *ModelAndClient) GetOne(
@@ -143,19 +158,37 @@ func (m *ModelAndClient) GetOne(
 	conditionKey string,
 	conditionValue interface{},
 ) error {
-	return m.model.GetOne(m.client, &items, conditionKey, conditionValue)
+	err := m.model.GetOne(m.client, &items, conditionKey, conditionValue)
+	if err != nil {
+		return fmt.Errorf("failed to invoke GetOne: %v", err)
+	}
+
+	return nil
+
 }
 
 func (m *ModelAndClient) Add(
 	item interface{},
 	items interface{},
 ) error {
-	return m.model.Add(m.client, &item, &items)
+	err := m.model.Add(m.client, &item, &items)
+	if err != nil {
+		return fmt.Errorf("failed to invoke Add: %v", err)
+	}
+
+	return nil
+
 }
 
 func (m *ModelAndClient) Remove(
 	item interface{},
 	items interface{},
 ) error {
-	return m.model.Remove(m.client, &item, &items)
+	err := m.model.Remove(m.client, &item, &items)
+	if err != nil {
+		return fmt.Errorf("failed to invoke Remove: %v", err)
+	}
+
+	return nil
+
 }

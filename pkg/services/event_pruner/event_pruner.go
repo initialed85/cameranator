@@ -55,10 +55,8 @@ func (e *EventPruner) work() {
 	for _, event := range events {
 		paths := make([]string, 0)
 
-		paths = append(paths, event.HighQualityVideo.FilePath)
-		paths = append(paths, event.LowQualityVideo.FilePath)
-		paths = append(paths, event.HighQualityImage.FilePath)
-		paths = append(paths, event.LowQualityImage.FilePath)
+		paths = append(paths, event.OriginalVideo.FilePath)
+		paths = append(paths, event.ThumnailImage.FilePath)
 
 		remove := true
 		for _, path := range paths {

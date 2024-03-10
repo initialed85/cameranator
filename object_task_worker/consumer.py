@@ -1,17 +1,23 @@
 import os
-from typing import Optional
-
+import traceback
 import psycopg2
+import datetime
+from threading import Thread, Event
+from queue import Queue, Empty
+
+from typing import Optional, Dict, cast
 from amqpy import Connection, Message, Timeout, Channel
 from dateutil.parser import parse
 from orjson import loads
 
+from object_task_worker.helpers import get_query_for_detection
 from object_task_worker.object_tracker import (
+    DetectionContext,
     ObjectTracker,
-    DEFAULT_CONF_THRESHOLD,
-    DEFAULT_IOU_THRESHOLD,
-    DEFAULT_IMAGE_SIZE,
-    DEFAULT_STRIDE_FRAMES,
+    CONF_THRESHOLD,
+    IOU_THRESHOLD,
+    IMAGE_SIZE,
+    STRIDE_FRAMES,
     ProcessedVideo,
 )
 
@@ -21,12 +27,15 @@ _HEARTBEAT = 60
 
 _INSERT_VIDEO_QUERY = """
 INSERT INTO video (
-    start_timestamp, end_timestamp, size, is_high_quality, file_path, source_camera_id
+    start_timestamp,
+    end_timestamp,
+    size,
+    file_path,
+    camera_id
 ) VALUES (
     %s,
     %s,
     %s,
-    true,
     %s,
     %s
 )
@@ -35,9 +44,13 @@ RETURNING id;
 
 _INSERT_OBJECT_QUERY = """
 INSERT INTO object (
-    start_timestamp, end_timestamp, detected_class_id, detected_class_name, tracked_object_id, event_id, processed_video_id
+    start_timestamp,
+    end_timestamp,
+    class_id,
+    class_name,
+    camera_id,
+    event_id
 ) VALUES (
-    %s,
     %s,
     %s,
     %s,
@@ -45,6 +58,14 @@ INSERT INTO object (
     %s,
     %s
 );
+"""
+
+_UPDATE_EVENT_QUERY = """
+UPDATE event SET
+    processed_video_id = %s,
+    status = 'needs tracking'
+WHERE
+    id = %s;
 """
 
 _DB_HOST = (os.getenv("DB_HOST") or "").strip()
@@ -76,50 +97,138 @@ class Consumer(object):
 
         self._conn: Optional[Connection] = None
         self._consume_ch: Optional[Channel] = None
-        # self._produce_ch: Optional[Channel] = None
+
+        self._queue = Queue(maxsize=65536)
+        self._stop_event = Event()
+        self._thread = Thread(target=self._handle_write_detections_to_db, daemon=False)
+        self._thread.start()
+
+    def __del__(self):
+        self._stop_event.set()
+
+        try:
+            print("trying to join background thread...")
+            self._thread.join()
+            print("joined.")
+        except Exception:
+            pass
+
+    def _handle_write_detections_to_db(self):
+        while not self._stop_event.is_set():
+            try:
+                (
+                    detection_context,
+                    name_by_class_id,
+                    start_timestamp,
+                    camera_id,
+                    event_id,
+                ) = self._queue.get(timeout=1)
+            except Empty:
+                continue
+
+            detection_context = cast(DetectionContext, detection_context)
+            name_by_class_id = cast(Dict[int, str], name_by_class_id)
+            start_timestamp = cast(datetime.datetime, start_timestamp)
+            camera_id = cast(int, camera_id)
+            event_id = cast(int, event_id)
+
+            try:
+                query = get_query_for_detection(
+                    detection_context=detection_context,
+                    name_by_class_id=name_by_class_id,
+                    start_timestamp=start_timestamp,
+                    camera_id=camera_id,
+                    event_id=event_id,
+                )
+            except Exception:
+                traceback.print_exc()
+                continue
+
+            if not query:
+                continue
+
+            print(query)
+
+            with psycopg2.connect(_DSN) as conn:
+                with conn.cursor() as cur:
+                    try:
+                        detections = len(
+                            detection_context.centroid_detections or []
+                        ) + len(detection_context.bbox_detections or [])
+
+                        print(
+                            f"insert of {detections} detections for event_id={event_id}"
+                        )
+
+                        cur.execute(query)
+                    except Exception:
+                        traceback.print_exc()
+                        continue
+
+    def _write_detections_to_db(
+        self,
+        detection_context: DetectionContext,
+        name_by_class_id: Dict[int, str],
+        start_timestamp: datetime.datetime,
+        camera_id: int,
+        event_id: int,
+    ):
+        self._queue.put(
+            (
+                detection_context,
+                name_by_class_id,
+                start_timestamp,
+                camera_id,
+                event_id,
+            )
+        )
 
     def _actual_handler(self, message: Message):
-        # example event
-        _ = {
-            "id": 69,
-            "high_quality_video": {
-                "file_path": "/srv/target_dir/events/Event_2023-01-31T17:01:44__102__FrontDoor__2710.mp4",
-                "source_camera_id": 3,
-                "start_timestamp": "2023-01-31T09:01:48Z",
-                "end_timestamp": "2023-01-31T09:02:03Z",
-            },
-        }
-
         event = loads(message.body)
         print(f"received event={repr(event)}")
 
         event_id = event.get("id")
-        file_path = event.get("high_quality_video", {}).get("file_path")
-        source_camera_id = event.get("high_quality_video", {}).get("source_camera_id")
-        start_timestamp = event.get("high_quality_video", {}).get("start_timestamp")
-        end_timestamp = event.get("high_quality_video", {}).get("end_timestamp")
+        file_path = event.get("original_video", {}).get("file_path")
+        camera_id = event.get("original_video", {}).get("camera_id")
+        start_timestamp = event.get("original_video", {}).get("start_timestamp")
+        end_timestamp = event.get("original_video", {}).get("end_timestamp")
 
-        if not all(
-            [event_id, file_path, source_camera_id, start_timestamp, end_timestamp]
-        ):
+        if not all([event_id, file_path, camera_id, start_timestamp, end_timestamp]):
             raise ValueError("unexpectedly Falsey field in event={}".format(event))
 
         start_timestamp = parse(start_timestamp)
         end_timestamp = parse(end_timestamp)
 
+        def write_detections_to_db(
+            detection_context: DetectionContext,
+            name_by_class_id: Dict[int, str],
+        ):
+            print(
+                f"queueing insert of {max([len(detection_context.centroid_detections), len(detection_context.bbox_detections)])} detections for event_id={event_id}"
+            )
+
+            return self._write_detections_to_db(
+                detection_context=detection_context,
+                name_by_class_id=name_by_class_id,
+                start_timestamp=start_timestamp,
+                camera_id=camera_id,
+                event_id=event_id,
+            )
+
         print("creating object tracker..")
         object_tracker = ObjectTracker(
             model_name="yolov7.pt",
             device="cuda",
-            tracking_mode="centroid",  # bbox or centroid
-            conf_threshold=DEFAULT_CONF_THRESHOLD,
-            iou_threshold=DEFAULT_IOU_THRESHOLD,
-            img_size=DEFAULT_IMAGE_SIZE,
-            stride_frames=DEFAULT_STRIDE_FRAMES,
+            tracking_mode="bbox",  # bbox or centroid
+            conf_threshold=CONF_THRESHOLD,
+            iou_threshold=IOU_THRESHOLD,
+            img_size=IMAGE_SIZE,
+            stride_frames=STRIDE_FRAMES,
+            handle_detections=write_detections_to_db,
         )
-        print("created {}".format(repr(object_tracker)))
+        print(f"created {repr(object_tracker)}")
 
-        print("processing video...")
+        print(f"processing video for file_path={file_path}...")
         processed_video: ProcessedVideo = object_tracker(
             file_path
         )  # slow, blocking call to do the processing
@@ -128,7 +237,9 @@ class Consumer(object):
 
         with psycopg2.connect(_DSN) as conn:
             with conn.cursor() as cur:
-                print("insert video row...")
+                print(
+                    f"insert video row for file_path={repr(processed_video.output_path)}..."
+                )
                 cur.execute(
                     _INSERT_VIDEO_QUERY,
                     (
@@ -136,15 +247,23 @@ class Consumer(object):
                         end_timestamp.isoformat(),
                         size,
                         processed_video.output_path,
-                        source_camera_id,
+                        camera_id,
+                    ),
+                )
+                processed_video_id = cur.fetchone()[0]
+
+                print(f"update event row for event_id={event_id}...")
+                cur.execute(
+                    _UPDATE_EVENT_QUERY,
+                    (
+                        processed_video_id,
+                        event_id,
                     ),
                 )
 
-                processed_video_id = cur.fetchone()[0]
-
                 for detected_object in processed_video.detected_objects:
                     print(
-                        f"insert object row for object_id={detected_object.object_id}..."
+                        f"insert object row for class_id={detected_object.class_id}, class_name={repr(detected_object.class_name)}..."
                     )
                     cur.execute(
                         _INSERT_OBJECT_QUERY,
@@ -153,9 +272,8 @@ class Consumer(object):
                             start_timestamp + detected_object.end_timedelta,
                             detected_object.class_id,
                             detected_object.class_name,
-                            detected_object.object_id,
+                            camera_id,
                             event_id,
-                            processed_video_id,
                         ),
                     )
 
@@ -213,24 +331,6 @@ class Consumer(object):
             callback=self._handler,
         )
 
-        # print("opening produce channel and declaring exchange and queue")
-        # self._produce_ch = self._conn.channel()
-
-        # self._produce_ch.exchange_declare(
-        #     _AMQP_IDENTIFIER,
-        #     "direct",
-        # )
-
-        # self._produce_ch.queue_declare(
-        #     _AMQP_IDENTIFIER,
-        # )
-
-        # self._produce_ch.queue_bind(
-        #     _AMQP_IDENTIFIER,
-        #     exchange=_AMQP_IDENTIFIER,
-        #     routing_key=_AMQP_IDENTIFIER,
-        # )
-
         print("waiting for events...")
 
         while 1:
@@ -244,9 +344,6 @@ class Consumer(object):
     def close(self):
         if self._consume_ch:
             self._consume_ch.close()
-
-        # if self._produce_ch:
-        #     self._produce_ch.close()
 
         if self._conn:
             self._conn.close()

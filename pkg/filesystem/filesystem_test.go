@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/initialed85/cameranator/pkg/test_utils"
 )
@@ -16,12 +17,12 @@ import (
 func TestNewWatcher(t *testing.T) {
 	dir, err := test_utils.GetTempDir()
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 
 	matcher, err := regexp.Compile(`.*/file\.txt`)
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 
 	created := make([]File, 0)
@@ -48,7 +49,7 @@ func TestNewWatcher(t *testing.T) {
 
 	f, err := os.Create(fmt.Sprintf("%v/file.txt", dir))
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 	time.Sleep(time.Millisecond * 100)
 	assert.Len(t, created, 1)
@@ -56,7 +57,7 @@ func TestNewWatcher(t *testing.T) {
 
 	_, err = f.Write([]byte("Hello, world."))
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 	time.Sleep(time.Millisecond * 100)
 	assert.Len(t, created, 1)
@@ -64,7 +65,7 @@ func TestNewWatcher(t *testing.T) {
 
 	_, err = f.Write([]byte("Hello, world."))
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 	time.Sleep(time.Millisecond * 100)
 	assert.Len(t, created, 1)

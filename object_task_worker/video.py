@@ -43,38 +43,55 @@ class Video(_Video):
         del self
 
     def __iter__(self):
-        with self.progress_bar as progress_bar:
-            start = time.time()
+        start = time.time()
 
-            while True:
-                self.frame_counter += 1
-                ret, frame = self.video_capture.read()
-                if ret is False or frame is None:
-                    break
-                process_fps = self.frame_counter / (time.time() - start)
-                progress_bar.update(
-                    self.task, advance=1, refresh=True, process_fps=process_fps
-                )
-                yield frame
+        process_fpses = []
+
+        while True:
+            self.frame_counter += 1
+
+            ret, frame = self.video_capture.read()
+            if ret is False or frame is None:
+                break
+
+            process_fps = self.frame_counter / (time.time() - start)
+            process_fpses.append(process_fps)
+
+            yield frame
 
         wait(self._futures)
 
+        min_process_fps = 0
+        avg_process_fps = 0
+        max_process_fps = 0
+
+        if len(process_fpses) > 0:
+            min_process_fps = min(process_fpses)
+            avg_process_fps = sum(process_fpses) / len(process_fpses)
+            max_process_fps = max(process_fpses)
+
+        print(
+            f"fps_min={min_process_fps}, fps_avg={avg_process_fps}, fps_max={max_process_fps}"
+        )
+
         if self.output_video is not None:
             self.output_video.release()
-            print(
-                f"[white]Output video file saved to: {self.get_output_file_path()}[/white]"
-            )
+            print(f"Output video file saved to: {self.get_output_file_path()}")
+
         self.video_capture.release()
         cv2.destroyAllWindows()
 
     def _write(self, frame: np.ndarray):
         if self.output_video is None:
             output_file_path = self.get_output_file_path()
+
             fourcc = cv2.VideoWriter_fourcc(*self.get_codec_fourcc(output_file_path))
+
             output_size = (
                 frame.shape[1],
                 frame.shape[0],
             )
+
             self.output_video = cv2.VideoWriter(
                 output_file_path,
                 fourcc,
@@ -85,5 +102,11 @@ class Video(_Video):
         self.output_video.write(frame)
 
     def write(self, frame: np.ndarray) -> int:
-        self._futures.append(self._executor.submit(self._write, frame))
+        self._futures.append(
+            self._executor.submit(
+                self._write,
+                frame,
+            ),
+        )
+
         return -1

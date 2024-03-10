@@ -3,17 +3,17 @@ FROM --platform=linux/amd64 linuxserver/ffmpeg AS base
 RUN apt-get update && apt-get upgrade -y libfontconfig1 && apt-get install -y --reinstall \
     libfontconfig1 libfontconfig1-dev fontconfig-config
 
-FROM golang:1.19 AS build
+# FROM golang:1.21 AS build
 
-WORKDIR /srv/
+# WORKDIR /srv/
 
-COPY ./go.mod /srv/go.mod
-COPY ./go.sum /srv/go.sum
-RUN go mod download
+# COPY ./go.mod /srv/go.mod
+# COPY ./go.sum /srv/go.sum
+# RUN go mod download
 
-COPY ./cmd /srv/cmd
-COPY ./pkg /srv/pkg
-RUN go build -v -o object_task_scheduler ./cmd/object_task_scheduler/main.go
+# COPY ./cmd /srv/cmd
+# COPY ./pkg /srv/pkg
+# RUN go build -v -o object_task_scheduler ./cmd/object_task_scheduler/main.go
 
 FROM --platform=linux/amd64 base AS run
 
@@ -25,7 +25,8 @@ RUN apt-get update && apt-get install -y \
 
 RUN dpkg-reconfigure -f noninteractive tzdata
 
-COPY --from=build /srv/object_task_scheduler /srv/
+# COPY --from=build /srv/object_task_scheduler /srv/
+COPY ./object_task_scheduler /srv/
 
 WORKDIR /srv/
 

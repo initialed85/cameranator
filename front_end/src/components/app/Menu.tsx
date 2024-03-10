@@ -71,11 +71,11 @@ function getCameraButtons(
         buttons.push(
             <ToggleButton
                 size="sm"
-                key={item.uuid}
+                key={item.id}
                 variant={"outline-primary"}
-                value={item.uuid}
-                id={item.uuid}
-                active={item.uuid === camera?.uuid}
+                value={item.id}
+                id={item.id}
+                active={item.id === camera?.id}
                 onClick={() => {
                     setCamera(item as any)
                 }}
@@ -104,9 +104,7 @@ function getStreamButton(camera: Camera | null) {
                 variant={"outline-primary"}
                 disabled={!camera}
                 href={
-                    camera
-                        ? `${fileHttpUrl}motion-stream/${camera.external_id}/stream/`
-                        : "#"
+                    camera ? `${fileHttpUrl}stream/${camera.id}/stream/` : "#"
                 }
                 target={"_stream"}
             >
@@ -170,7 +168,7 @@ function getObjectFilter(setObjectFilter: Dispatch<SetStateAction<string>>) {
             id="objectFilter"
             type="text"
             size={"sm"}
-            style={{ width: "300px" }}
+            style={{ width: "200px" }}
             onChange={(event) => {
                 setObjectFilter(event.target.value)
             }}
@@ -210,13 +208,13 @@ export function Menu(props: MenuProps) {
 
             <Navbar.Collapse>
                 <Nav>
-                    {getTypeButtons(props.types, props.type, props.setType)}
+                    {/* {getTypeButtons(props.types, props.type, props.setType)} */}
                     {getCameraButtons(
                         props.cameras,
                         props.camera,
                         props.setCamera,
                     )}
-                    {getStreamButton(props.camera)}
+                    {/* {getStreamButton(props.camera)} */}
                     {getDateDropdown(props.dates, props.date, props.setDate)}
                 </Nav>
                 {getObjectFilter(props.setObjectFilter)}

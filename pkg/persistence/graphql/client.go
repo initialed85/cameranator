@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -52,7 +52,7 @@ func (c *Client) Query(
 
 	requestBodyJSON, err := json.Marshal(requestBody)
 	if err != nil {
-		return map[string][]interface{}{}, err
+		return map[string][]interface{}{}, fmt.Errorf("failed to marshal %#+v; %v", requestBody, err)
 	}
 
 	response, err := c.httpClient.Post(
@@ -60,7 +60,9 @@ func (c *Client) Query(
 		"application/json",
 		bytes.NewBuffer(requestBodyJSON),
 	)
-
+	if err != nil {
+		return map[string][]interface{}{}, fmt.Errorf("failed to POST %v; %v", string(requestBodyJSON), err)
+	}
 	defer func() {
 		if response == nil || response.Body == nil {
 			return
@@ -68,13 +70,9 @@ func (c *Client) Query(
 		_ = response.Body.Close()
 	}()
 
+	responseBodyJSON, err := io.ReadAll(response.Body)
 	if err != nil {
-		return map[string][]interface{}{}, err
-	}
-
-	responseBodyJSON, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return map[string][]interface{}{}, err
+		return map[string][]interface{}{}, fmt.Errorf("failed to read JSON from %#+v; %v", response.Body, err)
 	}
 
 	manyResponseBody := ManyResponseBody{}
@@ -86,23 +84,29 @@ func (c *Client) Query(
 	if err != nil {
 		err = json.Unmarshal(responseBodyJSON, &singleResponseBody)
 		if err != nil {
-			return map[string][]interface{}{}, err
+			return map[string][]interface{}{}, fmt.Errorf("failed to unmarshal %v as many or single response; %v", string(responseBodyJSON), err)
 		}
 		many = false
 	}
 
-	var errors []Error
+	var errs []Error
 
 	if many {
-		errors = manyResponseBody.Errors
+		errs = manyResponseBody.Errors
 	} else {
-		errors = singleResponseBody.Errors
+		errs = singleResponseBody.Errors
 	}
 
-	if len(errors) > 0 {
+	if len(errs) > 0 {
+		errorMessages := make([]string, 0)
+
+		for _, err := range errs {
+			errorMessages = append(errorMessages, err.Message)
+		}
+
 		return map[string][]interface{}{}, fmt.Errorf(
-			"got %#+v attempting query %v",
-			errors,
+			"server rejected query stating: %v; query was %v",
+			strings.Join(errorMessages, ", "),
 			query,
 		)
 	}
@@ -159,14 +163,19 @@ func (c *Client) QueryAndExtract(
 ) error {
 	data, err := c.Query(query)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to invoke Query: %v", err)
 	}
 
-	return c.Extract(
+	err = c.Extract(
 		data,
 		key,
 		result,
 	)
+	if err != nil {
+		return fmt.Errorf("failed to invoke Extract: %v", err)
+	}
+
+	return nil
 }
 
 func (c *Client) QueryAndExtractMultiple(
@@ -227,7 +236,7 @@ func (c *Client) Mutate(
 		return map[string][]interface{}{}, err
 	}
 
-	responseBodyJSON, err := ioutil.ReadAll(response.Body)
+	responseBodyJSON, err := io.ReadAll(response.Body)
 	if err != nil {
 		return map[string][]interface{}{}, err
 	}

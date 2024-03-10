@@ -11,21 +11,16 @@ import (
 
 var (
 	disableNvidia     = false
-	enablePassthrough = false
+	enablePassthrough = true
 )
-
-func DisableNvidia() {
-	disableNvidia = true
-	log.Printf("warning: Nvidia support disabled at user request")
-}
 
 func init() {
 	if os.Getenv("DISABLE_NVIDIA") == "1" {
 		disableNvidia = true
 	}
 
-	if os.Getenv("ENABLE_PASSTHROUGH") == "1" {
-		enablePassthrough = true
+	if os.Getenv("ENABLE_PASSTHROUGH") == "0" {
+		enablePassthrough = false
 	}
 }
 

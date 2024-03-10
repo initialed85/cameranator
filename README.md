@@ -2,6 +2,22 @@
 
 # status: undergoing a hacky change in direction (moving away from motion daemon, towards PyTorch + YOLOv7)
 
+```shell
+docker run --platform=linux/amd64 --rm -it -e POSTGRES_PASSWORD=postgrespassword -e POSTGRES_DB=cameranator -p 5432:5432 postgis/postgis:14-3.4
+
+PGPASSWORD=postgrespassword psql -h localhost -p 5432 -U postgres cameranator < persistence/real-migrations.sql
+
+docker run --rm -d -e HASURA_GRAPHQL_DATABASE_URL=postgresql://postgres:postgrespassword@host.docker.internal:5432/cameranator -e HASURA_GRAPHQL_ENABLE_CONSOLE=true -e HASURA_GRAPHQL_DEV_MODE=true -p 8082:8080 --name hasura hasura/graphql-engine:v2.1.0; docker logs -f -t hasura; docker stop -t 0 hasura
+
+docker run --rm -it --name rtsp-simple-server -e RTSP_PROTOCOLS=tcp -p 8554:8554 aler9/rtsp-simple-server
+
+docker run --rm -it --name ffmpeg -v "$(pwd)/test_data/segments/":/srv/ jrottenberg/ffmpeg:4.3.1-ubuntu1804 -re -stream_loop -1 -i /srv/Segment_2020-12-25T08:45:04_Driveway.mp4 -c copy -f rtsp rtsp://host.docker.internal:8554/Streaming/Channels/101
+
+PGPASSWORD=postgrespassword psql -h localhost -p 5432 -U postgres cameranator < persistence/real-migrations.sql >/dev/null 2>&1; go test -v -count=1 ./pkg/persistence/...
+
+find . -type f -name '*.py' | entr -c -s "pylint --disable C0301,C0114,E0401,C0115,C0116,R0902,R0913,R1721,C0209,W0718,R0914,E1101,R0205,E0611 object_task_worker/"
+```
+
 ## TODO:
 
 -   Store video file size

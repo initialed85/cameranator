@@ -1,20 +1,18 @@
-import { gql } from "@apollo/client";
+import { gql } from "@apollo/client"
 
 export const CAMERAS = gql`
-  subscription cameras {
-    camera(order_by: { name: asc }) {
-      uuid
-      name
-      stream_url
-      external_id
+    subscription cameras {
+        camera(order_by: { name: asc }) {
+            id
+            name
+            stream_url
+        }
     }
-  }
-`;
+`
 
 export interface Camera {
-  __typename: string | null;
-  uuid: string;
-  name: string;
-  stream_url: string | null;
-  external_id: string | null;
+    __typename: string | null
+    id: string
+    name: string
+    stream_url: string | null
 }

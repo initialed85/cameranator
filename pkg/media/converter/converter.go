@@ -26,11 +26,6 @@ func init() {
 	}
 }
 
-func DisableNvidia() {
-	disableNvidia = true
-	log.Printf("warning: Nvidia support disabled at user request")
-}
-
 func IsConversionEnabled() bool {
 	return enableConversion
 }

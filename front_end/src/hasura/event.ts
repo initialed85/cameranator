@@ -28,42 +28,31 @@ export const getEventsQuery = (
             event(
                 order_by: {start_timestamp: desc},
                 where: {
-                    is_segment: {_eq: ${type.is_segment}},
                     start_timestamp: {_gte: "${startTimestamp.toISOString()}"},
                     end_timestamp: {_lte: "${endTimestamp.toISOString()}"}
-                    source_camera: {uuid: {_eq: "${camera.uuid}"}}
+                    source_camera: {id: {_eq: ${camera.id}}}
                 }
             ) {
-                uuid
+                id
                 start_timestamp
                 end_timestamp
-                is_segment
-                high_quality_video {
-                    uuid
+                original_video {
+                    id
                     file_path
                 }
-                high_quality_image {
-                    uuid
-                    file_path
-                }
-                low_quality_video {
-                    uuid
-                    file_path
-                }
-                low_quality_image {
-                    uuid
+                thumbnail_image {
+                    id
                     file_path
                 }
                 source_camera {
-                    uuid
+                    id
                     name
                 }
                 objects {
-                  detected_class_id
-                  detected_class_name
+                  class_id
+                  class_name
                   start_timestamp
                   end_timestamp
-                  tracked_object_id
                 }
             }
         }
@@ -71,33 +60,29 @@ export const getEventsQuery = (
 }
 
 export interface Video {
-    uuid: string
+    id: string
     file_path: string
 }
 
 export interface Image {
-    uuid: string
+    id: string
     file_path: string
 }
 
 export interface Object {
-    detected_class_id: number
-    detected_class_name: string
+    class_id: number
+    class_name: string
     start_timestamp: string
     end_timestamp: string
     tracked_object_id: number
 }
 
 export interface Event {
-    __typename: string
-    uuid: string
+    id: string
     start_timestamp: string
     end_timestamp: string
-    is_segment: boolean
-    high_quality_video: Video
-    high_quality_image: Image
-    low_quality_video: Video
-    low_quality_image: Image
+    original_video: Video
+    thumbnail_image: Image
     source_camera: Camera
     objects: Object[]
 }

@@ -2,13 +2,13 @@ package event_receiver
 
 import (
 	"encoding/json"
-	"log"
 	"testing"
 	"time"
 
 	"github.com/initialed85/glue/pkg/network"
 	"github.com/relvacode/iso8601"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/initialed85/cameranator/pkg/segments/segment_generator"
 	"github.com/initialed85/cameranator/pkg/utils"
@@ -24,12 +24,12 @@ func TestNewEventReceiver_All(t *testing.T) {
 		},
 	)
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 	err = eventReceiver.Open()
 	defer eventReceiver.Close()
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 	time.Sleep(time.Millisecond * 100)
 
@@ -37,7 +37,7 @@ func TestNewEventReceiver_All(t *testing.T) {
 	err = sender.Open()
 	defer sender.Close()
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 	time.Sleep(time.Millisecond * 100)
 
@@ -56,12 +56,12 @@ func TestNewEventReceiver_All(t *testing.T) {
 
 	testEventJSON, err := json.Marshal(testEvent)
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 
 	err = sender.Send(testEventJSON)
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 
 	time.Sleep(time.Millisecond * 1000)

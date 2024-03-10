@@ -8,43 +8,41 @@ import (
 
 	"github.com/initialed85/glue/pkg/network"
 	"github.com/relvacode/iso8601"
+	"github.com/stretchr/testify/require"
 
-	"github.com/initialed85/cameranator/pkg/media/converter"
 	"github.com/initialed85/cameranator/pkg/persistence/model"
 	"github.com/initialed85/cameranator/pkg/segments/segment_generator"
 	"github.com/initialed85/cameranator/pkg/utils"
 )
 
 func TestSegmentProcessor(t *testing.T) {
-	converter.DisableNvidia()
-
 	m, err := NewSegmentProcessor(
 		6291,
 		"http://localhost:8082/v1/graphql",
 		time.Second*10,
 	)
 	if err != nil {
-		log.Fatal()
+		require.NoError(t, err)
 	}
 
 	cameraModelAndClient, err := m.application.GetModelAndClient("camera")
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 
 	imageModelAndClient, err := m.application.GetModelAndClient("image")
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 
 	videoModelAndClient, err := m.application.GetModelAndClient("video")
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 
 	eventModelAndClient, err := m.application.GetModelAndClient("event")
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 
 	camera := model.NewCamera(
@@ -57,55 +55,55 @@ func TestSegmentProcessor(t *testing.T) {
 		events := make([]model.Event, 0)
 		err = eventModelAndClient.GetAll(&events)
 		if err != nil {
-			log.Fatal(err)
+			require.NoError(t, err)
 		}
 
 		for _, event := range events {
 			err = eventModelAndClient.Remove(&event, []model.Event{})
 			if err != nil {
-				log.Fatal(err)
+				require.NoError(t, err)
 			}
 		}
 
 		videos := make([]model.Video, 0)
 		err = videoModelAndClient.GetAll(&videos)
 		if err != nil {
-			log.Fatal(err)
+			require.NoError(t, err)
 		}
 
 		for _, video := range videos {
 			err = videoModelAndClient.Remove(&video, []model.Video{})
 			if err != nil {
-				log.Fatal(err)
+				require.NoError(t, err)
 			}
 		}
 
 		images := make([]model.Image, 0)
 		err = imageModelAndClient.GetAll(&images)
 		if err != nil {
-			log.Fatal(err)
+			require.NoError(t, err)
 		}
 
 		for _, image := range images {
 			err = imageModelAndClient.Remove(&image, []model.Image{})
 			if err != nil {
-				log.Fatal(err)
+				require.NoError(t, err)
 			}
 		}
 
 		err = cameraModelAndClient.Remove(&camera, []model.Camera{})
 		if err != nil {
-			log.Fatal(err)
+			require.NoError(t, err)
 		}
 	}()
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 
 	err = m.Start()
 	defer m.Stop()
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 	time.Sleep(time.Millisecond * 100)
 
@@ -113,7 +111,7 @@ func TestSegmentProcessor(t *testing.T) {
 	err = sender.Open()
 	defer sender.Close()
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 	time.Sleep(time.Millisecond * 100)
 
@@ -132,12 +130,12 @@ func TestSegmentProcessor(t *testing.T) {
 
 	testEventJSON, err := json.Marshal(testEvent)
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 
 	err = sender.Send(testEventJSON)
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 
 	timeout := time.Now().Add(time.Second * 30)
@@ -146,13 +144,13 @@ func TestSegmentProcessor(t *testing.T) {
 
 		err = eventModelAndClient.GetAll(&events)
 		if err != nil {
-			log.Fatal(err)
+			require.NoError(t, err)
 		}
 
 		if len(events) > 0 {
 			eventsJSON, err := json.MarshalIndent(events, "", "   ")
 			if err != nil {
-				log.Fatal(err)
+				require.NoError(t, err)
 			}
 
 			log.Printf("added event %v", string(eventsJSON))
@@ -161,5 +159,5 @@ func TestSegmentProcessor(t *testing.T) {
 		}
 	}
 
-	log.Fatal("timed out")
+	require.Fail(t, "timed out")
 }

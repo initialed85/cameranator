@@ -9,23 +9,21 @@ import (
 
 	"github.com/initialed85/glue/pkg/network"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-	"github.com/initialed85/cameranator/pkg/media/segment_recorder"
 	"github.com/initialed85/cameranator/pkg/segments/segment_generator"
 	"github.com/initialed85/cameranator/pkg/test_utils"
 )
 
 func TestNewSegmentGenerators(t *testing.T) {
-	segment_recorder.DisableNvidia()
-
 	dir, err := test_utils.GetTempDir()
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 
 	interfaceName, err := network.GetDefaultInterfaceName()
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 
 	receiver := network.NewReceiver("0.0.0.0:6291", interfaceName)
@@ -37,18 +35,18 @@ func TestNewSegmentGenerators(t *testing.T) {
 
 		err := json.Unmarshal(data, &event)
 		if err != nil {
-			log.Fatal(err)
+			require.NoError(t, err)
 		}
 
 		events = append(events, event)
 	})
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 
 	err = receiver.Open()
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 	defer receiver.Close()
 
@@ -70,7 +68,7 @@ func TestNewSegmentGenerators(t *testing.T) {
 	err = segmentGenerators.Start()
 	defer segmentGenerators.Stop()
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 
 	assert.True(t, test_utils.IsLive("localhost", 8080))

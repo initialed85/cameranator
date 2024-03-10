@@ -11,3 +11,4 @@ temp_data/
 **/*.pyc
 object_task_worker/models/
 scratch/
+test_data

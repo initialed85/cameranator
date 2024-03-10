@@ -13,8 +13,6 @@ import (
 )
 
 func TestConvertVideo(t *testing.T) {
-	DisableNvidia()
-
 	dir, err := test_utils.GetTempDir()
 	if err != nil {
 		log.Fatal(err)
@@ -85,8 +83,6 @@ func testNewConverter(
 	fileName string,
 	sourcePath string,
 ) {
-	DisableNvidia()
-
 	dir, err := test_utils.GetTempDir()
 	if err != nil {
 		log.Fatal(err)

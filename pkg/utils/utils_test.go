@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"log"
 	"syscall"
 	"testing"
 	"time"
@@ -9,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/relvacode/iso8601"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetUUID(t *testing.T) {
@@ -40,7 +40,7 @@ func TestWaitForCtrlC(t *testing.T) {
 
 	err := syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 
 	time.Sleep(time.Millisecond * 100)

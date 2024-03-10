@@ -1,12 +1,12 @@
 package utils
 
 import (
-	"log"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewExecutor(t *testing.T) {
@@ -32,7 +32,7 @@ func TestNewExecutor(t *testing.T) {
 			},
 			func(result interface{}, err error) {
 				if err != nil {
-					log.Fatal(err)
+					require.NoError(t, err)
 				}
 
 				mu.Lock()

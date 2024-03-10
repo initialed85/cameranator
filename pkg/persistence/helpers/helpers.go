@@ -3,8 +3,6 @@ package helpers
 import (
 	"fmt"
 
-	"github.com/initialed85/cameranator/pkg/media/converter"
-
 	"github.com/relvacode/iso8601"
 
 	"github.com/initialed85/cameranator/pkg/media/metadata"
@@ -39,11 +37,8 @@ func AddEvent(
 	cameraName string,
 	startTimestamp iso8601.Time,
 	endTimestamp iso8601.Time,
-	isSegment bool,
 	highQualityVideoPath string,
 	highQualityImagePath string,
-	lowQualityVideoPath string,
-	lowQualityImagePath string,
 ) (model.Event, error) {
 	camera, err := GetCamera(application, cameraName)
 	if err != nil {
@@ -60,25 +55,11 @@ func AddEvent(
 		return model.Event{}, err
 	}
 
-	lowQualityVideoSize := 0.1
-	if converter.IsConversionEnabled() {
-		lowQualityVideoSize, err = metadata.GetFileSize(lowQualityVideoPath)
-		if err != nil {
-			return model.Event{}, err
-		}
-	}
-
-	lowQualityImageSize, err := metadata.GetFileSize(lowQualityImagePath)
-	if err != nil {
-		return model.Event{}, err
-	}
-
 	highQualityVideo := model.NewVideo(
 		startTimestamp,
 		endTimestamp,
 		highQualityVideoSize,
 		highQualityVideoPath,
-		true,
 		camera,
 	)
 
@@ -86,35 +67,14 @@ func AddEvent(
 		startTimestamp,
 		highQualityImageSize,
 		highQualityImagePath,
-		true,
-		camera,
-	)
-
-	lowQualityVideo := model.NewVideo(
-		startTimestamp,
-		endTimestamp,
-		lowQualityVideoSize,
-		lowQualityVideoPath,
-		true,
-		camera,
-	)
-
-	lowQualityImage := model.NewImage(
-		startTimestamp,
-		lowQualityImageSize,
-		lowQualityImagePath,
-		true,
 		camera,
 	)
 
 	event := model.NewEvent(
 		startTimestamp,
 		endTimestamp,
-		isSegment,
 		highQualityVideo,
 		highQualityImage,
-		lowQualityVideo,
-		lowQualityImage,
 		camera,
 	)
 

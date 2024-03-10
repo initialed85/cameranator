@@ -3,18 +3,18 @@ FROM linuxserver/ffmpeg AS base
 RUN apt-get update && apt-get upgrade -y libfontconfig1 && apt-get install -y --reinstall \
     libfontconfig1 libfontconfig1-dev fontconfig-config
 
-FROM golang:1.20 AS build
+# FROM golang:1.21 AS build
 
-WORKDIR /srv/
+# WORKDIR /srv/
 
-COPY ./go.mod /srv/go.mod
-COPY ./go.sum /srv/go.sum
-RUN go mod download
+# COPY ./go.mod /srv/go.mod
+# COPY ./go.sum /srv/go.sum
+# RUN go mod download
 
-COPY ./cmd /srv/cmd
-COPY ./pkg /srv/pkg
+# COPY ./cmd /srv/cmd
+# COPY ./pkg /srv/pkg
 
-RUN go build -v -o segment_processor ./cmd/segment_processor/main.go
+# RUN go build -v -o segment_processor ./cmd/segment_processor/main.go
 
 FROM base AS run
 
@@ -27,7 +27,8 @@ RUN apt-get update && apt-get install -y \
 
 RUN dpkg-reconfigure -f noninteractive tzdata
 
-COPY --from=build /srv/segment_processor /srv/
+# COPY --from=build /srv/segment_processor /srv/
+COPY ./segment_processor /srv/
 
 WORKDIR /srv/
 

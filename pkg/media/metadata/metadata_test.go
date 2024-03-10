@@ -1,21 +1,21 @@
 package metadata
 
 import (
-	"log"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetVideoDuration(t *testing.T) {
 	duration, err := GetVideoDuration("../../../test_data/segments/Segment_2020-12-25T08:45:04_Driveway.mp4")
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 	assert.Equal(
 		t,
-		time.Minute*5,
+		time.Second*30,
 		duration,
 	)
 }
@@ -23,12 +23,12 @@ func TestGetVideoDuration(t *testing.T) {
 func TestGetSize(t *testing.T) {
 	size, err := GetFileSize("../../../test_data/segments/Segment_2020-12-25T08:45:04_Driveway.mp4")
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 
 	assert.Equal(
 		t,
-		76.708967,
+		23.850268,
 		size,
 	)
 }

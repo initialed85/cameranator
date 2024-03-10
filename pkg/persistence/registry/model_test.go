@@ -5,12 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/initialed85/cameranator/pkg/persistence/graphql"
 	"github.com/initialed85/cameranator/pkg/persistence/model"
-	"github.com/initialed85/cameranator/pkg/utils"
 )
 
 func testGetClient() *graphql.Client {
@@ -30,11 +29,7 @@ func TestModel_GetAll(t *testing.T) {
 
 	err := m.GetAll(&cameras)
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	for _, camera := range cameras {
-		camera.UUID = uuid.UUID{}
+		require.NoError(t, err)
 	}
 
 	assert.Equal(
@@ -42,19 +37,16 @@ func TestModel_GetAll(t *testing.T) {
 		[]model.Camera{
 			{
 				ID:        1,
-				UUID:      uuid.UUID{0x38, 0x30, 0xe9, 0xa5, 0x67, 0x3d, 0x4e, 0x7f, 0xae, 0x9b, 0xaf, 0xa9, 0xae, 0xb4, 0x39, 0xab},
 				Name:      "Driveway",
 				StreamURL: "rtsp://192.168.137.31:554/Streaming/Channels/101/",
 			},
 			{
 				ID:        2,
-				UUID:      uuid.UUID{0xcd, 0x5, 0x63, 0x89, 0xb0, 0xb0, 0x49, 0x78, 0x91, 0x67, 0x68, 0xc9, 0x3e, 0x59, 0xf5, 0x3d},
 				Name:      "FrontDoor",
 				StreamURL: "rtsp://192.168.137.32:554/Streaming/Channels/101/",
 			},
 			{
 				ID:        3,
-				UUID:      uuid.UUID{0xba, 0x9a, 0x40, 0x13, 0x9c, 0x25, 0x4b, 0xd0, 0x93, 0x1f, 0x6e, 0xaf, 0x61, 0xe7, 0x36, 0x9f},
 				Name:      "SideGate",
 				StreamURL: "rtsp://192.168.137.33:554/Streaming/Channels/101/",
 			},
@@ -68,9 +60,9 @@ func TestModel_GetOne(t *testing.T) {
 
 	cameras := make([]model.Camera, 0)
 
-	err := m.GetOne(&cameras, "uuid", "3830e9a5-673d-4e7f-ae9b-afa9aeb439ab")
+	err := m.GetOne(&cameras, "id", 1)
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 
 	assert.Equal(
@@ -78,7 +70,6 @@ func TestModel_GetOne(t *testing.T) {
 		[]model.Camera{
 			{
 				ID:        1,
-				UUID:      uuid.UUID{0x38, 0x30, 0xe9, 0xa5, 0x67, 0x3d, 0x4e, 0x7f, 0xae, 0x9b, 0xaf, 0xa9, 0xae, 0xb4, 0x39, 0xab},
 				Name:      "Driveway",
 				StreamURL: "rtsp://192.168.137.31:554/Streaming/Channels/101/",
 			},
@@ -90,10 +81,7 @@ func TestModel_GetOne(t *testing.T) {
 func TestModel_AddAndRemove(t *testing.T) {
 	m := NewModelAndClient(testGetModel(), testGetClient())
 
-	cameraUUID := utils.GetUUID()
-
 	camera := model.Camera{
-		UUID:      cameraUUID,
 		Name:      "TestCamera",
 		StreamURL: "rtsp://192.168.137.34:554/Streaming/Channels/101/",
 	}
@@ -103,7 +91,7 @@ func TestModel_AddAndRemove(t *testing.T) {
 
 	err = m.GetAll(&cameras)
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 	assert.Len(t, cameras, 3)
 
@@ -114,28 +102,28 @@ func TestModel_AddAndRemove(t *testing.T) {
 	cameras = make([]model.Camera, 0)
 	err = m.Add(&camera, &cameras)
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 	log.Printf("%#+v", cameras)
 
 	cameras = make([]model.Camera, 0)
 	err = m.GetAll(&cameras)
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 	assert.Len(t, cameras, 4)
 
 	cameras = make([]model.Camera, 0)
 	err = m.Remove(&camera, &cameras)
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 	log.Printf("%#+v", cameras)
 
 	cameras = make([]model.Camera, 0)
 	err = m.GetAll(&cameras)
 	if err != nil {
-		log.Fatal(err)
+		require.NoError(t, err)
 	}
 	assert.Len(t, cameras, 3)
 }

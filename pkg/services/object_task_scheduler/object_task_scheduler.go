@@ -14,39 +14,23 @@ import (
 	"github.com/wagslane/go-rabbitmq"
 )
 
-// const tickDuration = time.Second * 600
-
-// const query = `
-// query LiveEvents {
-// 	event(where: {needs_object_processing: {_eq: true}, is_segment: {_eq: true}, start_timestamp: {_gte: "__timestamp__"}}, order_by: {start_timestamp: desc}) {
-//     id
-//     high_quality_video {
-//       file_path
-//       source_camera_id
-//       start_timestamp
-//       end_timestamp
-//     }
-//   }
-// }
-// `
-
 const subscription = `
 subscription LiveEvents {
-	event(where: {needs_object_processing: {_eq: true}, is_segment: {_eq: true}, start_timestamp: {_gte: "__timestamp__"}}, order_by: {start_timestamp: desc}) {
+	event(where: {status: {_eq: "needs detection"}, start_timestamp: {_gte: "__timestamp__"}}, order_by: {start_timestamp: desc}) {
 		id
-		high_quality_video {
-		file_path
-		source_camera_id
-		start_timestamp
-		end_timestamp
+		original_video {
+			file_path
+			camera_id
+			start_timestamp
+			end_timestamp
 		}
-  	}
+	}
 }
 `
 
 const mutation = `
 mutation UpdateEvent {
-	update_event(where: {id: {_in: [__ids__]}}, _set: {needs_object_processing: false}) {
+	update_event(where: {id: {_in: [__ids__]}}, _set: {status: "detection underway"}) {
 		returning {
 			id
 		}
@@ -100,18 +84,6 @@ func NewObjectTaskScheduler(
 }
 
 func (o *ObjectTaskScheduler) handler(message []byte, err error) error {
-	// message should be the bytes for something like this:
-	/*
-		{
-		  "uuid": "363530a1-0666-4587-a44a-a45bcc644779",
-		  "start_timestamp": "2023-01-29T04:35:00+00:00",
-		  "end_timestamp": "2023-01-29T04:40:00+00:00",
-		  "high_quality_video": {
-			"file_path": "/srv/target_dir/segments/Segment_2023-01-29T12:35:00_FrontDoor.mp4"
-		  }
-		}
-	*/
-
 	log.Printf("handling message=%v", string(message))
 
 	if err != nil {
@@ -129,15 +101,15 @@ func (o *ObjectTaskScheduler) handler(message []byte, err error) error {
 		return nil
 	}
 
+	eventIDs := make([]string, 0)
+	for _, event := range payload.Event {
+		eventIDs = append(eventIDs, fmt.Sprintf("%v", event.ID))
+	}
+
 	eventModelAndClient, err := o.application.GetModelAndClient("event")
 	if err != nil {
 		log.Printf("attempt to get model and client caused %#+v; ignoring", err)
 		return nil
-	}
-
-	eventIDs := make([]string, 0)
-	for _, event := range payload.Event {
-		eventIDs = append(eventIDs, fmt.Sprintf("%v", event.ID))
 	}
 
 	client := eventModelAndClient.Client()

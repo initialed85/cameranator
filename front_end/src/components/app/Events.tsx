@@ -94,8 +94,8 @@ export function Events(props: EventsProps) {
         objectsWithContext.forEach((objectWithContext, i) => {
             objectElements.push(
                 <span key={i}>
-                    {objectWithContext.object.detected_class_name} (
-                    {objectWithContext.object.detected_class_id}) x{" "}
+                    {objectWithContext.object.class_name} (
+                    {objectWithContext.object.class_id}) x{" "}
                     {objectWithContext.count}
                 </span>,
             )
@@ -105,7 +105,7 @@ export function Events(props: EventsProps) {
             (objectWithContext: ObjectWithContext) => {
                 if (objectFilter.length) {
                     if (
-                        !objectWithContext.object.detected_class_name
+                        !objectWithContext.object.class_name
                             .toLowerCase()
                             .includes(objectFilter)
                     ) {
@@ -122,7 +122,7 @@ export function Events(props: EventsProps) {
         }
 
         rows.push(
-            <tr key={event.uuid}>
+            <tr key={event.id}>
                 <td>
                     {startTimestamp.local().format("HH:mm:ss")}
                     {props.responsive ? <br /> : " to "}
@@ -143,7 +143,7 @@ export function Events(props: EventsProps) {
                             return
                         }
 
-                        setFocusEventUUID(event.uuid as any)
+                        setFocusEventUUID(event.id as any)
 
                         // TODO
                         // setTimeout(() => {
@@ -175,9 +175,9 @@ export function Events(props: EventsProps) {
                     }}
                 >
                     <a
-                        target={`_high_quality_image_${event.uuid}`}
+                        target={`_thumbnail_image_${event.id}`}
                         rel={"noreferrer"}
-                        href={adjustPath(event.high_quality_image.file_path)}
+                        href={adjustPath(event.thumbnail_image.file_path)}
                     >
                         <Preview
                             event={event}
@@ -188,18 +188,18 @@ export function Events(props: EventsProps) {
                 </td>
                 <td>
                     <a
-                        target={`_high_quality_video_${event.uuid}`}
+                        target={`_original_video_${event.id}`}
                         rel={"noreferrer"}
-                        href={adjustPath(event.high_quality_video.file_path)}
+                        href={adjustPath(event.original_video.file_path)}
                     >
                         Original
                     </a>
                     <br />
                     <a
-                        target={`_low_quality_video_${event.uuid}`}
+                        target={`_low_quality_video_${event.id}`}
                         rel={"noreferrer"}
                         href={adjustPath(
-                            event.high_quality_video.file_path.replaceAll(
+                            event.original_video.file_path.replaceAll(
                                 ".mp4",
                                 "_out.mp4",
                             ),
