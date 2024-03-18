@@ -9,7 +9,7 @@ import { adjustPath, Preview } from "./Preview"
 import { CloudDownload } from "react-bootstrap-icons"
 
 const MIN_SECONDS_SEEN = 2.0
-const MIN_SCORE = 55.0
+const MIN_SCORE = 0.55
 const TOP_N_SCORES = 5
 
 export interface EventsProps {
