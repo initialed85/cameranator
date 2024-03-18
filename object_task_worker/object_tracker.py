@@ -1,5 +1,5 @@
 # credit to https://github.com/tryolabs/norfair/blob/master/demos/yolov7/src/demo.py for the basis of this code
-
+import gc
 import datetime
 import traceback
 import os
@@ -27,7 +27,7 @@ INITIALIZATION_DELAY: int = 2
 CONF_THRESHOLD: float = 0.44
 IOU_THRESHOLD: float = 0.1
 IMAGE_SIZE: int = 640
-STRIDE_FRAMES: int = 10
+STRIDE_FRAMES: int = 4
 
 
 class RawDetectedObject(NamedTuple):
@@ -164,7 +164,7 @@ class ObjectTracker(object):
 
         device = device or "cuda"
 
-        self._executor = ThreadPoolExecutor()
+        self._executor = ThreadPoolExecutor(max_workers=1)
         self._futures = []
 
         self._model = torch.hub.load("WongKinYiu/yolov7", "custom", model_path)
@@ -183,27 +183,39 @@ class ObjectTracker(object):
         self._detected_object_by_object_id: Dict[int, RawDetectedObject] = {}
 
     def __del__(self):
+        # print("tearing down {}".format(self._model))
+        # try:
+        #     del self._model
+        # except Exception:
+        #     pass
+
+        # print("running garbage collection")
+        # try:
+        #     gc.collect()
+        # except Exception:
+        #     pass
+
+        # print("clearing pytorch cache")
+        # try:
+        #     torch.cuda.empty_cache()
+        # except Exception:
+        #     pass
+
         print("tearing down {}".format(self._executor))
         try:
             self._executor.shutdown(wait=True)
         except Exception:
             pass
 
-        print("tearing down {}".format(self._model))
-        try:
-            del self._model
-        except Exception:
-            pass
-
-        print("tearing down {}".format(self))
-        try:
-            super().__del__()
-        except Exception:
-            pass
-        try:
-            del self
-        except Exception:
-            pass
+        # print("tearing down {}".format(self))
+        # try:
+        #     super().__del__()
+        # except Exception:
+        #     pass
+        # try:
+        #     del self
+        # except Exception:
+        #     pass
 
     def _draw_tracking_context_on_frame(
         self,
@@ -247,50 +259,55 @@ class ObjectTracker(object):
         video: Video,
         video_timedelta: datetime.timedelta,
     ) -> Tuple[float, float]:
-        centroid_detections, bbox_detections = yolo_detections_to_norfair_detections(
-            yolo_detections=yolo_detections
-        )
+        try:
+            centroid_detections, bbox_detections = (
+                yolo_detections_to_norfair_detections(yolo_detections=yolo_detections)
+            )
 
-        self._handle_detections(
-            detection_context=DetectionContext(
-                centroid_detections=centroid_detections,
-                bbox_detections=bbox_detections,
-                timedelta=video_timedelta,
-            ),
-            name_by_class_id=self._name_by_class_id,
-        )
+            self._handle_detections(
+                detection_context=DetectionContext(
+                    centroid_detections=centroid_detections,
+                    bbox_detections=bbox_detections,
+                    timedelta=video_timedelta,
+                ),
+                name_by_class_id=self._name_by_class_id,
+            )
 
-        tracked_objects: List[TrackedObject] = tracker.update(
-            detections=(
-                centroid_detections
-                if self._tracking_mode == "centroid"
-                else bbox_detections
-            ),
-        )
+            # tracked_objects: List[TrackedObject] = tracker.update(
+            #     detections=(
+            #         centroid_detections
+            #         if self._tracking_mode == "centroid"
+            #         else bbox_detections
+            #     ),
+            # )
+            # tracked_objects: List[TrackedObject] = []
 
-        self._draw_tracking_context_on_frame(
-            frame=frame,
-            tracked_objects=tracked_objects,
-            video=video,
-        )
+            # self._draw_tracking_context_on_frame(
+            #     frame=frame,
+            #     tracked_objects=tracked_objects,
+            #     video=video,
+            # )
 
-        for tracked_object in tracked_objects:
-            with self._lock:
-                detected_object = self._detected_object_by_object_id.setdefault(
-                    tracked_object.global_id,
-                    RawDetectedObject(
-                        tracking_mode=self._tracking_mode,
-                        object_id=tracked_object.global_id,
-                        class_id=tracked_object.last_detection.label,
-                        class_name=self._name_by_class_id.get(
-                            tracked_object.last_detection.label
-                        )
-                        or "__unknown__",
-                        timedeltas=[],
-                    ),
-                )
+            # for tracked_object in tracked_objects:
+            #     with self._lock:
+            #         detected_object = self._detected_object_by_object_id.setdefault(
+            #             tracked_object.global_id,
+            #             RawDetectedObject(
+            #                 tracking_mode=self._tracking_mode,
+            #                 object_id=tracked_object.global_id,
+            #                 class_id=tracked_object.last_detection.label,
+            #                 class_name=self._name_by_class_id.get(
+            #                     tracked_object.last_detection.label
+            #                 )
+            #                 or "__unknown__",
+            #                 timedeltas=[],
+            #             ),
+            #         )
 
-                detected_object.timedeltas.append(video_timedelta)
+            #         detected_object.timedeltas.append(video_timedelta)
+        except Exception:
+            traceback.print_exc()
+            raise
 
     def _handle_file(
         self,
@@ -306,6 +323,8 @@ class ObjectTracker(object):
                 folder_path,
                 f"{file_base_name}_out.{file_extension.lstrip('.')}",
             )
+
+        print(f"output_path={output_path}")
 
         if not os.path.exists(input_path) or not os.path.isfile(input_path):
             raise ValueError(

@@ -1,6 +1,7 @@
 # credit to https://github.com/tryolabs/norfair/blob/master/norfair/video.py; extended w/ ThreadPoolExcutor
 
 import time
+import traceback
 from concurrent.futures import ThreadPoolExecutor, wait
 from typing import Optional
 
@@ -25,8 +26,8 @@ class Video(_Video):
         output_fourcc: Optional[str] = None,
         output_extension: str = "mp4",
     ):
-        self._executor = ThreadPoolExecutor(max_workers=1)
-        self._futures = []
+        # self._executor = ThreadPoolExecutor(max_workers=1)
+        # self._futures = []
 
         super().__init__(
             camera=camera,
@@ -38,9 +39,9 @@ class Video(_Video):
             output_extension=output_extension,
         )
 
-    def __del__(self):
-        self._executor.shutdown(wait=True)
-        del self
+    # def __del__(self):
+    #     self._executor.shutdown(wait=True)
+    #     del self
 
     def __iter__(self):
         start = time.time()
@@ -59,7 +60,7 @@ class Video(_Video):
 
             yield frame
 
-        wait(self._futures)
+        # wait(self._futures)
 
         min_process_fps = 0
         avg_process_fps = 0
@@ -82,31 +83,37 @@ class Video(_Video):
         cv2.destroyAllWindows()
 
     def _write(self, frame: np.ndarray):
-        if self.output_video is None:
-            output_file_path = self.get_output_file_path()
+        try:
+            if self.output_video is None:
+                output_file_path = self.get_output_file_path()
 
-            fourcc = cv2.VideoWriter_fourcc(*self.get_codec_fourcc(output_file_path))
+                fourcc = cv2.VideoWriter_fourcc(
+                    *self.get_codec_fourcc(output_file_path)
+                )
 
-            output_size = (
-                frame.shape[1],
-                frame.shape[0],
-            )
+                output_size = (
+                    frame.shape[1],
+                    frame.shape[0],
+                )
 
-            self.output_video = cv2.VideoWriter(
-                output_file_path,
-                fourcc,
-                self.output_fps,
-                output_size,
-            )
+                self.output_video = cv2.VideoWriter(
+                    output_file_path,
+                    fourcc,
+                    self.output_fps,
+                    output_size,
+                )
 
-        self.output_video.write(frame)
+            self.output_video.write(frame)
+        except Exception:
+            traceback.print_exc()
+            raise
 
     def write(self, frame: np.ndarray) -> int:
-        self._futures.append(
-            self._executor.submit(
-                self._write,
-                frame,
-            ),
-        )
+        # self._futures.append(
+        #     self._executor.submit(
+        #         self._write,
+        #         frame,
+        #     ),
+        # )
 
         return -1

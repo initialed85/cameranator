@@ -12,30 +12,16 @@ import (
 )
 
 var (
-	disableNvidia    = false
-	enableConversion = false
+	disableNvidia = false
 )
 
 func init() {
 	if os.Getenv("DISABLE_NVIDIA") == "1" {
 		disableNvidia = false
 	}
-
-	if os.Getenv("ENABLE_CONVERSION") == "1" {
-		enableConversion = true
-	}
-}
-
-func IsConversionEnabled() bool {
-	return enableConversion
 }
 
 func ConvertVideo(sourcePath, destinationPath string, width, height int) (string, string, error) {
-	if !enableConversion {
-		_ = os.WriteFile(destinationPath, []byte{}, 0644)
-		return "warning: conversion support disabled at user request\n", "", nil
-	}
-
 	var err error
 
 	sourcePath, err = filepath.Abs(sourcePath)
@@ -75,7 +61,7 @@ func ConvertVideo(sourcePath, destinationPath string, width, height int) (string
 		arguments,
 		"-y",
 		"-i",
-		sourcePath,
+		fmt.Sprintf("%v", sourcePath),
 		"-s",
 		fmt.Sprintf("%vx%v", width, height),
 	)
@@ -96,7 +82,7 @@ func ConvertVideo(sourcePath, destinationPath string, width, height int) (string
 
 	arguments = append(
 		arguments,
-		destinationPath,
+		fmt.Sprintf("%v", destinationPath),
 	)
 
 	return process.RunCommand(
@@ -126,8 +112,8 @@ func ConvertImage(sourcePath, destinationPath string, width, height int) (string
 	arguments := []string{
 		"-resize",
 		fmt.Sprintf("%vX%v", width, height),
-		sourcePath,
-		destinationPath,
+		fmt.Sprintf("%v", sourcePath),
+		fmt.Sprintf("%v", destinationPath),
 	}
 
 	return process.RunCommand(

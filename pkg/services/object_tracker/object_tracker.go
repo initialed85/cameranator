@@ -22,8 +22,8 @@ import (
 
 // TODO: fix hacked file_path match
 const subscription = `
-query LiveEvents {
-	event(where: {status: {_eq: "needs tracking"}, start_timestamp: {_gte: "__timestamp__"}, original_video: {file_path: {_eq: "/srv/target_dir/segments/Segment_2024-03-10T22:18:02_Driveway.mp4"}}}, order_by: {start_timestamp: desc}, limit: 1) {
+subscription LiveEvents {
+	event(where: {status: {_eq: "needs tracking"}, start_timestamp: {_gte: "__timestamp__"}, original_video: {file_path: {_eq: "/srv/target_dir/segments/Segment_2024-03-11T15:56:01_Driveway.mp4"}}}, order_by: {start_timestamp: desc}, limit: 1) {
 	  id
 	  original_video {
 		file_path
@@ -41,7 +41,7 @@ query LiveEvents {
 	  }
 	}
   }
-  `
+`
 
 const mutation = `
 mutation UpdateEvent {
@@ -135,7 +135,7 @@ func (o *ObjectTracker) handleEvent(event *PartialEvent) error {
 		event.PartialDetection[i] = detection
 	}
 
-	filePath := "test_data/segments/Segment_2024-03-10T22_18_02_Driveway.mp4"
+	filePath := "test_data/segments/Segment_2024-03-11T15_56_01_Driveway.mp4"
 
 	rawData, err := ffmpeg.Probe(filePath)
 	if err != nil {
@@ -188,8 +188,23 @@ func (o *ObjectTracker) handleEvent(event *PartialEvent) error {
 	frameSize := width * height * 3
 	buf := make([]byte, frameSize)
 
-	lineColor := color.RGBA{B: 255, A: 127}
-	textColor := color.RGBA{R: 255, A: 255}
+	red := color.RGBA{
+		R: uint8(255),
+		G: uint8(0),
+		B: uint8(0),
+	}
+
+	green := color.RGBA{
+		R: uint8(0),
+		G: uint8(255),
+		B: uint8(0),
+	}
+
+	white := color.RGBA{
+		R: uint8(255),
+		G: uint8(255),
+		B: uint8(255),
+	}
 
 	frame := 1
 
@@ -224,45 +239,41 @@ func (o *ObjectTracker) handleEvent(event *PartialEvent) error {
 		originalImage.Close()
 
 		for _, detection := range event.PartialDetection {
-			if detection.Timestamp.Before(frameTimestamp.Add(-time.Millisecond*250)) ||
-				detection.Timestamp.After(frameTimestamp.Add(+time.Millisecond*250)) {
-				continue
+			if detection.Timestamp.After(frameTimestamp.Add(-time.Millisecond*3000)) &&
+				detection.Timestamp.Before(frameTimestamp) {
+
+				gocv.Circle(
+					&overlay,
+					image.Point{int(detection.Centroid.X), int(detection.Centroid.Y)},
+					10,
+					white,
+					1,
+				)
 			}
 
-			topLeft := detection.BoundingBox[0]
-			bottomRight := detection.BoundingBox[2]
+			if detection.Timestamp.After(frameTimestamp.Add(-time.Millisecond*250)) &&
+				detection.Timestamp.Before(frameTimestamp.Add(+time.Millisecond*250)) {
+				topLeft := detection.BoundingBox[0]
+				bottomRight := detection.BoundingBox[2]
 
-			r := image.Rectangle{
-				Min: image.Point{
-					X: int(topLeft.X),
-					Y: int(topLeft.Y),
-				},
-				Max: image.Point{
-					X: int(bottomRight.X),
-					Y: int(bottomRight.Y),
-				},
+				r := image.Rectangle{
+					Min: image.Point{
+						X: int(topLeft.X),
+						Y: int(topLeft.Y),
+					},
+					Max: image.Point{
+						X: int(bottomRight.X),
+						Y: int(bottomRight.Y),
+					},
+				}
+
+				gocv.Rectangle(&overlay, r, green, 1)
+
+				text := fmt.Sprintf("%v (%.2f%%)", detection.ClassName, detection.Score*100.0)
+				textSize := gocv.GetTextSize(text, gocv.FontHersheyPlain, 1.5, 1)
+				pt := image.Pt(int(detection.Centroid.X)-(textSize.X/2), int(detection.Centroid.Y))
+				gocv.PutText(&overlay, text, pt, gocv.FontHersheyPlain, 2.0, red, 2)
 			}
-
-			gocv.Rectangle(&overlay, r, lineColor, 1)
-
-			text := fmt.Sprintf("%v (%.2f%%)", detection.ClassName, detection.Score)
-
-			textSize := gocv.GetTextSize(text, gocv.FontHersheyPlain, 1.5, 1)
-
-			pt := image.Pt(
-				int(detection.Centroid.X)-(textSize.X/2),
-				int(detection.Centroid.Y),
-			)
-
-			gocv.PutText(
-				&overlay,
-				text,
-				pt,
-				gocv.FontHersheyPlain,
-				1.5,
-				textColor,
-				1,
-			)
 		}
 
 		o.mats <- overlay
@@ -274,7 +285,11 @@ func (o *ObjectTracker) handleEvent(event *PartialEvent) error {
 }
 
 func (o *ObjectTracker) handler(message []byte, err error) error {
-	log.Printf("handling message=%v", string(message))
+	if err != nil {
+		return err
+	}
+
+	log.Printf("handling message=%v, err=%v", string(message), err)
 
 	if err != nil {
 		log.Printf("attempt to read message caused %#+v; ignoring", err)

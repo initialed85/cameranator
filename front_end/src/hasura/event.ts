@@ -24,44 +24,54 @@ export const getEventsQuery = (
     )
 
     return gql`
-        subscription {
-            event(
-                order_by: {start_timestamp: desc},
-                where: {
-                    start_timestamp: {_gte: "${startTimestamp.toISOString()}"},
-                    end_timestamp: {_lte: "${endTimestamp.toISOString()}"}
-                    source_camera: {id: {_eq: ${camera.id}}}
-                }
-            ) {
+    subscription {
+        event_with_detection(
+            order_by: {start_timestamp: desc},
+            where: {
+                start_timestamp: {_gte: "${startTimestamp.toISOString()}"},
+                end_timestamp: {_lte: "${endTimestamp.toISOString()}"}
+                source_camera: {id: {_eq: ${camera.id}}}
+            }
+        ) {
+            id
+            start_timestamp
+            end_timestamp
+            original_video {
                 id
+                file_path
+                size
+            }
+            thumbnail_image {
+                id
+                file_path
+            }
+            processed_video {
+                id
+                file_path
+            }
+            source_camera {
+                id
+                name
+            }
+            objects {
+                class_id
+                class_name
                 start_timestamp
                 end_timestamp
-                original_video {
-                    id
-                    file_path
-                }
-                thumbnail_image {
-                    id
-                    file_path
-                }
-                source_camera {
-                    id
-                    name
-                }
-                objects {
-                  class_id
-                  class_name
-                  start_timestamp
-                  end_timestamp
-                }
             }
+            class_id
+            class_name
+            score
+            count
+            weighted_score
         }
-    `
+    }`
 }
 
 export interface Video {
     id: string
     file_path: string
+    size: number
 }
 
 export interface Image {
@@ -77,12 +87,27 @@ export interface Object {
     tracked_object_id: number
 }
 
+export interface Detection {
+    class_id: number
+    class_name: string
+    score: number
+    count: number
+    weighted_score: number
+}
+
 export interface Event {
     id: string
     start_timestamp: string
     end_timestamp: string
     original_video: Video
     thumbnail_image: Image
+    processed_video: Video
     source_camera: Camera
     objects: Object[]
+    class_id: number
+    class_name: string
+    score: number
+    count: number
+    weighted_score: number
+    detections?: Detection[]
 }

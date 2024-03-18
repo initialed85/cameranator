@@ -39,9 +39,7 @@ func TestWaitForCtrlC(t *testing.T) {
 	assert.False(t, interrupted)
 
 	err := syscall.Kill(syscall.Getpid(), syscall.SIGINT)
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	time.Sleep(time.Millisecond * 100)
 	assert.True(t, interrupted)

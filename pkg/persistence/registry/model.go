@@ -31,6 +31,8 @@ func (m *Model) GetAll(
 	query, err := graphql.GetManyQuery(
 		m.name,
 		m.reference,
+		"",
+		nil,
 		"id",  // TODO: tied to database schema
 		"asc", // TODO: tied to database schema
 	)
@@ -60,6 +62,32 @@ func (m *Model) GetOne(
 	)
 	if err != nil {
 		return fmt.Errorf("failed to invoke GetOneQuery: %v", err)
+	}
+
+	err = c.QueryAndExtract(query, m.name, &item)
+	if err != nil {
+		return fmt.Errorf("failed to invoke QueryAndExtract: %v", err)
+	}
+
+	return nil
+}
+
+func (m *Model) GetMany(
+	c *graphql.Client,
+	item interface{},
+	conditionKey string,
+	conditionValue interface{},
+) error {
+	query, err := graphql.GetManyQuery(
+		m.name,
+		m.reference,
+		conditionKey,
+		conditionValue,
+		"id",  // TODO: tied to database schema
+		"asc", // TODO: tied to database schema
+	)
+	if err != nil {
+		return fmt.Errorf("failed to invoke GetManyQuery: %v", err)
 	}
 
 	err = c.QueryAndExtract(query, m.name, &item)
@@ -164,7 +192,19 @@ func (m *ModelAndClient) GetOne(
 	}
 
 	return nil
+}
 
+func (m *ModelAndClient) GetMany(
+	items interface{},
+	conditionKey string,
+	conditionValue interface{},
+) error {
+	err := m.model.GetMany(m.client, &items, conditionKey, conditionValue)
+	if err != nil {
+		return fmt.Errorf("failed to invoke GetMany: %v", err)
+	}
+
+	return nil
 }
 
 func (m *ModelAndClient) Add(
@@ -177,7 +217,6 @@ func (m *ModelAndClient) Add(
 	}
 
 	return nil
-
 }
 
 func (m *ModelAndClient) Remove(
@@ -190,5 +229,4 @@ func (m *ModelAndClient) Remove(
 	}
 
 	return nil
-
 }

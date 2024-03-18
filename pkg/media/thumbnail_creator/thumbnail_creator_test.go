@@ -11,9 +11,7 @@ import (
 
 func TestCreateThumbnail(t *testing.T) {
 	dir, err := test_utils.GetTempDir()
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	path := filepath.Join(dir, "some_file.jpg")
 	defer func() {
@@ -27,12 +25,8 @@ func TestCreateThumbnail(t *testing.T) {
 	defer func() {
 		_ = os.Remove(path)
 	}()
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	_, err = os.Stat(path)
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 }

@@ -12,10 +12,8 @@ import (
 )
 
 func TestGetManyQuery(t *testing.T) {
-	query, err := GetManyQuery("camera", model.Camera{}, "id", "asc")
-	if err != nil {
-		require.NoError(t, err)
-	}
+	query, err := GetManyQuery("camera", model.Camera{}, "", nil, "id", "asc")
+	require.NoError(t, err)
 
 	assert.Equal(
 		t,
@@ -35,10 +33,8 @@ func TestGetManyQuery(t *testing.T) {
 func TestGetManyQuery_Nested(t *testing.T) {
 	event := model.Event{}
 
-	query, err := GetManyQuery("event", event, "id", "asc")
-	if err != nil {
-		require.NoError(t, err)
-	}
+	query, err := GetManyQuery("event", event, "", nil, "id", "asc")
+	require.NoError(t, err)
 
 	assert.Equal(
 		t,
@@ -48,9 +44,8 @@ func TestGetManyQuery_Nested(t *testing.T) {
     id
     start_timestamp
     end_timestamp
-    is_segment
-    video_id
-    video {
+    original_video_id
+    original_video {
       id
       start_timestamp
       end_timestamp
@@ -76,39 +71,13 @@ func TestGetManyQuery_Nested(t *testing.T) {
         stream_url
       }
     }
-    low_quality_video_id
-    low_quality_video {
-      id
-      start_timestamp
-      end_timestamp
-      size
-      file_path
-      camera_id
-      camera {
-        id
-        name
-        stream_url
-      }
-    }
-    low_quality_image_id
-    low_quality_image {
-      id
-      timestamp
-      size
-      file_path
-      camera_id
-      camera {
-        id
-        name
-        stream_url
-      }
-    }
-    camera_id
-    camera {
+    source_camera_id
+    source_camera {
       id
       name
       stream_url
     }
+    status
   }
 }
 `,
@@ -118,9 +87,7 @@ func TestGetManyQuery_Nested(t *testing.T) {
 
 func TestGetOneQuery(t *testing.T) {
 	query, err := GetOneQuery("camera", model.Camera{}, "name", "Driveway")
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	assert.Equal(
 		t,
@@ -144,9 +111,7 @@ func TestInsertQuery(t *testing.T) {
 	}
 
 	query, err := InsertQuery("camera", camera)
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	assert.Equal(
 		t,
@@ -154,7 +119,7 @@ func TestInsertQuery(t *testing.T) {
 mutation {
   insert_camera_one(object: {
     name: "Driveway1",
-    stream_url: "rtsp://192.168.137.31:554/Streaming/Channels/101/",
+    stream_url: "rtsp://192.168.137.31:554/Streaming/Channels/101/"
   }) {
     id
     name
@@ -182,28 +147,26 @@ func TestInsertQuery_WithTimestamp(t *testing.T) {
 	}
 
 	query, err := InsertQuery("image", image)
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	assert.Equal(
 		t,
 		`
 mutation {
   insert_image_one(object: {
-    file_path: "/path/to/file",
-    size: 65536,
     camera: {
       data: {
         name: "Driveway2",
-        stream_url: "rtsp://192.168.137.31:554/Streaming/Channels/101/",
+        stream_url: "rtsp://192.168.137.31:554/Streaming/Channels/101/"
       },
       on_conflict: {
-        constraint: camera_name_key
+        constraint: camera_pkey
         update_columns: [name, stream_url]
       }
     },
-    timestamp: "2020-12-26T12:23:54+0930",
+    file_path: "/path/to/file",
+    size: 65536,
+    timestamp: "2020-12-26T12:23:54+0930"
   }) {
     id
     timestamp
@@ -236,28 +199,26 @@ func TestInsertQuery_Nested(t *testing.T) {
 	}
 
 	query, err := InsertQuery("image", image)
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	assert.Equal(
 		t,
 		`
 mutation {
   insert_image_one(object: {
-    file_path: "/some/path",
-    size: 65536,
     camera: {
       data: {
         name: "Driveway3",
-        stream_url: "rtsp://192.168.137.31:554/Streaming/Channels/101/",
+        stream_url: "rtsp://192.168.137.31:554/Streaming/Channels/101/"
       },
       on_conflict: {
-        constraint: camera_id_key
+        constraint: camera_pkey
         update_columns: [name, stream_url]
       }
     },
-    timestamp: "2020-03-27T08:30:00+0800",
+    file_path: "/some/path",
+    size: 65536,
+    timestamp: "2020-03-27T08:30:00+0800"
   }) {
     id
     timestamp
@@ -283,9 +244,7 @@ func TestDeleteQuery(t *testing.T) {
 	}
 
 	query, err := DeleteQuery("camera", camera)
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	assert.Equal(
 		t,
@@ -294,7 +253,6 @@ mutation {
   delete_camera(where: {name: {_eq: "Driveway4"}, stream_url: {_eq: "rtsp://192.168.137.31:554/Streaming/Channels/101/"}}) {
     returning {
       id
-      uuid
       name
       stream_url
     }

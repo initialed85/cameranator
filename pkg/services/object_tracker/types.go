@@ -34,6 +34,8 @@ type PartialDetection struct {
 	Score          float64      `json:"score,omitempty"`
 	Centroid       Point
 	BoundingBox    []Point
+	Height         float64
+	Width          float64
 }
 
 type PartialEvent struct {

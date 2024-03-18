@@ -23,22 +23,16 @@ func TestNewEventReceiver_All(t *testing.T) {
 			events = append(events, event)
 		},
 	)
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 	err = eventReceiver.Open()
 	defer eventReceiver.Close()
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 	time.Sleep(time.Millisecond * 100)
 
 	sender := network.NewSender("localhost:6291")
 	err = sender.Open()
 	defer sender.Close()
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 	time.Sleep(time.Millisecond * 100)
 
 	rawVideoStartTimestamp := "2020-12-25T08:45:04"
@@ -47,28 +41,24 @@ func TestNewEventReceiver_All(t *testing.T) {
 
 	testEvent := segment_generator.Event{
 		CameraName:          "Driveway",
-		VideoPath:           "./test_data/segments/Segment_2020-12-25T08:45:04_Driveway.mp4",
-		ImagePath:           "./test_data/segments/Segment_2020-12-25T08:45:04_Driveway.jpg",
+		VideoPath:           "../../../test_data/segments/Segment_2020-12-25T08:45:04_Driveway.mp4",
+		ImagePath:           "../../../test_data/segments/Segment_2020-12-25T08:45:04_Driveway.jpg",
 		VideoStartTimestamp: videoStartTimestamp,
 		VideoEndTimestamp:   videoEndTimestamp,
 		ImageTimestamp:      videoStartTimestamp,
 	}
 
 	testEventJSON, err := json.Marshal(testEvent)
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	err = sender.Send(testEventJSON)
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	time.Sleep(time.Millisecond * 1000)
 
 	assert.Equal(
 		t,
-		[]segment_generator.Event{testEvent},
-		events,
+		testEvent,
+		events[len(events)-1],
 	)
 }

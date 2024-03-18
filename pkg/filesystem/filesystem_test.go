@@ -16,14 +16,10 @@ import (
 
 func TestNewWatcher(t *testing.T) {
 	dir, err := test_utils.GetTempDir()
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	matcher, err := regexp.Compile(`.*/file\.txt`)
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	created := make([]File, 0)
 	wrote := make([]File, 0)
@@ -48,25 +44,19 @@ func TestNewWatcher(t *testing.T) {
 	assert.Len(t, wrote, 0)
 
 	f, err := os.Create(fmt.Sprintf("%v/file.txt", dir))
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 	time.Sleep(time.Millisecond * 100)
 	assert.Len(t, created, 1)
 	assert.Len(t, wrote, 0)
 
 	_, err = f.Write([]byte("Hello, world."))
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 	time.Sleep(time.Millisecond * 100)
 	assert.Len(t, created, 1)
 	assert.Len(t, wrote, 1)
 
 	_, err = f.Write([]byte("Hello, world."))
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 	time.Sleep(time.Millisecond * 100)
 	assert.Len(t, created, 1)
 	assert.Len(t, wrote, 2)

@@ -11,7 +11,7 @@ type Event struct {
 	OriginalVideoID  int64        `json:"original_video_id,omitempty"`
 	OriginalVideo    Video        `json:"original_video,omitempty"`
 	ThumbnailImageID int64        `json:"thumbnail_image_id,omitempty"`
-	ThumnailImage    Image        `json:"thumbnail_image,omitempty"`
+	ThumbnailImage   Image        `json:"thumbnail_image,omitempty"`
 	SourceCameraID   int64        `json:"source_camera_id,omitempty"`
 	SourceCamera     Camera       `json:"source_camera,omitempty"`
 	Status           string       `json:"status,omitempty"`
@@ -28,7 +28,7 @@ func NewEvent(
 		StartTimestamp: startTimestamp,
 		EndTimestamp:   endTimestamp,
 		OriginalVideo:  originalVideo,
-		ThumnailImage:  thumbnailImage,
+		ThumbnailImage: thumbnailImage,
 		SourceCamera:   sourceCamera,
 		Status:         "needs detection",
 	}

@@ -37,15 +37,13 @@ INSERT INTO detection (
 """
 
 
-def get_query_for_detection(
+def get_repeaters_for_detection(
     detection_context: DetectionContext,
     name_by_class_id: Dict[int, str],
     start_timestamp: datetime.datetime,
     camera_id: int,
     event_id: int,
-) -> Optional[str]:
-    # TODO: use detection_context.*_detections.[].scores.mean() for confidence
-
+) -> List[str]:
     repeaters: List[str] = []
 
     for i, centroid_detection in enumerate(detection_context.centroid_detections or []):
@@ -79,6 +77,10 @@ def get_query_for_detection(
             )
         )
 
+    return repeaters
+
+
+def get_query_for_repeaters(repeaters: List[str]) -> Optional[str]:
     if not repeaters:
         return None
 

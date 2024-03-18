@@ -14,9 +14,7 @@ import (
 
 func TestRecordSegments(t *testing.T) {
 	dir, err := os.MkdirTemp("", "cameranator")
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	process, err := RecordSegments("rtsp://host.docker.internal:8554/Streaming/Channels/101", dir, "Driveway", 5)
 	if process == nil {
@@ -34,9 +32,7 @@ func TestRecordSegments(t *testing.T) {
 	process.Stop()
 
 	fileInfos, err := os.ReadDir(dir)
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	assert.Greater(t, len(fileInfos), 0)
 

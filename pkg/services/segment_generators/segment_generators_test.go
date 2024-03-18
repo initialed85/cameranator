@@ -17,14 +17,10 @@ import (
 
 func TestNewSegmentGenerators(t *testing.T) {
 	dir, err := test_utils.GetTempDir()
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	interfaceName, err := network.GetDefaultInterfaceName()
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	receiver := network.NewReceiver("0.0.0.0:6291", interfaceName)
 
@@ -40,14 +36,10 @@ func TestNewSegmentGenerators(t *testing.T) {
 
 		events = append(events, event)
 	})
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	err = receiver.Open()
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 	defer receiver.Close()
 
 	time.Sleep(time.Millisecond * 100)
@@ -67,20 +59,14 @@ func TestNewSegmentGenerators(t *testing.T) {
 
 	err = segmentGenerators.Start()
 	defer segmentGenerators.Stop()
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	assert.True(t, test_utils.IsLive("localhost", 8080))
-
 	time.Sleep(time.Second * 15)
-
 	segmentGenerators.Stop()
-
 	time.Sleep(time.Second * 15)
 
 	assert.False(t, test_utils.IsLive("localhost", 8080))
-
 	assert.Greater(t, len(events), 0)
 
 	log.Printf("%#+v", events)

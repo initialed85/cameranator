@@ -1,16 +1,20 @@
 import os
+import time
 import traceback
 import psycopg2
 import datetime
 from threading import Thread, Event
 from queue import Queue, Empty
 
-from typing import Optional, Dict, cast
+from typing import Optional, Dict, cast, List, Tuple
 from amqpy import Connection, Message, Timeout, Channel
 from dateutil.parser import parse
 from orjson import loads
 
-from object_task_worker.helpers import get_query_for_detection
+from object_task_worker.helpers import (
+    get_query_for_repeaters,
+    get_repeaters_for_detection,
+)
 from object_task_worker.object_tracker import (
     DetectionContext,
     ObjectTracker,
@@ -100,66 +104,132 @@ class Consumer(object):
 
         self._queue = Queue(maxsize=65536)
         self._stop_event = Event()
-        self._thread = Thread(target=self._handle_write_detections_to_db, daemon=False)
-        self._thread.start()
+
+        self._thread_1 = Thread(
+            target=self._handle_write_detections_to_db,
+            daemon=False,
+        )
+        self._thread_1.start()
 
     def __del__(self):
         self._stop_event.set()
 
         try:
-            print("trying to join background thread...")
-            self._thread.join()
+            print("trying to join background threads...")
+            self._thread_1.join()
             print("joined.")
         except Exception:
             pass
 
     def _handle_write_detections_to_db(self):
+        last_iteration = time.time() - 10.0
+
         while not self._stop_event.is_set():
-            try:
-                (
-                    detection_context,
-                    name_by_class_id,
-                    start_timestamp,
-                    camera_id,
-                    event_id,
-                ) = self._queue.get(timeout=1)
-            except Empty:
-                continue
+            sleep = time.time() - last_iteration
+            if sleep > 0:
+                time.sleep(sleep)
 
-            detection_context = cast(DetectionContext, detection_context)
-            name_by_class_id = cast(Dict[int, str], name_by_class_id)
-            start_timestamp = cast(datetime.datetime, start_timestamp)
-            camera_id = cast(int, camera_id)
-            event_id = cast(int, event_id)
-
-            try:
-                query = get_query_for_detection(
-                    detection_context=detection_context,
-                    name_by_class_id=name_by_class_id,
-                    start_timestamp=start_timestamp,
-                    camera_id=camera_id,
-                    event_id=event_id,
-                )
-            except Exception:
-                traceback.print_exc()
-                continue
-
-            if not query:
-                continue
-
-            print(query)
+            last_iteration = time.time()
 
             with psycopg2.connect(_DSN) as conn:
                 with conn.cursor() as cur:
+                    conn.set_session(autocommit=True)
+
+                    tasks: List[
+                        Tuple[
+                            DetectionContext,
+                            Dict[int, str],
+                            datetime.datetime,
+                            int,
+                            int,
+                        ]
+                    ] = []
+
+                    detections = 0
+                    event_ids = []
+                    repeaters = []
+
+                    while (
+                        not self._stop_event.is_set()
+                        and time.time() - last_iteration < 10.0
+                    ):
+                        try:
+                            (
+                                detection_context,
+                                name_by_class_id,
+                                start_timestamp,
+                                camera_id,
+                                event_id,
+                            ) = self._queue.get(timeout=1)
+
+                            detections = max(
+                                [
+                                    len(detection_context.centroid_detections),
+                                    len(detection_context.bbox_detections),
+                                ],
+                            )
+
+                            detection_context = cast(
+                                DetectionContext, detection_context
+                            )
+                            name_by_class_id = cast(Dict[int, str], name_by_class_id)
+                            start_timestamp = cast(datetime.datetime, start_timestamp)
+                            camera_id = cast(int, camera_id)
+                            event_id = cast(int, event_id)
+
+                            detections += len(
+                                detection_context.centroid_detections or []
+                            )
+                            detections += len(detection_context.bbox_detections or [])
+
+                            if event_id not in event_ids:
+                                event_ids.append(event_id)
+
+                            tasks.append(
+                                (
+                                    detection_context,
+                                    name_by_class_id,
+                                    start_timestamp,
+                                    camera_id,
+                                    event_id,
+                                )
+                            )
+                        except Empty:
+                            continue
+
+                    print(f"processing {len(tasks)} batched tasks")
+
+                    for (
+                        detection_context,
+                        name_by_class_id,
+                        start_timestamp,
+                        camera_id,
+                        event_id,
+                    ) in tasks:
+                        try:
+                            repeaters.extend(
+                                get_repeaters_for_detection(
+                                    detection_context=detection_context,
+                                    name_by_class_id=name_by_class_id,
+                                    start_timestamp=start_timestamp,
+                                    camera_id=camera_id,
+                                    event_id=event_id,
+                                )
+                            )
+                        except Exception:
+                            traceback.print_exc()
+                            continue
+
+                    query = get_query_for_repeaters(repeaters)
+
+                    print(
+                        f"insert of {detections} detections for event_ids={event_ids}"
+                    )
+
+                    if not query:
+                        continue
+
                     try:
-                        detections = len(
-                            detection_context.centroid_detections or []
-                        ) + len(detection_context.bbox_detections or [])
-
-                        print(
-                            f"insert of {detections} detections for event_id={event_id}"
-                        )
-
                         cur.execute(query)
                     except Exception:
                         traceback.print_exc()
@@ -173,6 +243,13 @@ class Consumer(object):
         camera_id: int,
         event_id: int,
     ):
+        detections = max(
+            [
+                len(detection_context.centroid_detections),
+                len(detection_context.bbox_detections),
+            ]
+        )
+
         self._queue.put(
             (
                 detection_context,
@@ -203,10 +280,6 @@ class Consumer(object):
             detection_context: DetectionContext,
             name_by_class_id: Dict[int, str],
         ):
-            print(
-                f"queueing insert of {max([len(detection_context.centroid_detections), len(detection_context.bbox_detections)])} detections for event_id={event_id}"
-            )
-
             return self._write_detections_to_db(
                 detection_context=detection_context,
                 name_by_class_id=name_by_class_id,
@@ -233,7 +306,12 @@ class Consumer(object):
             file_path
         )  # slow, blocking call to do the processing
 
-        size = os.stat(processed_video.output_path).st_size / 1024 / 1024
+        try:
+            size = os.stat(processed_video.output_path).st_size / 1024 / 1024
+        except Exception:
+            size = 0
+            with open(processed_video.output_path, "wb") as f:
+                f.write(b"")
 
         with psycopg2.connect(_DSN) as conn:
             with conn.cursor() as cur:
@@ -261,7 +339,7 @@ class Consumer(object):
                     ),
                 )
 
-                for detected_object in processed_video.detected_objects:
+                for detected_object in processed_video.detected_objects or []:
                     print(
                         f"insert object row for class_id={detected_object.class_id}, class_name={repr(detected_object.class_name)}..."
                     )
@@ -277,7 +355,7 @@ class Consumer(object):
                         ),
                     )
 
-        print("done.")
+                print("done.")
 
     def _handler(self, message: Message):
         try:
@@ -287,11 +365,24 @@ class Consumer(object):
             message.ack()
             print(f"acked message={repr(message)}.")
         except Exception as e:
+            traceback.print_exc()
+
             print(
                 f"failed to handle message={repr(message)}; e={repr(e)}, rejecting..."
             )
-            message.reject(requeue=True)
-            print(f"rejecrted message={repr(message)}.")
+
+            try:
+                message.reject(requeue=True)
+                print(f"rejected message={repr(message)}.")
+            except Exception as e:
+                traceback.print_exc()
+
+                print(
+                    f"failed to handle rejection of message={repr(message)}; e={repr(e)}, crashing out..."
+                )
+
+                self._stop_event.set()
+                raise SystemExit(e) from e
 
     def open(self):
         print("connecting to {}:{}".format(self._host, self._port))
@@ -340,6 +431,13 @@ class Consumer(object):
                 pass
             except KeyboardInterrupt:
                 break
+            except Exception as e:
+                traceback.print_exc()
+
+                print(f"failed to drain events; e={repr(e)}, crashing out...")
+
+                self._stop_event.set()
+                raise SystemExit(e) from e
 
     def close(self):
         if self._consume_ch:

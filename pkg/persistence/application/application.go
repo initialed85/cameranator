@@ -46,6 +46,13 @@ func NewApplication(url string, timeout time.Duration) (*Application, error) {
 		return nil, err
 	}
 
+	err = r.Register(
+		registry.NewModel("object", model.Object{}),
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	a := Application{
 		registry: r,
 		client:   graphql.NewClient(url, timeout),

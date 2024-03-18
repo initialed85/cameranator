@@ -49,9 +49,10 @@ function App() {
     }
 
     return (
-        <Container style={{ width: "100%", height: "100%" }}>
+        <Container>
             <Row>
                 <Menu
+                    responsive={responsive}
                     cameras={camerasQuery?.data?.camera}
                     camera={camera}
                     setCamera={(x) => {

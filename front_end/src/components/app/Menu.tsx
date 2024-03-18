@@ -1,5 +1,5 @@
 import "bootstrap/dist/css/bootstrap.min.css"
-import React, { Dispatch, SetStateAction } from "react"
+import { Dispatch, SetStateAction } from "react"
 import "./App.css"
 import { Camera } from "../../hasura/camera"
 import {
@@ -15,46 +15,6 @@ import {
 import moment from "moment"
 import { Type } from "../../hasura/type"
 import { fileHttpUrl } from "../../config"
-
-function getTypeButtons(
-    types: Type[] | null,
-    type: Type | null,
-    setType: Dispatch<SetStateAction<null>>,
-) {
-    if (!types?.length) {
-        return null
-    }
-
-    const buttons: JSX.Element[] = []
-
-    types.forEach((item) => {
-        buttons.push(
-            <ToggleButton
-                size="sm"
-                key={item.name}
-                variant={"outline-primary"}
-                value={item.name}
-                id={item.name}
-                active={item.name === type?.name}
-                onClick={() => {
-                    setType(item as any)
-                }}
-            >
-                {item.name}
-            </ToggleButton>,
-        )
-    })
-
-    return (
-        <ToggleButtonGroup
-            name={"type"}
-            type={"radio"}
-            style={{ paddingRight: "5px" }}
-        >
-            {buttons}
-        </ToggleButtonGroup>
-    )
-}
 
 function getCameraButtons(
     cameras: Camera[] | null,
@@ -72,7 +32,7 @@ function getCameraButtons(
             <ToggleButton
                 size="sm"
                 key={item.id}
-                variant={"outline-primary"}
+                variant={"outline-secondary"}
                 value={item.id}
                 id={item.id}
                 active={item.id === camera?.id}
@@ -89,7 +49,10 @@ function getCameraButtons(
         <ToggleButtonGroup
             name={"camera"}
             type={"radio"}
-            style={{ paddingRight: "5px" }}
+            style={{
+                paddingLeft: "5px",
+                paddingRight: "5px",
+            }}
         >
             {buttons}
         </ToggleButtonGroup>
@@ -101,7 +64,7 @@ function getStreamButton(camera: Camera | null) {
         <ButtonGroup style={{ paddingRight: "5px" }}>
             <Button
                 size="sm"
-                variant={"outline-primary"}
+                variant={"outline-secondary"}
                 disabled={!camera}
                 href={
                     camera ? `${fileHttpUrl}stream/${camera.id}/stream/` : "#"
@@ -118,6 +81,7 @@ function getDateDropdown(
     dates: moment.Moment[] | null,
     date: moment.Moment | null,
     setDate: Dispatch<SetStateAction<null>>,
+    responsive: boolean,
 ) {
     if (!dates?.length) {
         return null
@@ -129,7 +93,7 @@ function getDateDropdown(
         const dateFriendly = item.format("YYYY-MM-DD")
         eventDates.push(
             <Dropdown.Item
-                variant={"outline-primary"}
+                variant={"outline-secondary"}
                 href={"#"}
                 key={dateFriendly}
                 id={dateFriendly}
@@ -145,9 +109,16 @@ function getDateDropdown(
     })
 
     return (
-        <Dropdown style={{ paddingRight: "5px", width: "100%" }}>
+        <Dropdown
+            style={{
+                paddingLeft: "5px",
+                paddingRight: "5px",
+                width: "100%",
+                marginTop: responsive ? "5px" : "0px",
+            }}
+        >
             <Dropdown.Toggle
-                variant={"outline-primary"}
+                variant={"outline-secondary"}
                 id="date"
                 size="sm"
                 style={{ width: "100%" }}
@@ -162,13 +133,21 @@ function getDateDropdown(
     )
 }
 
-function getObjectFilter(setObjectFilter: Dispatch<SetStateAction<string>>) {
+function getObjectFilter(
+    setObjectFilter: Dispatch<SetStateAction<string>>,
+    responsive: boolean,
+) {
     return (
         <FormControl
             id="objectFilter"
             type="text"
             size={"sm"}
-            style={{ width: "200px" }}
+            style={{
+                marginLeft: "5px",
+                width: responsive ? "97.33%" : "200px",
+                marginTop: responsive ? "5px" : "0px",
+                marginBottom: responsive ? "-3px" : "0px",
+            }}
             onChange={(event) => {
                 setObjectFilter(event.target.value)
             }}
@@ -177,6 +156,7 @@ function getObjectFilter(setObjectFilter: Dispatch<SetStateAction<string>>) {
 }
 
 export interface MenuProps {
+    responsive: boolean
     cameras: Camera[] | null
     camera: Camera | null
     setCamera: Dispatch<SetStateAction<null>>
@@ -196,28 +176,41 @@ export function Menu(props: MenuProps) {
                 href="#"
                 style={{
                     fontSize: "14pt",
+                    fontWeight: "bold",
                     marginLeft: "10px",
                     marginRight: "10px",
+                    color: "gray",
                 }}
                 onClick={() => {}}
             >
                 Cameranator
             </Navbar.Brand>
 
-            <Navbar.Toggle />
+            <Navbar.Toggle
+                style={{
+                    marginRight: "5px",
+                    marginTop: props.responsive ? "-3px" : "0px",
+                    marginBottom: "5px",
+                    color: "gray",
+                }}
+            />
 
             <Navbar.Collapse>
                 <Nav>
-                    {/* {getTypeButtons(props.types, props.type, props.setType)} */}
                     {getCameraButtons(
                         props.cameras,
                         props.camera,
                         props.setCamera,
                     )}
                     {/* {getStreamButton(props.camera)} */}
-                    {getDateDropdown(props.dates, props.date, props.setDate)}
+                    {getDateDropdown(
+                        props.dates,
+                        props.date,
+                        props.setDate,
+                        props.responsive,
+                    )}
                 </Nav>
-                {getObjectFilter(props.setObjectFilter)}
+                {getObjectFilter(props.setObjectFilter, props.responsive)}
             </Navbar.Collapse>
         </Navbar>
     )

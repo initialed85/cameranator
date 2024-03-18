@@ -1,6 +1,7 @@
 package converter
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -8,6 +9,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/initialed85/cameranator/pkg/test_utils"
 )
@@ -29,14 +31,13 @@ func TestConvertVideo(t *testing.T) {
 		640,
 		360,
 	)
+	require.NoError(t, err, fmt.Sprintf("out: %v, err: %v", stdout, stderr))
 	defer func() {
 		_ = os.Remove(path)
 	}()
-	if err != nil {
-		log.Fatalf("stdout=%#+v, stderr=%#+v, err=%#+v", stdout, stderr, err)
-	}
 
-	assert.NotEqual(t, "", stderr)
+	assert.Equal(t, "warning: conversion support disabled at user request\n", stdout)
+	assert.Equal(t, "", stderr)
 
 	_, err = os.Stat(path)
 	if err != nil {

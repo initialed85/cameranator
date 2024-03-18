@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"log"
 	"os"
 	"os/signal"
 	"reflect"
@@ -22,7 +23,7 @@ func GetISO8601Time(rawTimestamp string) iso8601.Time {
 	return iso8601.Time{Time: timestamp}
 }
 
-func WaitForCtrlC() {
+func WaitForCtrlC(onCancels ...func()) {
 	var wg sync.WaitGroup
 
 	wg.Add(1)
@@ -32,7 +33,12 @@ func WaitForCtrlC() {
 	signal.Notify(sig, os.Interrupt)
 
 	go func() {
+		log.Printf("waiting for Ctrl + C...")
 		<-sig
+		log.Printf("received Ctrl + C...")
+		for _, onCancel := range onCancels {
+			onCancel()
+		}
 		wg.Done()
 	}()
 

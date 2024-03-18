@@ -10,9 +10,7 @@ import (
 
 func TestRunCommand(t *testing.T) {
 	stdout, stderr, err := RunCommand("echo", "hello")
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	assert.Equal(t, "hello\n", stdout)
 	assert.Equal(t, "", stderr)
@@ -22,9 +20,7 @@ func TestRunBackgroundProcess(t *testing.T) {
 	before := time.Now()
 
 	process, err := RunBackgroundProcess("sleep", "1")
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	assert.NotNil(t, process)
 

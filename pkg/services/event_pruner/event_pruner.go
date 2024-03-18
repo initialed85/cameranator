@@ -44,6 +44,24 @@ func (e *EventPruner) work() {
 		return
 	}
 
+	videoModel, err := e.application.GetModelAndClient("video")
+	if err != nil {
+		log.Printf("warning: %v", err)
+		return
+	}
+
+	imageModel, err := e.application.GetModelAndClient("image")
+	if err != nil {
+		log.Printf("warning: %v", err)
+		return
+	}
+
+	objectModel, err := e.application.GetModelAndClient("object")
+	if err != nil {
+		log.Printf("warning: %v", err)
+		return
+	}
+
 	events := make([]model.Event, 0)
 
 	err = eventModel.GetAll(&events)
@@ -54,9 +72,8 @@ func (e *EventPruner) work() {
 
 	for _, event := range events {
 		paths := make([]string, 0)
-
 		paths = append(paths, event.OriginalVideo.FilePath)
-		paths = append(paths, event.ThumnailImage.FilePath)
+		paths = append(paths, event.ThumbnailImage.FilePath)
 
 		remove := true
 		for _, path := range paths {
@@ -72,8 +89,69 @@ func (e *EventPruner) work() {
 			continue
 		}
 
+		//
+		// event
+		//
+
 		log.Printf("attempting to delete %#+v", event)
 		err = eventModel.Remove(event, &[]model.Event{})
+		if err != nil {
+			log.Printf("warning: %v", err)
+			continue
+		}
+
+		//
+		// object
+		//
+
+		objects := make([]model.Object, 0)
+		err = objectModel.GetMany(&objects, "event_id", event.ID)
+		if err != nil {
+			log.Printf("warning: %v", err)
+			continue
+		}
+
+		for _, object := range objects {
+			err = objectModel.Remove(object, &[]model.Object{})
+			if err != nil {
+				log.Printf("warning: %v", err)
+				continue
+			}
+		}
+
+		//
+		// video
+		//
+
+		videos := make([]model.Video, 0)
+		err = videoModel.GetOne(&videos, "id", event.OriginalVideoID)
+		if err != nil {
+			log.Printf("warning: %v", err)
+			continue
+		}
+		video := videos[0]
+
+		log.Printf("attempting to delete %#+v", video)
+		err = videoModel.Remove(video, &[]model.Video{})
+		if err != nil {
+			log.Printf("warning: %v", err)
+			continue
+		}
+
+		//
+		// image
+		//
+
+		images := make([]model.Image, 0)
+		err = imageModel.GetOne(&images, "id", event.ThumbnailImageID)
+		if err != nil {
+			log.Printf("warning: %v", err)
+			continue
+		}
+		image := images[0]
+
+		log.Printf("attempting to delete %#+v", image)
+		err = imageModel.Remove(image, &[]model.Image{})
 		if err != nil {
 			log.Printf("warning: %v", err)
 			continue

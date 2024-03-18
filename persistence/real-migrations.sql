@@ -1,4 +1,12 @@
-TRUNCATE TABLE camera CASCADE;
+DROP TABLE IF EXISTS public.camera CASCADE;
+
+DROP TABLE IF EXISTS public.video CASCADE;
+
+DROP TABLE IF EXISTS public.image CASCADE;
+
+DROP TABLE IF EXISTS public.object CASCADE;
+
+DROP TABLE IF EXISTS public.detection CASCADE;
 
 SET
     statement_timeout = 0;
@@ -44,7 +52,7 @@ SET
 
 CREATE EXTENSION IF NOT EXISTS postgis SCHEMA public;
 
-CREATE EXTENSION IF NOT EXISTS postgis_raster;
+CREATE EXTENSION IF NOT EXISTS postgis_raster SCHEMA public;
 
 SET
     postgis.gdal_enabled_drivers = 'ENABLE_ALL';
@@ -53,7 +61,7 @@ SET
 -- camera
 --
 CREATE TABLE
-    public.camera (id bigint NOT NULL, name text NOT NULL, stream_url text NOT NULL);
+    public.camera (id bigint NOT NULL PRIMARY KEY, name text NOT NULL UNIQUE, stream_url text NOT NULL);
 
 ALTER TABLE public.camera OWNER TO postgres;
 
@@ -72,15 +80,12 @@ SET DEFAULT nextval('public.camera_id_seq'::regclass);
 SELECT
     pg_catalog.setval ('public.camera_id_seq', 1, true);
 
-ALTER TABLE ONLY public.camera
-ADD CONSTRAINT camera_pkey PRIMARY KEY (id);
-
 --
 -- event
 --
 CREATE TABLE
     public.event (
-        id bigint NOT NULL,
+        id bigint NOT NULL PRIMARY KEY,
         start_timestamp timestamp with time zone NOT NULL,
         end_timestamp timestamp with time zone NOT NULL,
         duration interval NOT NULL DEFAULT interval '0 seconds',
@@ -108,15 +113,12 @@ SET DEFAULT nextval('public.event_id_seq'::regclass);
 SELECT
     pg_catalog.setval ('public.event_id_seq', 1, true);
 
-ALTER TABLE ONLY public.event
-ADD CONSTRAINT event_pkey PRIMARY KEY (id);
-
 --
 -- video
 --
 CREATE TABLE
     public.video (
-        id bigint NOT NULL,
+        id bigint NOT NULL PRIMARY KEY,
         start_timestamp timestamp with time zone NOT NULL,
         end_timestamp timestamp with time zone NOT NULL,
         duration interval NOT NULL DEFAULT interval '0 seconds',
@@ -143,15 +145,12 @@ SET DEFAULT nextval('public.video_id_seq'::regclass);
 SELECT
     pg_catalog.setval ('public.video_id_seq', 1, true);
 
-ALTER TABLE ONLY public.video
-ADD CONSTRAINT video_pkey PRIMARY KEY (id);
-
 --
 -- image
 --
 CREATE TABLE
     public.image (
-        id bigint NOT NULL,
+        id bigint NOT NULL PRIMARY KEY,
         "timestamp" timestamp with time zone NOT NULL,
         "size" double precision NOT NULL DEFAULT 0,
         file_path text NOT NULL,
@@ -176,15 +175,12 @@ SET DEFAULT nextval('public.image_id_seq'::regclass);
 SELECT
     pg_catalog.setval ('public.image_id_seq', 1, true);
 
-ALTER TABLE ONLY public.image
-ADD CONSTRAINT image_pkey PRIMARY KEY (id);
-
 --
 -- object
 --
 CREATE TABLE
     public.object (
-        id bigint NOT NULL,
+        id bigint NOT NULL PRIMARY KEY,
         start_timestamp timestamp with time zone NOT NULL,
         end_timestamp timestamp with time zone NOT NULL,
         class_id bigint NOT NULL,
@@ -210,15 +206,12 @@ SET DEFAULT nextval('public.object_id_seq'::regclass);
 SELECT
     pg_catalog.setval ('public.object_id_seq', 1, false);
 
-ALTER TABLE ONLY public.object
-ADD CONSTRAINT object_pkey PRIMARY KEY (id);
-
 --
 -- detection
 --
 CREATE TABLE
     public.detection (
-        id bigint NOT NULL,
+        id bigint NOT NULL PRIMARY KEY,
         "timestamp" timestamp with time zone NOT NULL,
         class_id bigint NOT NULL,
         class_name text NOT NULL,
@@ -246,9 +239,6 @@ SET DEFAULT nextval('public.detection_id_seq'::regclass);
 
 SELECT
     pg_catalog.setval ('public.detection_id_seq', 1, true);
-
-ALTER TABLE ONLY public.detection
-ADD CONSTRAINT detection_pkey PRIMARY KEY (id);
 
 --
 -- foreign keys
@@ -293,6 +283,125 @@ ALTER TABLE ONLY public.detection
 ADD CONSTRAINT detection_object_id_fkey FOREIGN KEY (object_id) REFERENCES public.object (id) ON UPDATE RESTRICT ON DELETE RESTRICT;
 
 --
+-- because my neanderthal brain cannot switch contexts from the naming schema we use at work
+--
+DROP VIEW IF EXISTS public.cameras;
+
+CREATE VIEW
+    public.cameras AS
+SELECT
+    *
+FROM
+    public.camera;
+
+DROP VIEW IF EXISTS public.detections;
+
+CREATE VIEW
+    public.detections AS
+SELECT
+    *
+FROM
+    public.detection;
+
+DROP VIEW IF EXISTS public.events;
+
+CREATE VIEW
+    public.events AS
+SELECT
+    *
+FROM
+    public.event;
+
+DROP VIEW IF EXISTS public.images;
+
+CREATE VIEW
+    public.images AS
+SELECT
+    *
+FROM
+    public.image;
+
+DROP VIEW IF EXISTS public.objects;
+
+CREATE VIEW
+    public.objects AS
+SELECT
+    *
+FROM
+    public.object;
+
+DROP VIEW IF EXISTS public.videos;
+
+CREATE VIEW
+    public.videos AS
+SELECT
+    *
+FROM
+    public.video;
+
+--
+-- indexes
+--
+CREATE INDEX IF NOT EXISTS event_start_timestamp_idx ON public.event (start_timestamp);
+
+CREATE INDEX IF NOT EXISTS event_end_timestamp_idx ON public.event (end_timestamp);
+
+CREATE INDEX IF NOT EXISTS video_start_timestamp_idx ON public.video (start_timestamp);
+
+CREATE INDEX IF NOT EXISTS video_end_timestamp_idx ON public.video (end_timestamp);
+
+CREATE INDEX IF NOT EXISTS image_timestamp_idx ON public.image ("timestamp");
+
+CREATE INDEX IF NOT EXISTS object_start_timestamp_idx ON public.object (start_timestamp);
+
+CREATE INDEX IF NOT EXISTS object_end_timestamp_idx ON public.object (end_timestamp);
+
+CREATE INDEX IF NOT EXISTS object_class_id_idx ON public.object (class_id);
+
+CREATE INDEX IF NOT EXISTS object_class_name_idx ON public.object (class_name);
+
+CREATE INDEX IF NOT EXISTS detection_timestamp_idx ON public.detection ("timestamp");
+
+CREATE INDEX IF NOT EXISTS detection_class_id_idx ON public.detection (class_id);
+
+CREATE INDEX IF NOT EXISTS detection_class_name_idx ON public.detection (class_name);
+
+--
+-- views
+--
+DROP VIEW IF EXISTS event_with_detection;
+
+CREATE VIEW
+    event_with_detection AS (
+        WITH
+            detections_1 AS (
+                SELECT
+                    d.event_id,
+                    d.class_id,
+                    d.class_name,
+                    avg(d.score) AS score,
+                    count(d.id) AS count,
+                    avg(d.score) * count(d.id) AS weighted_score
+                FROM
+                    detection d
+                GROUP BY
+                    (event_id, class_id, class_name)
+            ),
+            events_1 AS (
+                SELECT
+                    e.*,
+                    d.*
+                FROM
+                    events e
+                    LEFT JOIN detections_1 d ON d.event_id = e.id
+            )
+        SELECT
+            *
+        FROM
+            events_1 e
+    );
+
+--
 -- seed data
 --
 INSERT INTO
@@ -303,5 +412,14 @@ VALUES
     (3, 'SideGate', 'rtsp://192.168.137.33:554/Streaming/Channels/101/') ON CONFLICT (id)
 DO NOTHING;
 
+WITH
+    cte AS (
+        SELECT
+            max(id) AS max_id
+        FROM
+            public.camera
+    )
 SELECT
-    pg_catalog.setval ('public.camera_id_seq', 3, true);
+    pg_catalog.setval ('public.camera_id_seq', cte.max_id, true)
+FROM
+    cte;

@@ -1,0 +1,515 @@
+{
+    "resource_version": 7,
+    "metadata": {
+        "version": 3,
+        "sources": [
+            {
+                "name": "default",
+                "kind": "postgres",
+                "tables": [
+                    {
+                        "table": {
+                            "schema": "public",
+                            "name": "camera"
+                        },
+                        "array_relationships": [
+                            {
+                                "name": "detections",
+                                "using": {
+                                    "foreign_key_constraint_on": {
+                                        "column": "camera_id",
+                                        "table": {
+                                            "schema": "public",
+                                            "name": "detection"
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "name": "events",
+                                "using": {
+                                    "foreign_key_constraint_on": {
+                                        "column": "source_camera_id",
+                                        "table": {
+                                            "schema": "public",
+                                            "name": "event"
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "name": "images",
+                                "using": {
+                                    "foreign_key_constraint_on": {
+                                        "column": "camera_id",
+                                        "table": {
+                                            "schema": "public",
+                                            "name": "image"
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "name": "objects",
+                                "using": {
+                                    "foreign_key_constraint_on": {
+                                        "column": "camera_id",
+                                        "table": {
+                                            "schema": "public",
+                                            "name": "object"
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "name": "videos",
+                                "using": {
+                                    "foreign_key_constraint_on": {
+                                        "column": "camera_id",
+                                        "table": {
+                                            "schema": "public",
+                                            "name": "video"
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "table": {
+                            "schema": "public",
+                            "name": "cameras"
+                        }
+                    },
+                    {
+                        "table": {
+                            "schema": "public",
+                            "name": "detection"
+                        },
+                        "object_relationships": [
+                            {
+                                "name": "camera",
+                                "using": {
+                                    "foreign_key_constraint_on": "camera_id"
+                                }
+                            },
+                            {
+                                "name": "event",
+                                "using": {
+                                    "foreign_key_constraint_on": "event_id"
+                                }
+                            },
+                            {
+                                "name": "object",
+                                "using": {
+                                    "foreign_key_constraint_on": "object_id"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "table": {
+                            "schema": "public",
+                            "name": "detections"
+                        }
+                    },
+                    {
+                        "table": {
+                            "schema": "public",
+                            "name": "event"
+                        },
+                        "object_relationships": [
+                            {
+                                "name": "original_video",
+                                "using": {
+                                    "foreign_key_constraint_on": "original_video_id"
+                                }
+                            },
+                            {
+                                "name": "processed_video",
+                                "using": {
+                                    "foreign_key_constraint_on": "processed_video_id"
+                                }
+                            },
+                            {
+                                "name": "source_camera",
+                                "using": {
+                                    "foreign_key_constraint_on": "source_camera_id"
+                                }
+                            },
+                            {
+                                "name": "thumbnail_image",
+                                "using": {
+                                    "foreign_key_constraint_on": "thumbnail_image_id"
+                                }
+                            }
+                        ],
+                        "array_relationships": [
+                            {
+                                "name": "detections",
+                                "using": {
+                                    "foreign_key_constraint_on": {
+                                        "column": "event_id",
+                                        "table": {
+                                            "schema": "public",
+                                            "name": "detection"
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "name": "images",
+                                "using": {
+                                    "foreign_key_constraint_on": {
+                                        "column": "event_id",
+                                        "table": {
+                                            "schema": "public",
+                                            "name": "image"
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "name": "objects",
+                                "using": {
+                                    "foreign_key_constraint_on": {
+                                        "column": "event_id",
+                                        "table": {
+                                            "schema": "public",
+                                            "name": "object"
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "name": "videos",
+                                "using": {
+                                    "foreign_key_constraint_on": {
+                                        "column": "event_id",
+                                        "table": {
+                                            "schema": "public",
+                                            "name": "video"
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "table": {
+                            "schema": "public",
+                            "name": "event_with_detection"
+                        },
+                        "object_relationships": [
+                            {
+                                "name": "original_video",
+                                "using": {
+                                    "manual_configuration": {
+                                        "remote_table": {
+                                            "schema": "public",
+                                            "name": "video"
+                                        },
+                                        "insertion_order": null,
+                                        "column_mapping": {
+                                            "original_video_id": "id"
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "name": "processed_video",
+                                "using": {
+                                    "manual_configuration": {
+                                        "remote_table": {
+                                            "schema": "public",
+                                            "name": "video"
+                                        },
+                                        "insertion_order": null,
+                                        "column_mapping": {
+                                            "processed_video_id": "id"
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "name": "source_camera",
+                                "using": {
+                                    "manual_configuration": {
+                                        "remote_table": {
+                                            "schema": "public",
+                                            "name": "camera"
+                                        },
+                                        "insertion_order": null,
+                                        "column_mapping": {
+                                            "source_camera_id": "id"
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "name": "thumbnail_image",
+                                "using": {
+                                    "manual_configuration": {
+                                        "remote_table": {
+                                            "schema": "public",
+                                            "name": "image"
+                                        },
+                                        "insertion_order": null,
+                                        "column_mapping": {
+                                            "thumbnail_image_id": "id"
+                                        }
+                                    }
+                                }
+                            }
+                        ],
+                        "array_relationships": [
+                            {
+                                "name": "detections",
+                                "using": {
+                                    "manual_configuration": {
+                                        "remote_table": {
+                                            "schema": "public",
+                                            "name": "detections"
+                                        },
+                                        "insertion_order": null,
+                                        "column_mapping": {
+                                            "id": "event_id"
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "name": "images",
+                                "using": {
+                                    "manual_configuration": {
+                                        "remote_table": {
+                                            "schema": "public",
+                                            "name": "images"
+                                        },
+                                        "insertion_order": null,
+                                        "column_mapping": {
+                                            "id": "event_id"
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "name": "objects",
+                                "using": {
+                                    "manual_configuration": {
+                                        "remote_table": {
+                                            "schema": "public",
+                                            "name": "objects"
+                                        },
+                                        "insertion_order": null,
+                                        "column_mapping": {
+                                            "id": "event_id"
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "name": "videos",
+                                "using": {
+                                    "manual_configuration": {
+                                        "remote_table": {
+                                            "schema": "public",
+                                            "name": "videos"
+                                        },
+                                        "insertion_order": null,
+                                        "column_mapping": {
+                                            "id": "event_id"
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "table": {
+                            "schema": "public",
+                            "name": "events"
+                        }
+                    },
+                    {
+                        "table": {
+                            "schema": "public",
+                            "name": "geography_columns"
+                        }
+                    },
+                    {
+                        "table": {
+                            "schema": "public",
+                            "name": "geometry_columns"
+                        }
+                    },
+                    {
+                        "table": {
+                            "schema": "public",
+                            "name": "image"
+                        },
+                        "object_relationships": [
+                            {
+                                "name": "camera",
+                                "using": {
+                                    "foreign_key_constraint_on": "camera_id"
+                                }
+                            },
+                            {
+                                "name": "event",
+                                "using": {
+                                    "foreign_key_constraint_on": "event_id"
+                                }
+                            }
+                        ],
+                        "array_relationships": [
+                            {
+                                "name": "events",
+                                "using": {
+                                    "foreign_key_constraint_on": {
+                                        "column": "thumbnail_image_id",
+                                        "table": {
+                                            "schema": "public",
+                                            "name": "event"
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "table": {
+                            "schema": "public",
+                            "name": "images"
+                        }
+                    },
+                    {
+                        "table": {
+                            "schema": "public",
+                            "name": "object"
+                        },
+                        "object_relationships": [
+                            {
+                                "name": "camera",
+                                "using": {
+                                    "foreign_key_constraint_on": "camera_id"
+                                }
+                            },
+                            {
+                                "name": "event",
+                                "using": {
+                                    "foreign_key_constraint_on": "event_id"
+                                }
+                            }
+                        ],
+                        "array_relationships": [
+                            {
+                                "name": "detections",
+                                "using": {
+                                    "foreign_key_constraint_on": {
+                                        "column": "object_id",
+                                        "table": {
+                                            "schema": "public",
+                                            "name": "detection"
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "table": {
+                            "schema": "public",
+                            "name": "objects"
+                        }
+                    },
+                    {
+                        "table": {
+                            "schema": "public",
+                            "name": "raster_columns"
+                        }
+                    },
+                    {
+                        "table": {
+                            "schema": "public",
+                            "name": "raster_overviews"
+                        }
+                    },
+                    {
+                        "table": {
+                            "schema": "public",
+                            "name": "spatial_ref_sys"
+                        }
+                    },
+                    {
+                        "table": {
+                            "schema": "public",
+                            "name": "video"
+                        },
+                        "object_relationships": [
+                            {
+                                "name": "camera",
+                                "using": {
+                                    "foreign_key_constraint_on": "camera_id"
+                                }
+                            },
+                            {
+                                "name": "event",
+                                "using": {
+                                    "foreign_key_constraint_on": "event_id"
+                                }
+                            }
+                        ],
+                        "array_relationships": [
+                            {
+                                "name": "events_for_original_videos",
+                                "using": {
+                                    "foreign_key_constraint_on": {
+                                        "column": "original_video_id",
+                                        "table": {
+                                            "schema": "public",
+                                            "name": "event"
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "name": "events_for_processed_videos",
+                                "using": {
+                                    "foreign_key_constraint_on": {
+                                        "column": "processed_video_id",
+                                        "table": {
+                                            "schema": "public",
+                                            "name": "event"
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "table": {
+                            "schema": "public",
+                            "name": "videos"
+                        }
+                    }
+                ],
+                "configuration": {
+                    "connection_info": {
+                        "use_prepared_statements": true,
+                        "database_url": {
+                            "from_env": "HASURA_GRAPHQL_DATABASE_URL"
+                        },
+                        "isolation_level": "read-committed",
+                        "pool_settings": {
+                            "connection_lifetime": 600,
+                            "retries": 1,
+                            "idle_timeout": 180,
+                            "max_connections": 50
+                        }
+                    }
+                }
+            }
+        ]
+    }
+}

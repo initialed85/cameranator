@@ -325,6 +325,8 @@ func getWhere(
 func GetManyQuery(
 	key string,
 	item interface{},
+	conditionKey string,
+	conditionValue interface{},
 	orderKey string,
 	orderDirection string,
 ) (string, error) {
@@ -333,16 +335,26 @@ func GetManyQuery(
 		return "", err
 	}
 
-	order := ""
+	parts := make([]string, 0)
+
+	if conditionKey != "" {
+		parts = append(parts, fmt.Sprintf("where: {%v: {_eq: %#v}}", conditionKey, conditionValue))
+	}
+
 	if orderKey != "" && orderDirection != "" {
-		order = fmt.Sprintf(" (order_by: {%v: %v})", orderKey, orderDirection)
+		parts = append(parts, fmt.Sprintf("order_by: {%v: %v}", orderKey, orderDirection))
+	}
+
+	joinedParts := ""
+	if len(parts) > 0 {
+		joinedParts = fmt.Sprintf(" (%v)", strings.Join(parts, ", "))
 	}
 
 	query := fmt.Sprintf(`
 {
   %v%v %v
 }
-`, key, order, fields)
+`, key, joinedParts, fields)
 
 	return query, nil
 }

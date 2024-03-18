@@ -21,29 +21,19 @@ func TestSegmentProcessor(t *testing.T) {
 		"http://localhost:8082/v1/graphql",
 		time.Second*10,
 	)
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	cameraModelAndClient, err := m.application.GetModelAndClient("camera")
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	imageModelAndClient, err := m.application.GetModelAndClient("image")
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	videoModelAndClient, err := m.application.GetModelAndClient("video")
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	eventModelAndClient, err := m.application.GetModelAndClient("event")
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	camera := model.NewCamera(
 		"Testing",
@@ -96,23 +86,17 @@ func TestSegmentProcessor(t *testing.T) {
 			require.NoError(t, err)
 		}
 	}()
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	err = m.Start()
 	defer m.Stop()
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 	time.Sleep(time.Millisecond * 100)
 
 	sender := network.NewSender("localhost:6291")
 	err = sender.Open()
 	defer sender.Close()
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 	time.Sleep(time.Millisecond * 100)
 
 	rawVideoStartTimestamp := "2020-12-25T08:45:04"
@@ -129,14 +113,10 @@ func TestSegmentProcessor(t *testing.T) {
 	}
 
 	testEventJSON, err := json.Marshal(testEvent)
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	err = sender.Send(testEventJSON)
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	timeout := time.Now().Add(time.Second * 30)
 	for time.Now().Before(timeout) {
