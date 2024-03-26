@@ -162,7 +162,7 @@ class Consumer(object):
                                 event_id,
                             ) = self._queue.get(timeout=1)
 
-                            detections = max(
+                            detections += max(
                                 [
                                     len(detection_context.centroid_detections),
                                     len(detection_context.bbox_detections),

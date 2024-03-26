@@ -8,6 +8,8 @@ DROP TABLE IF EXISTS public.object CASCADE;
 
 DROP TABLE IF EXISTS public.detection CASCADE;
 
+DROP TABLE IF EXISTS public.aggregated_detection CASCADE;
+
 SET
     statement_timeout = 0;
 
@@ -218,6 +220,7 @@ CREATE TABLE
         score float NOT NULL,
         centroid Point NOT NULL,
         bounding_box Polygon NOT NULL,
+        colour geometry (pointz) NOT NULL,
         camera_id bigint NOT NULL,
         event_id bigint NULL,
         object_id bigint NULL
@@ -239,6 +242,39 @@ SET DEFAULT nextval('public.detection_id_seq'::regclass);
 
 SELECT
     pg_catalog.setval ('public.detection_id_seq', 1, true);
+
+--
+-- aggregated_detection
+--
+CREATE TABLE
+    public.aggregated_detection (
+        id bigint NOT NULL PRIMARY KEY,
+        start_timestamp timestamp with time zone NOT NULL,
+        end_timestamp timestamp with time zone NOT NULL,
+        class_id bigint NOT NULL,
+        class_name text NOT NULL,
+        score float NOT NULL,
+        count bigint NOT NULL,
+        weighted_score float NOT NULL,
+        event_id bigint NULL
+    );
+
+ALTER TABLE public.aggregated_detection OWNER TO postgres;
+
+CREATE SEQUENCE public.aggregated_detection_id_seq AS bigint START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+
+ALTER TABLE public.aggregated_detection_id_seq OWNER TO postgres;
+
+ALTER SEQUENCE public.aggregated_detection_id_seq OWNED BY public.aggregated_detection.id;
+
+ALTER TABLE ONLY public.aggregated_detection
+ALTER COLUMN id
+SET DEFAULT nextval('public.aggregated_detection_id_seq'::regclass);
+
+SELECT
+    pg_catalog.setval ('public.aggregated_detection_id_seq', 1, true);
 
 --
 -- foreign keys
@@ -281,6 +317,9 @@ ADD CONSTRAINT detection_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.
 
 ALTER TABLE ONLY public.detection
 ADD CONSTRAINT detection_object_id_fkey FOREIGN KEY (object_id) REFERENCES public.object (id) ON UPDATE RESTRICT ON DELETE RESTRICT;
+
+ALTER TABLE ONLY public.aggregated_detection
+ADD CONSTRAINT aggregated_detection_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.event (id) ON UPDATE RESTRICT ON DELETE RESTRICT;
 
 --
 -- because my neanderthal brain cannot switch contexts from the naming schema we use at work
@@ -344,13 +383,21 @@ FROM
 --
 CREATE INDEX IF NOT EXISTS event_start_timestamp_idx ON public.event (start_timestamp);
 
+CREATE INDEX IF NOT EXISTS event_start_timestamp_source_camera_id_idx ON public.event (start_timestamp, source_camera_id);
+
 CREATE INDEX IF NOT EXISTS event_end_timestamp_idx ON public.event (end_timestamp);
+
+CREATE INDEX IF NOT EXISTS event_end_timestamp_source_camera_id_idx ON public.event (end_timestamp, source_camera_id);
 
 CREATE INDEX IF NOT EXISTS video_start_timestamp_idx ON public.video (start_timestamp);
 
 CREATE INDEX IF NOT EXISTS video_end_timestamp_idx ON public.video (end_timestamp);
 
+CREATE INDEX IF NOT EXISTS video_event_id_idx ON public.video (event_id);
+
 CREATE INDEX IF NOT EXISTS image_timestamp_idx ON public.image ("timestamp");
+
+CREATE INDEX IF NOT EXISTS image_event_id_idx ON public.image (event_id);
 
 CREATE INDEX IF NOT EXISTS object_start_timestamp_idx ON public.object (start_timestamp);
 
@@ -360,6 +407,8 @@ CREATE INDEX IF NOT EXISTS object_class_id_idx ON public.object (class_id);
 
 CREATE INDEX IF NOT EXISTS object_class_name_idx ON public.object (class_name);
 
+CREATE INDEX IF NOT EXISTS object_event_id_idx ON public.object (event_id);
+
 CREATE INDEX IF NOT EXISTS detection_timestamp_idx ON public.detection ("timestamp");
 
 CREATE INDEX IF NOT EXISTS detection_class_id_idx ON public.detection (class_id);
@@ -367,39 +416,63 @@ CREATE INDEX IF NOT EXISTS detection_class_id_idx ON public.detection (class_id)
 CREATE INDEX IF NOT EXISTS detection_class_name_idx ON public.detection (class_name);
 
 --
--- views
+-- aggregations
 --
-DROP VIEW IF EXISTS event_with_detection;
+CREATE
+OR REPLACE FUNCTION aggregate_detection () RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.status = 'needs tracking' THEN
+        -- id bigint NOT NULL PRIMARY KEY,
+        -- start_timestamp timestamp with time zone NOT NULL,
+        -- end_timestamp timestamp with time zone NOT NULL,
+        -- class_id bigint NOT NULL,
+        -- class_name text NOT NULL,
+        -- score float NOT NULL,
+        -- count bigint NOT NULL,
+        -- weighted_score float NOT NULL,
+        -- event_id bigint NULL
 
-CREATE VIEW
-    event_with_detection AS (
-        WITH
-            detections_1 AS (
-                SELECT
-                    d.event_id,
-                    d.class_id,
-                    d.class_name,
-                    avg(d.score) AS score,
-                    count(d.id) AS count,
-                    avg(d.score) * count(d.id) AS weighted_score
-                FROM
-                    detection d
-                GROUP BY
-                    (event_id, class_id, class_name)
-            ),
-            events_1 AS (
-                SELECT
-                    e.*,
-                    d.*
-                FROM
-                    events e
-                    LEFT JOIN detections_1 d ON d.event_id = e.id
-            )
-        SELECT
-            *
-        FROM
-            events_1 e
-    );
+        WITH cte1 AS (
+            SELECT
+                d.class_id AS class_id,
+                d.class_name AS class_name,
+                avg(d.score) AS score,
+                count(d.*) AS count,
+                avg(d.score) * count(d.*) AS weighted_score,
+                NEW.id AS event_id
+            FROM detections d
+            WHERE d.event_id = NEW.id
+            GROUP BY (d.class_id, d.class_name)
+        ),
+        cte2 AS (
+            SELECT NEW.start_timestamp AS start_timestamp,
+                NEW.end_timestamp AS end_timestamp,
+                cte1.*
+            FROM cte1
+        )
+        INSERT INTO aggregated_detection (
+            start_timestamp,
+            end_timestamp,
+            class_id,
+            class_name,
+            score,
+            count,
+            weighted_score,
+            event_id
+        )
+        SELECT * FROM cte2;
+
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE
+OR REPLACE TRIGGER aggregate_detection_trigger
+AFTER
+UPDATE ON event FOR EACH ROW WHEN (NEW.status = 'needs tracking')
+EXECUTE PROCEDURE aggregate_detection ();
 
 --
 -- seed data

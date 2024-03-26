@@ -1,5 +1,3 @@
-# credit to https://github.com/tryolabs/norfair/blob/master/demos/yolov7/src/demo.py for the basis of this code
-import gc
 import datetime
 import traceback
 import os
@@ -9,9 +7,9 @@ from threading import RLock
 from typing import Callable, List, Union, Optional, NamedTuple, Dict, Hashable, Tuple
 
 import numpy as np
-import torch
-import torch.backends.cuda
-from cv2 import CAP_PROP_POS_MSEC, CAP_PROP_FPS  # noqa
+import torch  # noqa
+import torch.backends.cuda  # noqa
+import cv2
 from norfair import Detection, Tracker, draw_points, draw_boxes
 from norfair.tracker import TrackedObject
 from orjson import dumps
@@ -84,7 +82,8 @@ class ProcessedVideo(NamedTuple):
 
 def yolo_detections_to_norfair_detections(
     yolo_detections: torch.tensor,
-) -> Tuple[List[Detection], List[Detection]]:
+    frame: np.ndarray,
+) -> Tuple[List[Detection], List[Detection], List[np.array]]:
     centroid_norfair_detections: List[Detection] = []
     bbox_norfair_detections: List[Detection] = []
 
@@ -141,7 +140,27 @@ def yolo_detections_to_norfair_detections(
 
         bbox_norfair_detections.append(detection)
 
-    return centroid_norfair_detections, bbox_norfair_detections
+    dominant_colours = []
+
+    for bbox_detection in bbox_norfair_detections:
+        # TODO
+        # tlx, tly = [int(round(x, 0)) for x in bbox_detection.points[0]]
+        # brx, bry = [int(round(x, 0)) for x in bbox_detection.points[1]]
+        # img = frame[tly:bry, tlx:brx]
+        # pixels = np.float32(img.reshape(-1, 3))
+        # n_colors = 5
+        # criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 200, 0.1)
+        # flags = cv2.KMEANS_RANDOM_CENTERS
+        # _, labels, palette = cv2.kmeans(pixels, n_colors, None, criteria, 10, flags)
+        # _, counts = np.unique(labels, return_counts=True)
+        # dominant_colour = palette[np.argmax(counts)]
+
+        # TODO
+        dominant_colour = np.array([0.0, 0.0, 0.0])
+
+        dominant_colours.append(dominant_colour)
+
+    return centroid_norfair_detections, bbox_norfair_detections, dominant_colours
 
 
 class ObjectTracker(object):
@@ -183,39 +202,11 @@ class ObjectTracker(object):
         self._detected_object_by_object_id: Dict[int, RawDetectedObject] = {}
 
     def __del__(self):
-        # print("tearing down {}".format(self._model))
-        # try:
-        #     del self._model
-        # except Exception:
-        #     pass
-
-        # print("running garbage collection")
-        # try:
-        #     gc.collect()
-        # except Exception:
-        #     pass
-
-        # print("clearing pytorch cache")
-        # try:
-        #     torch.cuda.empty_cache()
-        # except Exception:
-        #     pass
-
         print("tearing down {}".format(self._executor))
         try:
             self._executor.shutdown(wait=True)
         except Exception:
             pass
-
-        # print("tearing down {}".format(self))
-        # try:
-        #     super().__del__()
-        # except Exception:
-        #     pass
-        # try:
-        #     del self
-        # except Exception:
-        #     pass
 
     def _draw_tracking_context_on_frame(
         self,
@@ -260,51 +251,22 @@ class ObjectTracker(object):
         video_timedelta: datetime.timedelta,
     ) -> Tuple[float, float]:
         try:
-            centroid_detections, bbox_detections = (
-                yolo_detections_to_norfair_detections(yolo_detections=yolo_detections)
+            centroid_detections, bbox_detections, dominant_colours = (
+                yolo_detections_to_norfair_detections(
+                    yolo_detections=yolo_detections,
+                    frame=frame,
+                )
             )
 
             self._handle_detections(
                 detection_context=DetectionContext(
                     centroid_detections=centroid_detections,
                     bbox_detections=bbox_detections,
+                    dominant_colours=dominant_colours,
                     timedelta=video_timedelta,
                 ),
                 name_by_class_id=self._name_by_class_id,
             )
-
-            # tracked_objects: List[TrackedObject] = tracker.update(
-            #     detections=(
-            #         centroid_detections
-            #         if self._tracking_mode == "centroid"
-            #         else bbox_detections
-            #     ),
-            # )
-            # tracked_objects: List[TrackedObject] = []
-
-            # self._draw_tracking_context_on_frame(
-            #     frame=frame,
-            #     tracked_objects=tracked_objects,
-            #     video=video,
-            # )
-
-            # for tracked_object in tracked_objects:
-            #     with self._lock:
-            #         detected_object = self._detected_object_by_object_id.setdefault(
-            #             tracked_object.global_id,
-            #             RawDetectedObject(
-            #                 tracking_mode=self._tracking_mode,
-            #                 object_id=tracked_object.global_id,
-            #                 class_id=tracked_object.last_detection.label,
-            #                 class_name=self._name_by_class_id.get(
-            #                     tracked_object.last_detection.label
-            #                 )
-            #                 or "__unknown__",
-            #                 timedeltas=[],
-            #             ),
-            #         )
-
-            #         detected_object.timedeltas.append(video_timedelta)
         except Exception:
             traceback.print_exc()
             raise
@@ -338,7 +300,7 @@ class ObjectTracker(object):
             output_path=os.path.abspath(output_path),
         )
 
-        frames_per_second: int = video.video_capture.get(CAP_PROP_FPS)
+        frames_per_second: int = video.video_capture.get(cv2.CAP_PROP_FPS)
 
         # TOOD: dear future self- attempts to reduce this below 1 fps have been in vain
         # video.output_fps = float(frames_per_second) / float(self._stride_frames)
@@ -369,7 +331,7 @@ class ObjectTracker(object):
             total_frames += 1
 
             video_timedelta = datetime.timedelta(
-                milliseconds=video.video_capture.get(CAP_PROP_POS_MSEC)
+                milliseconds=video.video_capture.get(cv2.CAP_PROP_POS_MSEC)
             )
 
             if i % self._stride_frames != 0:
@@ -377,6 +339,7 @@ class ObjectTracker(object):
 
             handled_frames += 1
 
+            # this is the actual (blocking) call to execute the model against a frame
             yolo_detections: torch.tensor = self._model(frame, size=self._img_size)
 
             self._futures.append(

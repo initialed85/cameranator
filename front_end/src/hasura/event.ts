@@ -20,12 +20,12 @@ export const getEventsQuery = (
         `${date.local().format("YYYY-MM-DD")}T00:00:00+0800`,
     )
     const endTimestamp = moment(
-        `${date.local().format("YYYY-MM-DD")}T23:59:00+0800`,
+        `${date.local().format("YYYY-MM-DD")}T23:59:59+0800`,
     )
 
     return gql`
     subscription {
-        event_with_detection(
+        event(
             order_by: {start_timestamp: desc},
             where: {
                 start_timestamp: {_gte: "${startTimestamp.toISOString()}"},
@@ -53,17 +53,13 @@ export const getEventsQuery = (
                 id
                 name
             }
-            objects {
+            aggregated_detections(order_by: {weighted_score: desc}) {
                 class_id
                 class_name
-                start_timestamp
-                end_timestamp
+                score
+                count
+                weighted_score
             }
-            class_id
-            class_name
-            score
-            count
-            weighted_score
         }
     }`
 }
@@ -96,6 +92,7 @@ export interface Detection {
 }
 
 export interface Event {
+    __typename: string | null
     id: string
     start_timestamp: string
     end_timestamp: string
@@ -103,11 +100,5 @@ export interface Event {
     thumbnail_image: Image
     processed_video: Video
     source_camera: Camera
-    objects: Object[]
-    class_id: number
-    class_name: string
-    score: number
-    count: number
-    weighted_score: number
-    detections?: Detection[]
+    aggregated_detections: [Detection]
 }

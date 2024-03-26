@@ -1,8 +1,5 @@
-# credit to https://github.com/tryolabs/norfair/blob/master/norfair/video.py; extended w/ ThreadPoolExcutor
-
 import time
 import traceback
-from concurrent.futures import ThreadPoolExecutor, wait
 from typing import Optional
 
 import numpy as np
@@ -26,9 +23,6 @@ class Video(_Video):
         output_fourcc: Optional[str] = None,
         output_extension: str = "mp4",
     ):
-        # self._executor = ThreadPoolExecutor(max_workers=1)
-        # self._futures = []
-
         super().__init__(
             camera=camera,
             input_path=input_path,
@@ -38,10 +32,6 @@ class Video(_Video):
             output_fourcc=output_fourcc,
             output_extension=output_extension,
         )
-
-    # def __del__(self):
-    #     self._executor.shutdown(wait=True)
-    #     del self
 
     def __iter__(self):
         start = time.time()
@@ -59,8 +49,6 @@ class Video(_Video):
             process_fpses.append(process_fps)
 
             yield frame
-
-        # wait(self._futures)
 
         min_process_fps = 0
         avg_process_fps = 0
@@ -109,11 +97,4 @@ class Video(_Video):
             raise
 
     def write(self, frame: np.ndarray) -> int:
-        # self._futures.append(
-        #     self._executor.submit(
-        #         self._write,
-        #         frame,
-        #     ),
-        # )
-
         return -1

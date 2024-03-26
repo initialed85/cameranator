@@ -9,6 +9,7 @@ export interface ContentProps {
     date: moment.Moment | null
     type: Type | null
     objectFilter: string
+    setLoading: (x: boolean) => void
 }
 
 export function Content(props: ContentProps) {
@@ -27,6 +28,7 @@ export function Content(props: ContentProps) {
             date={props.date}
             type={props.type}
             objectFilter={props.objectFilter}
+            setLoading={props.setLoading}
         />
     )
 }

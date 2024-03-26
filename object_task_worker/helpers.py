@@ -7,6 +7,7 @@ from typing import List, Optional, NamedTuple, Tuple, Dict
 class DetectionContext(NamedTuple):
     centroid_detections: List[Detection]
     bbox_detections: List[Detection]
+    dominant_colours: List[np.array]
     timedelta: Optional[datetime.timedelta]
 
 
@@ -14,6 +15,7 @@ _VALUES_REPEATER = """(
     '{}',
     {},
     '{}',
+    {},
     {},
     {},
     {},
@@ -30,6 +32,7 @@ INSERT INTO detection (
     score,
     centroid,
     bounding_box,
+    colour,
     camera_id,
     event_id
 ) VALUES
@@ -48,6 +51,7 @@ def get_repeaters_for_detection(
 
     for i, centroid_detection in enumerate(detection_context.centroid_detections or []):
         bbox_detection = detection_context.bbox_detections[i]
+        dominant_colour = detection_context.dominant_colours[i]
 
         score = (centroid_detection.scores.mean() + bbox_detection.scores.mean()) / 2
 
@@ -72,6 +76,7 @@ def get_repeaters_for_detection(
                 score,
                 f"ST_MakePoint({centroid_detection.points[0][0]}, {centroid_detection.points[0][1]})::Point",
                 f"ST_MakePolygon(ST_GeomFromText('LINESTRING({line_string})'))::Polygon",
+                f"ST_MakePoint({dominant_colour[0]}, {dominant_colour[1]}, {dominant_colour[2]})::geometry(pointz)",
                 camera_id,
                 event_id,
             )

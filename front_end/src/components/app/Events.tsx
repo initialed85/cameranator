@@ -4,12 +4,12 @@ import { Type } from "../../hasura/type"
 import { useSubscription } from "@apollo/client"
 import { Detection, Event, getEventsQuery } from "../../hasura/event"
 import { Table } from "react-bootstrap"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { adjustPath, Preview } from "./Preview"
 import { CloudDownload } from "react-bootstrap-icons"
 
 const MIN_SECONDS_SEEN = 2.0
-const MIN_SCORE = 0.55
+// const MIN_SCORE = 0.55
 const TOP_N_SCORES = 5
 
 export interface EventsProps {
@@ -18,12 +18,14 @@ export interface EventsProps {
     date: moment.Moment | null
     type: Type | null
     objectFilter: string
+    setLoading: (x: boolean) => void
 }
 
 export interface DetectionSummary {
     className: string
     weightedScore: number
     score: number
+    count: number
 }
 
 export function Events(props: EventsProps) {
@@ -37,21 +39,13 @@ export function Events(props: EventsProps) {
 
     const detectionsByEventID: Map<string, Detection[]> = new Map()
 
-    const rawEvents = eventsQuery?.data?.event_with_detection || []
+    const rawEvents = eventsQuery?.data?.event || []
 
     rawEvents.forEach((event: Event) => {
-        if (!event.class_name) {
-            return
-        }
-
         const detections: Detection[] = detectionsByEventID.get(event.id) || []
 
-        detections.push({
-            class_id: event.class_id,
-            class_name: event.class_name,
-            score: event.score,
-            count: event.count,
-            weighted_score: event.weighted_score,
+        event.aggregated_detections.forEach((detection) => {
+            detections.push(detection)
         })
 
         detectionsByEventID.set(event.id, detections)
@@ -59,8 +53,6 @@ export function Events(props: EventsProps) {
 
     const eventByID: Map<string, Event> = new Map()
     rawEvents.forEach((event: Event) => {
-        event.detections = detectionsByEventID.get(event.id) || []
-
         eventByID.set(event.id, event)
     })
 
@@ -91,16 +83,24 @@ export function Events(props: EventsProps) {
 
         const detectionByClassName: Map<string, Detection> = new Map()
 
-        const detections = event.detections || []
+        const detections = event.aggregated_detections || []
         detections.forEach((detection) => {
+            detectionByClassName.set(detection.class_name, detection)
+        })
+
+        const filteredDetections = detections.filter((detection) => {
             if (objectFilter) {
                 if (!detection?.class_name?.includes(objectFilter)) {
-                    return
+                    return false
                 }
             }
 
-            detectionByClassName.set(detection.class_name, detection)
+            return true
         })
+
+        if (detections.length && !filteredDetections.length) {
+            return
+        }
 
         let detectionSummaries: DetectionSummary[] = []
         detectionByClassName.forEach((detection, className) => {
@@ -109,9 +109,9 @@ export function Events(props: EventsProps) {
                 return
             }
 
-            if (detection.score < MIN_SCORE) {
-                return
-            }
+            // if (detection.score < MIN_SCORE) {
+            //     return
+            // }
 
             if (detectionSummaries.length >= TOP_N_SCORES) {
                 return
@@ -121,6 +121,7 @@ export function Events(props: EventsProps) {
                 className,
                 weightedScore: detection.weighted_score,
                 score: detection.score,
+                count: detection.count,
             })
         })
 
@@ -137,6 +138,12 @@ export function Events(props: EventsProps) {
         const objectElements: JSX.Element[] = []
 
         detectionSummaries.forEach((detectionSummary) => {
+            const matchesObjectFilter =
+                objectFilter.length &&
+                detectionSummary.className.includes(objectFilter)
+
+            const color = matchesObjectFilter ? "red" : "black"
+
             objectElements.push(
                 <div
                     style={{
@@ -145,8 +152,21 @@ export function Events(props: EventsProps) {
                         justifyContent: "space-between",
                     }}
                 >
-                    <span>{detectionSummary.className}</span>
-                    <span>{detectionSummary.score.toFixed(2)}</span>
+                    <span
+                        style={{
+                            color,
+                        }}
+                    >
+                        {detectionSummary.className}
+                    </span>
+                    <span
+                        style={{
+                            color,
+                        }}
+                    >
+                        {detectionSummary.count} @{" "}
+                        {detectionSummary.score.toFixed(2)}
+                    </span>
                 </div>,
             )
         })
@@ -195,7 +215,7 @@ export function Events(props: EventsProps) {
                         )}
                     </div>
                 </td>
-                <td style={{ verticalAlign: "middle", width: "125px" }}>
+                <td style={{ verticalAlign: "middle", width: "200px" }}>
                     <div
                         style={{
                             display: "flex",
@@ -234,18 +254,28 @@ export function Events(props: EventsProps) {
                         setFocusEventUUID(null)
                     }}
                 >
-                    <a
-                        target={`_thumbnail_image_${event.id}`}
-                        rel={"noreferrer"}
-                        href={adjustPath(event.thumbnail_image?.file_path)}
+                    <div
+                        style={{
+                            display: "flex",
+                            flexDirection: "row",
+                            justifyContent: "center",
+                        }}
                     >
-                        <Preview
-                            event={event}
-                            focusEventUUID={focusEventUUID}
-                        />
-                    </a>
+                        <></>
+                        <a
+                            target={`_thumbnail_image_${event.id}`}
+                            rel={"noreferrer"}
+                            href={adjustPath(event.thumbnail_image?.file_path)}
+                        >
+                            <Preview
+                                event={event}
+                                focusEventUUID={focusEventUUID}
+                            />
+                        </a>
+                        <></>
+                    </div>
                 </td>
-                <td style={{ verticalAlign: "middle" }}>
+                <td style={{ verticalAlign: "middle", width: "50px" }}>
                     <a
                         target={`_original_video_${event.id}`}
                         rel={"noreferrer"}
@@ -253,8 +283,8 @@ export function Events(props: EventsProps) {
                     >
                         <CloudDownload
                             style={{
-                                width: "20px",
-                                height: "20px",
+                                width: "25px",
+                                height: "25px",
                                 color: "gray",
                             }}
                         />
@@ -264,12 +294,16 @@ export function Events(props: EventsProps) {
         )
     })
 
+    useEffect(() => {
+        props.setLoading(eventsQuery.loading)
+    }, [eventsQuery.loading, props])
+
     return (
         <Table striped bordered hover size="sm">
             <thead>
                 <tr>
                     <th>Details</th>
-                    <th>Objects</th>
+                    <th>Detections</th>
                     <th colSpan={2}>Media</th>
                 </tr>
             </thead>

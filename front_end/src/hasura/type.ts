@@ -5,12 +5,6 @@ export interface Type {
 }
 
 export const TYPES: Type[] = [
-    // TODO: disabled for now
-    // {
-    //   name: "Event",
-    //   is_segment: false,
-    //   is_stream: false,
-    // },
     {
         name: "Segment",
         is_segment: true,
