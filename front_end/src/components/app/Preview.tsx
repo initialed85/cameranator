@@ -4,6 +4,15 @@ import { Event } from "../../hasura/event"
 import { Ref, useEffect, useState } from "react"
 import { useInView } from "react-intersection-observer"
 
+const ORIGINAL_WIDTH = 640
+const ORIGINAL_HEIGHT = 360
+
+const FOCUSED_WIDTH = ORIGINAL_WIDTH / 2
+const FOCUSED_HEIGHT = ORIGINAL_HEIGHT / 2
+
+const UNFOCUSED_WIDTH = FOCUSED_WIDTH / 2
+const UNFOCUSED_HEIGHT = FOCUSED_HEIGHT / 2
+
 export function adjustPath(path?: string): string {
     return fileHttpUrl + (path?.split("/srv/target_dir/")[1] || "")
 }
@@ -41,8 +50,8 @@ export function Preview(props: PreviewProps) {
                 alignItems: "center",
                 margin: 0,
                 padding: 0,
-                width: focused ? 320 : 120,
-                height: focused ? 180 : 90,
+                width: focused ? FOCUSED_WIDTH : UNFOCUSED_WIDTH,
+                height: focused ? FOCUSED_HEIGHT : UNFOCUSED_HEIGHT,
             }}
         >
             {(inView || alreadyLoaded) && (
@@ -51,8 +60,8 @@ export function Preview(props: PreviewProps) {
                     src={adjustPath(props.event.thumbnail_image.file_path)}
                     rounded
                     style={{
-                        width: focused ? 320 : 120,
-                        height: focused ? 180 : 90,
+                        width: focused ? FOCUSED_WIDTH : UNFOCUSED_WIDTH,
+                        height: focused ? FOCUSED_HEIGHT : UNFOCUSED_HEIGHT,
                     }}
                 />
             )}

@@ -9,7 +9,7 @@ import { adjustPath, Preview } from "./Preview"
 import { CloudDownload } from "react-bootstrap-icons"
 
 const MIN_SECONDS_SEEN = 2.0
-// const MIN_SCORE = 0.55
+const MIN_SCORE = 0.55
 const TOP_N_SCORES = 5
 
 export interface EventsProps {
@@ -26,6 +26,7 @@ export interface DetectionSummary {
     weightedScore: number
     score: number
     count: number
+    outlier: boolean
 }
 
 export function Events(props: EventsProps) {
@@ -35,41 +36,19 @@ export function Events(props: EventsProps) {
 
     const [focusEventUUID, setFocusEventUUID] = useState(null)
 
+    const rawObjectFilter = (props.objectFilter.trim() || "").replaceAll(
+        " ",
+        "",
+    )
+    const objectFilter =
+        rawObjectFilter &&
+        new RegExp(
+            `^${(rawObjectFilter || "").toLowerCase().split(",").join("|")}$`,
+        )
+
     const rows: JSX.Element[] = []
 
-    const detectionsByEventID: Map<string, Detection[]> = new Map()
-
-    const rawEvents = eventsQuery?.data?.event || []
-
-    rawEvents.forEach((event: Event) => {
-        const detections: Detection[] = detectionsByEventID.get(event.id) || []
-
-        event.aggregated_detections.forEach((detection) => {
-            detections.push(detection)
-        })
-
-        detectionsByEventID.set(event.id, detections)
-    })
-
-    const eventByID: Map<string, Event> = new Map()
-    rawEvents.forEach((event: Event) => {
-        eventByID.set(event.id, event)
-    })
-
-    let events: Event[] = []
-    eventByID.forEach((event: Event) => {
-        events.push(event)
-    })
-
-    events = events.sort((a, b) => {
-        if (a.start_timestamp > b.start_timestamp) {
-            return -1
-        } else if (a.start_timestamp < b.start_timestamp) {
-            return 1
-        }
-
-        return 0
-    })
+    let events: Event[] = eventsQuery?.data?.event || []
 
     events.forEach((event: Event) => {
         const startTimestamp = moment.utc(event.start_timestamp)
@@ -79,49 +58,46 @@ export function Events(props: EventsProps) {
             endTimestamp.diff(event.start_timestamp),
         )
 
-        const objectFilter = (props.objectFilter.trim() || "").toLowerCase()
-
         const detectionByClassName: Map<string, Detection> = new Map()
+        const filteredDetectionByClassName: Map<string, Detection> = new Map()
 
         const detections = event.aggregated_detections || []
         detections.forEach((detection) => {
             detectionByClassName.set(detection.class_name, detection)
-        })
 
-        const filteredDetections = detections.filter((detection) => {
             if (objectFilter) {
-                if (!detection?.class_name?.includes(objectFilter)) {
-                    return false
+                if (detection?.class_name?.match(objectFilter)) {
+                    filteredDetectionByClassName.set(
+                        detection.class_name,
+                        detection,
+                    )
                 }
             }
-
-            return true
         })
 
-        if (detections.length && !filteredDetections.length) {
+        if (
+            objectFilter &&
+            (!detectionByClassName.size ||
+                (detectionByClassName.size &&
+                    !filteredDetectionByClassName.size))
+        ) {
             return
         }
 
         let detectionSummaries: DetectionSummary[] = []
         detectionByClassName.forEach((detection, className) => {
             // 20 fps / 4 stride frames = seconds seen
-            if (detection.count / (20 / 4) < MIN_SECONDS_SEEN) {
-                return
-            }
-
-            // if (detection.score < MIN_SCORE) {
-            //     return
-            // }
-
-            if (detectionSummaries.length >= TOP_N_SCORES) {
-                return
-            }
+            const outlier =
+                detection.count / (20 / 4) < MIN_SECONDS_SEEN ||
+                detection.score < MIN_SCORE ||
+                detectionSummaries.length >= TOP_N_SCORES
 
             detectionSummaries.push({
                 className,
                 weightedScore: detection.weighted_score,
                 score: detection.score,
                 count: detection.count,
+                outlier: outlier,
             })
         })
 
@@ -139,10 +115,43 @@ export function Events(props: EventsProps) {
 
         detectionSummaries.forEach((detectionSummary) => {
             const matchesObjectFilter =
-                objectFilter.length &&
-                detectionSummary.className.includes(objectFilter)
+                objectFilter && detectionSummary.className.match(objectFilter)
 
-            const color = matchesObjectFilter ? "red" : "black"
+            let color = "black"
+            let textDecoration = "none"
+            if (detectionSummary.outlier) {
+                color = "gray"
+                textDecoration = "line-through"
+            }
+
+            if (matchesObjectFilter) {
+                color = "red"
+                if (detectionSummary.outlier) {
+                    color = "maroon"
+                }
+            }
+
+            let inner = (
+                <>
+                    <span
+                        style={{
+                            color,
+                            textDecoration,
+                        }}
+                    >
+                        {detectionSummary.className}
+                    </span>
+                    <span
+                        style={{
+                            color,
+                            textDecoration,
+                        }}
+                    >
+                        {detectionSummary.count} @{" "}
+                        {detectionSummary.score.toFixed(2)}
+                    </span>
+                </>
+            )
 
             objectElements.push(
                 <div
@@ -152,28 +161,10 @@ export function Events(props: EventsProps) {
                         justifyContent: "space-between",
                     }}
                 >
-                    <span
-                        style={{
-                            color,
-                        }}
-                    >
-                        {detectionSummary.className}
-                    </span>
-                    <span
-                        style={{
-                            color,
-                        }}
-                    >
-                        {detectionSummary.count} @{" "}
-                        {detectionSummary.score.toFixed(2)}
-                    </span>
+                    {inner}
                 </div>,
             )
         })
-
-        if (objectFilter.length && !objectElements.length) {
-            return
-        }
 
         rows.push(
             <tr key={event.id}>
@@ -275,7 +266,7 @@ export function Events(props: EventsProps) {
                         <></>
                     </div>
                 </td>
-                <td style={{ verticalAlign: "middle", width: "50px" }}>
+                <td style={{ verticalAlign: "middle", width: "40px" }}>
                     <a
                         target={`_original_video_${event.id}`}
                         rel={"noreferrer"}
@@ -283,8 +274,8 @@ export function Events(props: EventsProps) {
                     >
                         <CloudDownload
                             style={{
-                                width: "25px",
-                                height: "25px",
+                                width: "20px",
+                                height: "20px",
                                 color: "gray",
                             }}
                         />
@@ -303,7 +294,13 @@ export function Events(props: EventsProps) {
             <thead>
                 <tr>
                     <th>Details</th>
-                    <th>Detections</th>
+                    <th>
+                        Detections{" "}
+                        <span style={{ fontWeight: "normal" }}>
+                            {props.responsive && <br />}
+                            (frames @ score)
+                        </span>
+                    </th>
                     <th colSpan={2}>Media</th>
                 </tr>
             </thead>
