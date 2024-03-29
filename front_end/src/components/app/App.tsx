@@ -1,14 +1,15 @@
 import "bootstrap/dist/css/bootstrap.min.css"
 import { useCallback, useEffect, useState } from "react"
 import "./App.css"
-import { CAMERAS } from "../../hasura/camera"
+import { CAMERAS, Camera } from "../../hasura/camera"
 import { useSubscription } from "@apollo/client"
 import { Container, Row } from "react-bootstrap"
 import { EVENT_DATES, getDeduplicatedDates } from "../../hasura/event_date"
 import { Menu } from "./Menu"
-import { TYPES } from "../../hasura/type"
+import { TYPES, Type } from "../../hasura/type"
 import { Content } from "./Content"
 import { useDebouncedCallback } from "use-debounce"
+import { Moment } from "moment"
 
 function App() {
     const camerasQuery = useSubscription(CAMERAS)
@@ -18,13 +19,13 @@ function App() {
     const deduplicatedDates = getDeduplicatedDates(datesQuery?.data)
 
     const [responsive, setResponsive] = useState(window.innerWidth < 992)
-    const [camera, setCamera] = useState(null)
-    const [date, setDate] = useState(null)
-    const [type, setType] = useState(null)
+    const [camera, setCamera] = useState<Camera | null>(null)
+    const [date, setDate] = useState<Moment | null>(null)
+    const [type, setType] = useState<Type | null>(null)
     const [objectFilter, setObjectFilter] = useState("")
     const debouncedSetObjectFilter = useDebouncedCallback(
         (x) => setObjectFilter(x),
-        1_000,
+        100,
     )
 
     const [isLoading, setIsLoading] = useState(false)
@@ -49,22 +50,32 @@ function App() {
             handleResize()
         })
 
+        if (!type && types?.length) {
+            setType(types[0] as any)
+        }
+        if (!camera && camerasQuery?.data?.camera) {
+            setCamera(camerasQuery?.data?.camera[0])
+        }
+
+        if (!date && deduplicatedDates?.length) {
+            setDate(deduplicatedDates[0] as any)
+        }
+
+        if (!type && types?.length) {
+            setType(types[0] as any)
+        }
+
         return () => {
             window.removeEventListener("resize", handleResize)
         }
-    }, [])
-
-    if (!camera && camerasQuery?.data?.camera) {
-        setCamera(camerasQuery?.data?.camera[0])
-    }
-
-    if (!date && deduplicatedDates?.length) {
-        setDate(deduplicatedDates[0] as any)
-    }
-
-    if (!type && types?.length) {
-        setType(types[0] as any)
-    }
+    }, [
+        camera,
+        camerasQuery?.data?.camera,
+        date,
+        deduplicatedDates,
+        type,
+        types,
+    ])
 
     return (
         <Container>

@@ -3,8 +3,6 @@ import { Dispatch, SetStateAction } from "react"
 import "./App.css"
 import { Camera } from "../../hasura/camera"
 import {
-    Button,
-    ButtonGroup,
     Dropdown,
     Nav,
     Navbar,
@@ -12,16 +10,17 @@ import {
     ToggleButtonGroup,
     FormControl,
     Spinner,
+    Button,
 } from "react-bootstrap"
-import moment from "moment"
+import moment, { Moment } from "moment"
 import { Type } from "../../hasura/type"
-import { fileHttpUrl } from "../../config"
 import { Check } from "react-bootstrap-icons"
+import { fileHttpUrl } from "../../config"
 
 function getCameraButtons(
     cameras: Camera[] | null,
     camera: Camera | null,
-    setCamera: Dispatch<SetStateAction<null>>,
+    setCamera: Dispatch<SetStateAction<Camera | null>>,
     responsive: boolean,
 ) {
     if (!cameras?.length) {
@@ -62,34 +61,10 @@ function getCameraButtons(
     )
 }
 
-// TODO
-function getStreamButton(camera: Camera | null, responsive: boolean) {
-    return (
-        <ButtonGroup
-            style={{
-                paddingLeft: responsive ? "5px" : "0px",
-                paddingRight: responsive ? "5px" : "0px",
-            }}
-        >
-            <Button
-                size="sm"
-                variant={"outline-secondary"}
-                disabled={!camera}
-                href={
-                    camera ? `${fileHttpUrl}stream/${camera.id}/stream/` : "#"
-                }
-                target={"_stream"}
-            >
-                Stream
-            </Button>
-        </ButtonGroup>
-    )
-}
-
 function getDateDropdown(
     dates: moment.Moment[] | null,
     date: moment.Moment | null,
-    setDate: Dispatch<SetStateAction<null>>,
+    setDate: Dispatch<SetStateAction<Moment | null>>,
     responsive: boolean,
 ) {
     if (!dates?.length) {
@@ -142,26 +117,56 @@ function getDateDropdown(
     )
 }
 
+function getStreamButton(camera: Camera | null, responsive: boolean) {
+    return (
+        <div
+            style={{
+                paddingLeft: "5px",
+                paddingRight: "0px",
+                marginTop: responsive ? "5px" : "0px",
+                width: responsive ? "100%" : "150%",
+            }}
+        >
+            <Button
+                size="sm"
+                variant={"outline-secondary"}
+                style={{ width: "100%" }}
+                disabled={!!!camera?.name}
+                href={fileHttpUrl + "streams/" + camera?.name}
+                target={camera?.name}
+            >
+                Stream
+            </Button>
+        </div>
+    )
+}
+
 function getObjectFilter(
     setObjectFilter: Dispatch<SetStateAction<string>>,
     responsive: boolean,
 ) {
     return (
-        <FormControl
-            id="objectFilter"
-            type="text"
-            size={"sm"}
+        <div
             style={{
-                marginLeft: "5px",
-                width: responsive ? "98.05%" : "200px",
-                marginTop: responsive ? "5px" : "0px",
-                marginBottom: responsive ? "5px" : "0px",
-                border: "1px solid #6c757d",
+                paddingLeft: "5px",
+                paddingRight: "5px",
+                width: responsive ? "100%" : "150%",
             }}
-            onChange={(event) => {
-                setObjectFilter(event.target.value)
-            }}
-        />
+        >
+            <FormControl
+                id="objectFilter"
+                type="text"
+                size={"sm"}
+                style={{
+                    marginTop: responsive ? "5px" : "0px",
+                    marginBottom: responsive ? "5px" : "0px",
+                    border: "1px solid #6c757d",
+                }}
+                onChange={(event) => {
+                    setObjectFilter(event.target.value)
+                }}
+            />
+        </div>
     )
 }
 
@@ -169,13 +174,13 @@ export interface MenuProps {
     responsive: boolean
     cameras: Camera[] | null
     camera: Camera | null
-    setCamera: Dispatch<SetStateAction<null>>
+    setCamera: Dispatch<SetStateAction<Camera | null>>
     dates: moment.Moment[] | null
     date: moment.Moment | null
-    setDate: Dispatch<SetStateAction<null>>
+    setDate: Dispatch<SetStateAction<Moment | null>>
     types: Type[] | null
     type: Type | null
-    setType: Dispatch<SetStateAction<null>>
+    setType: Dispatch<SetStateAction<Type | null>>
     setObjectFilter: Dispatch<SetStateAction<string>>
     isLoading: boolean
 }
@@ -233,15 +238,17 @@ export function Menu(props: MenuProps) {
                         props.setCamera,
                         props.responsive,
                     )}
-                    {/* {getStreamButton(props.camera)} */}
-                    {getDateDropdown(
-                        props.dates,
-                        props.date,
-                        props.setDate,
-                        props.responsive,
-                    )}
+                    <div style={{ display: "flex", flexDirection: "row" }}>
+                        {getStreamButton(props.camera, props.responsive)}
+                        {getDateDropdown(
+                            props.dates,
+                            props.date,
+                            props.setDate,
+                            props.responsive,
+                        )}
+                    </div>
+                    {getObjectFilter(props.setObjectFilter, props.responsive)}
                 </Nav>
-                {getObjectFilter(props.setObjectFilter, props.responsive)}
             </Navbar.Collapse>
         </Navbar>
     )

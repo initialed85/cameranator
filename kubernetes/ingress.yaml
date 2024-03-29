@@ -1,0 +1,78 @@
+# ---
+# apiVersion: v1
+# kind: Secret
+# metadata:
+#     namespace: cameranator
+#     name: cameranator-basic-auth
+# type: kubernetes.io/basic-auth
+# stringData:
+#     username: cctv
+#     password: cctv123!@#
+# ---
+# apiVersion: traefik.containo.us/v1alpha1
+# kind: Middleware
+# metadata:
+#     namespace: cameranator
+#     name: cameranator-basic-auth
+# spec:
+#     basicAuth:
+#         secret: cameranator-basic-auth
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+    namespace: cameranator
+    name: hasura-stripprefix
+spec:
+    stripPrefix:
+        prefixes:
+            - /api
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+    namespace: cameranator
+    name: cameranator
+    annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+        # (namespace)-(name)@kubernetescrd
+        # traefik.ingress.kubernetes.io/router.middlewares: cameranator-cameranator-basic-auth@kubernetescrd,cameranator-hasura-stripprefix@kubernetescrd
+        traefik.ingress.kubernetes.io/router.middlewares: cameranator-hasura-stripprefix@kubernetescrd
+spec:
+    ingressClassName: traefik
+    tls:
+        - hosts:
+              - cameranator.initialed85.cc
+          secretName: cameranator
+    rules:
+        - host: cameranator.initialed85.cc
+          http:
+              paths:
+                  - pathType: Prefix
+                    path: /
+                    backend:
+                        service:
+                            name: nginx
+                            port:
+                                number: 80
+                  - pathType: Prefix
+                    path: /filebrowser
+                    backend:
+                        service:
+                            name: filebrowser
+                            port:
+                                number: 8080
+                  - pathType: Prefix
+                    path: /api
+                    backend:
+                        service:
+                            name: hasura
+                            port:
+                                number: 8080
+                  - pathType: Prefix
+                    path: /streams
+                    backend:
+                        service:
+                            name: mediamtx
+                            port:
+                                number: 8889

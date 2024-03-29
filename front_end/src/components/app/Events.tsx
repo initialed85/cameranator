@@ -10,7 +10,6 @@ import { CloudDownload } from "react-bootstrap-icons"
 
 const MIN_SECONDS_SEEN = 2.0
 const MIN_SCORE = 0.55
-const TOP_N_SCORES = 5
 
 export interface EventsProps {
     responsive: boolean
@@ -36,15 +35,38 @@ export function Events(props: EventsProps) {
 
     const [focusEventUUID, setFocusEventUUID] = useState(null)
 
-    const rawObjectFilter = (props.objectFilter.trim() || "").replaceAll(
-        " ",
-        "",
-    )
-    const objectFilter =
-        rawObjectFilter &&
-        new RegExp(
-            `^${(rawObjectFilter || "").toLowerCase().split(",").join("|")}$`,
-        )
+    const rawObjectFilter = (props.objectFilter.trim() || "")
+        .replaceAll(" ", "")
+        .toLocaleLowerCase()
+
+    const objectFilterParts = rawObjectFilter
+        .split(",")
+        .filter((x) => x.trim() !== "")
+
+    const matchesObjectFilter = (
+        className: string,
+        isOutlier: boolean = false,
+    ): boolean => {
+        if (!objectFilterParts.length) {
+            return true
+        }
+
+        const matches = objectFilterParts.map((x: string): boolean => {
+            const excludeOutliers = x.includes("!")
+
+            if (excludeOutliers && isOutlier) {
+                return false
+            }
+
+            if (className.includes(x.replaceAll("!", ""))) {
+                return true
+            }
+
+            return false
+        })
+
+        return matches.some((x) => !!x)
+    }
 
     const rows: JSX.Element[] = []
 
@@ -65,8 +87,13 @@ export function Events(props: EventsProps) {
         detections.forEach((detection) => {
             detectionByClassName.set(detection.class_name, detection)
 
-            if (objectFilter) {
-                if (detection?.class_name?.match(objectFilter)) {
+            if (objectFilterParts.length) {
+                // 20 fps / 4 stride frames = seconds seen
+                const outlier =
+                    detection.count / (20 / 4) < MIN_SECONDS_SEEN ||
+                    detection.score < MIN_SCORE
+
+                if (matchesObjectFilter(detection.class_name, outlier)) {
                     filteredDetectionByClassName.set(
                         detection.class_name,
                         detection,
@@ -76,7 +103,7 @@ export function Events(props: EventsProps) {
         })
 
         if (
-            objectFilter &&
+            objectFilterParts.length &&
             (!detectionByClassName.size ||
                 (detectionByClassName.size &&
                     !filteredDetectionByClassName.size))
@@ -89,8 +116,7 @@ export function Events(props: EventsProps) {
             // 20 fps / 4 stride frames = seconds seen
             const outlier =
                 detection.count / (20 / 4) < MIN_SECONDS_SEEN ||
-                detection.score < MIN_SCORE ||
-                detectionSummaries.length >= TOP_N_SCORES
+                detection.score < MIN_SCORE
 
             detectionSummaries.push({
                 className,
@@ -114,9 +140,6 @@ export function Events(props: EventsProps) {
         const objectElements: JSX.Element[] = []
 
         detectionSummaries.forEach((detectionSummary) => {
-            const matchesObjectFilter =
-                objectFilter && detectionSummary.className.match(objectFilter)
-
             let color = "black"
             let textDecoration = "none"
             if (detectionSummary.outlier) {
@@ -124,7 +147,13 @@ export function Events(props: EventsProps) {
                 textDecoration = "line-through"
             }
 
-            if (matchesObjectFilter) {
+            if (
+                objectFilterParts.length &&
+                matchesObjectFilter(
+                    detectionSummary.className,
+                    detectionSummary.outlier,
+                )
+            ) {
                 color = "red"
                 if (detectionSummary.outlier) {
                     color = "maroon"
@@ -170,6 +199,7 @@ export function Events(props: EventsProps) {
             <tr key={event.id}>
                 <td style={{ verticalAlign: "middle" }}>
                     <div
+                        key={event.id}
                         style={{
                             display: "flex",
                             flexDirection: "column",
@@ -208,11 +238,15 @@ export function Events(props: EventsProps) {
                 </td>
                 <td style={{ verticalAlign: "middle", width: "200px" }}>
                     <div
+                        key={event.id}
                         style={{
                             display: "flex",
                             flexDirection: "column",
                             paddingLeft: "5px",
                             paddingRight: "5px",
+                            overflow: "scroll",
+                            height:
+                                focusEventUUID === event.id ? "185px" : "95px",
                         }}
                     >
                         {objectElements}
@@ -246,6 +280,7 @@ export function Events(props: EventsProps) {
                     }}
                 >
                     <div
+                        key={event.id}
                         style={{
                             display: "flex",
                             flexDirection: "row",

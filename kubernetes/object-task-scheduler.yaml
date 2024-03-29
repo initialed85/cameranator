@@ -1,0 +1,37 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    namespace: cameranator
+    name: object-task-scheduler
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+    namespace: cameranator
+    name: object-task-scheduler
+    labels:
+        app: object-task-scheduler
+spec:
+    serviceName: object-task-scheduler
+    replicas: 1
+    selector:
+        matchLabels:
+            app: object-task-scheduler
+    template:
+        metadata:
+            labels:
+                app: object-task-scheduler
+        spec:
+            containers:
+                - name: object-task-scheduler
+                  image: kube-registry:5000/cameranator-object-task-scheduler:latest
+                  imagePullPolicy: Always
+                  command:
+                      [
+                          "/srv/object_task_scheduler",
+                          "-url",
+                          "http://hasura:8080/v1/graphql",
+                          "-amqp",
+                          "amqp://guest:guest@rabbitmq:5672",
+                      ]

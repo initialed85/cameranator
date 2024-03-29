@@ -1,0 +1,40 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+    namespace: cameranator
+    name: maintenance-vacuum
+    labels:
+        app: maintenance-vacuum
+spec:
+    schedule: "30 20 * * 0"
+    jobTemplate:
+        metadata:
+            labels:
+                app: maintenance-vacuum
+        spec:
+            template:
+                spec:
+                    affinity:
+                        nodeAffinity:
+                            preferredDuringSchedulingIgnoredDuringExecution:
+                                - weight: 1
+                                  preference:
+                                      matchExpressions:
+                                          - key: kubernetes.io/hostname
+                                            operator: In
+                                            values:
+                                                - romulus
+                    containers:
+                        - name: postgres
+                          image: postgis/postgis:14-3.4
+                          envFrom:
+                              - configMapRef:
+                                    name: postgres
+                          command:
+                              [
+                                  "bash",
+                                  "-c",
+                                  "PAGER=cat PGPASSWORD=postgrespassword psql -h postgres -p 5432 -U postgres cameranator -c 'VACUUM FULL;'",
+                              ]
+                    restartPolicy: OnFailure

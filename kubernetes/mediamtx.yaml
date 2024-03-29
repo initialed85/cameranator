@@ -1,0 +1,81 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    namespace: cameranator
+    name: mediamtx
+data:
+    MTX_PROTOCOLS: tcp
+    MTX_WEBRTCADDITIONALHOSTS: cameranator.initialed85.cc
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+    namespace: cameranator
+    name: mediamtx
+    labels:
+        app: mediamtx
+spec:
+    serviceName: mediamtx
+    replicas: 1
+    selector:
+        matchLabels:
+            app: mediamtx
+    template:
+        metadata:
+            labels:
+                app: mediamtx
+        spec:
+            containers:
+                - name: mediamtx
+                  image: bluenviron/mediamtx:1.6.0-ffmpeg
+                  imagePullPolicy: IfNotPresent
+                  securityContext:
+                      privileged: true
+                  envFrom:
+                      - configMapRef:
+                            name: mediamtx
+                  ports:
+                      - containerPort: 8554
+                      - containerPort: 1935
+                      - containerPort: 8888
+                      - containerPort: 8889
+                      - containerPort: 8890
+                        protocol: UDP
+                      - containerPort: 8189
+                        protocol: UDP
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: mediamtx
+    namespace: cameranator
+spec:
+    selector:
+        app: mediamtx
+    type: LoadBalancer
+    ports:
+        - name: port-1
+          protocol: TCP
+          port: 8554
+          targetPort: 8554
+        - name: port-2
+          protocol: TCP
+          port: 1935
+          targetPort: 1935
+        - name: port-3
+          protocol: TCP
+          port: 8888
+          targetPort: 8888
+        - name: port-4
+          protocol: TCP
+          port: 8889
+          targetPort: 8889
+        - name: port-5
+          protocol: UDP
+          port: 8890
+          targetPort: 8890
+        - name: port-6
+          protocol: UDP
+          port: 8189
+          targetPort: 8189

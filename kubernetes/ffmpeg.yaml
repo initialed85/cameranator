@@ -1,0 +1,129 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+    namespace: cameranator
+    name: ffmpeg-driveway
+    labels:
+        app: ffmpeg-driveway
+spec:
+    serviceName: ffmpeg-driveway
+    replicas: 1
+    selector:
+        matchLabels:
+            app: ffmpeg-driveway
+    template:
+        metadata:
+            labels:
+                app: ffmpeg-driveway
+        spec:
+            nodeSelector:
+                gpu: "yes"
+                gpu-vendor: "nvidia"
+                kubernetes.io/arch: amd64
+            runtimeClassName: nvidia
+            containers:
+                - name: ffmpeg-driveway
+                  image: jrottenberg/ffmpeg:4.3.1-ubuntu1804
+                  imagePullPolicy: IfNotPresent
+                  securityContext:
+                      privileged: true
+                  args:
+                      [
+                          "-rtsp_transport",
+                          "tcp",
+                          "-re",
+                          "-i",
+                          "rtsp://192.168.137.31:554/Streaming/Channels/101",
+                          "-c",
+                          "copy",
+                          "-f",
+                          "rtsp",
+                          "rtsp://mediamtx:8554/streams/Driveway",
+                      ]
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+    namespace: cameranator
+    name: ffmpeg-frontdoor
+    labels:
+        app: ffmpeg-frontdoor
+spec:
+    serviceName: ffmpeg-frontdoor
+    replicas: 1
+    selector:
+        matchLabels:
+            app: ffmpeg-frontdoor
+    template:
+        metadata:
+            labels:
+                app: ffmpeg-frontdoor
+        spec:
+            nodeSelector:
+                gpu: "yes"
+                gpu-vendor: "nvidia"
+                kubernetes.io/arch: amd64
+            runtimeClassName: nvidia
+            containers:
+                - name: ffmpeg-frontdoor
+                  image: jrottenberg/ffmpeg:4.3.1-ubuntu1804
+                  imagePullPolicy: IfNotPresent
+                  securityContext:
+                      privileged: true
+                  args:
+                      [
+                          "-rtsp_transport",
+                          "tcp",
+                          "-re",
+                          "-i",
+                          "rtsp://192.168.137.32:554/Streaming/Channels/101",
+                          "-c",
+                          "copy",
+                          "-f",
+                          "rtsp",
+                          "rtsp://mediamtx:8554/streams/FrontDoor",
+                      ]
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+    namespace: cameranator
+    name: ffmpeg-sidegate
+    labels:
+        app: ffmpeg-sidegate
+spec:
+    serviceName: ffmpeg-sidegate
+    replicas: 1
+    selector:
+        matchLabels:
+            app: ffmpeg-sidegate
+    template:
+        metadata:
+            labels:
+                app: ffmpeg-sidegate
+        spec:
+            nodeSelector:
+                gpu: "yes"
+                gpu-vendor: "nvidia"
+                kubernetes.io/arch: amd64
+            runtimeClassName: nvidia
+            containers:
+                - name: ffmpeg-sidegate
+                  image: jrottenberg/ffmpeg:4.3.1-ubuntu1804
+                  imagePullPolicy: IfNotPresent
+                  securityContext:
+                      privileged: true
+                  args:
+                      [
+                          "-rtsp_transport",
+                          "tcp",
+                          "-re",
+                          "-i",
+                          "rtsp://192.168.137.33:554/Streaming/Channels/101",
+                          "-c",
+                          "copy",
+                          "-f",
+                          "rtsp",
+                          "rtsp://mediamtx:8554/streams/SideGate",
+                      ]

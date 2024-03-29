@@ -1,0 +1,105 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    namespace: cameranator
+    name: object-task-worker-nvidia-generic
+data:
+    DB_PASSWORD: "postgrespassword"
+    DB_HOST: "postgres"
+    DB_PORT: "5432"
+    DB_USER: "postgres"
+    DB_NAME: "cameranator"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+    namespace: cameranator
+    name: object-task-worker-nvidia-generic
+    labels:
+        app: object-task-worker-nvidia-generic
+spec:
+    serviceName: object-task-worker-nvidia-generic
+    replicas: 3
+    selector:
+        matchLabels:
+            app: object-task-worker-nvidia-generic
+    template:
+        metadata:
+            labels:
+                app: object-task-worker-nvidia-generic
+        spec:
+            topologySpreadConstraints:
+                - maxSkew: 1
+                  topologyKey: kubernetes.io/hostname
+                  whenUnsatisfiable: ScheduleAnyway
+                  labelSelector:
+                      matchLabels:
+                          app: object-task-worker-nvidia-generic
+            affinity:
+                nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                        - weight: 1
+                          preference:
+                              matchExpressions:
+                                  - key: kubernetes.io/hostname
+                                    operator: In
+                                    values:
+                                        - adonis
+            nodeSelector:
+                gpu: "yes"
+                gpu-vendor: "nvidia"
+                gpu-class: "nvidia-generic"
+                kubernetes.io/hostname: "adonis"
+            runtimeClassName: nvidia
+            volumes:
+                - name: shared
+                  persistentVolumeClaim:
+                      claimName: cameranator
+                      readOnly: false
+            containers:
+                - name: object-task-worker-nvidia-generic
+                  image: kube-registry:5000/cameranator-object-task-worker-nvidia-generic:latest
+                  imagePullPolicy: Always
+                  volumeMounts:
+                      - name: shared
+                        mountPath: /root/.cache/torch/hub
+                        subPath: media/root/.cache/torch/hub
+                      - name: shared
+                        mountPath: /srv/target_dir/events
+                        subPath: media/srv/events
+                      - name: shared
+                        mountPath: /srv/target_dir/segments
+                        subPath: media/srv/segments
+                  env:
+                      - name: DB_PASSWORD
+                        valueFrom:
+                            configMapKeyRef:
+                                name: object-task-worker-nvidia-generic
+                                key: DB_PASSWORD
+                      - name: DB_HOST
+                        valueFrom:
+                            configMapKeyRef:
+                                name: object-task-worker-nvidia-generic
+                                key: DB_HOST
+                      - name: DB_PORT
+                        valueFrom:
+                            configMapKeyRef:
+                                name: object-task-worker-nvidia-generic
+                                key: DB_PORT
+                      - name: DB_USER
+                        valueFrom:
+                            configMapKeyRef:
+                                name: object-task-worker-nvidia-generic
+                                key: DB_USER
+                      - name: DB_NAME
+                        valueFrom:
+                            configMapKeyRef:
+                                name: object-task-worker-nvidia-generic
+                                key: DB_NAME
+                      - name: NVIDIA_VISIBLE_DEVICES
+                        value: all
+                      - name: NVIDIA_DRIVER_CAPABILITIES
+                        value: all
+                      - name: AMQP_HOST
+                        value: rabbitmq

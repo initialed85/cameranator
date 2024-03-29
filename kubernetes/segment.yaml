@@ -1,0 +1,136 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    namespace: cameranator
+    name: segment
+data:
+    segment-0: "-netCamURL rtsp://192.168.137.31:554/Streaming/Channels/101 -cameraName Driveway"
+    segment-1: "-netCamURL rtsp://192.168.137.32:554/Streaming/Channels/101 -cameraName FrontDoor"
+    segment-2: "-netCamURL rtsp://192.168.137.33:554/Streaming/Channels/101 -cameraName SideGate"
+    segment-duration: "60"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+    namespace: cameranator
+    name: segment
+    labels:
+        app: segment
+spec:
+    serviceName: segment
+    replicas: 3
+    selector:
+        matchLabels:
+            app: segment
+    template:
+        metadata:
+            labels:
+                app: segment
+        spec:
+            topologySpreadConstraints:
+                - maxSkew: 1
+                  topologyKey: kubernetes.io/hostname
+                  whenUnsatisfiable: ScheduleAnyway
+                  labelSelector:
+                      matchLabels:
+                          app: segment
+            nodeSelector:
+                gpu: "yes"
+                gpu-vendor: "nvidia"
+                kubernetes.io/arch: amd64
+            runtimeClassName: nvidia
+            affinity:
+                nodeAffinity:
+                    requiredDuringSchedulingIgnoredDuringExecution:
+                        nodeSelectorTerms:
+                            - matchExpressions:
+                                  - key: kubernetes.io/hostname
+                                    operator: NotIn
+                                    values:
+                                        - adonis
+            volumes:
+                - name: segment
+                  configMap:
+                      name: segment
+                - name: segment-conf-d
+                  emptyDir: {}
+                - name: shared
+                  persistentVolumeClaim:
+                      claimName: cameranator
+                      readOnly: false
+            initContainers:
+                - name: move-config-for-ordinal
+                  image: busybox:1.28
+                  volumeMounts:
+                      - name: segment
+                        mountPath: /tmp/segment
+                      - name: segment-conf-d
+                        mountPath: /etc/segment/conf.d/
+                  env:
+                      - name: CCTV_SEGMENT_DURATION
+                        valueFrom:
+                            configMapKeyRef:
+                                name: segment
+                                key: segment-duration
+                  command:
+                      [
+                          "sh",
+                          "-c",
+                          'set -x && mkdir -p /etc/segment/conf.d/ && echo "/srv/segment_generator -destinationPath /srv/target_dir/segments -duration ${CCTV_SEGMENT_DURATION} $(cat /tmp/segment/${HOSTNAME})" > /etc/segment/conf.d/docker-command.sh && find /etc/segment/conf.d/ && cat /etc/segment/conf.d/docker-command.sh',
+                      ]
+            containers:
+                - name: segment-processor
+                  image: initialed85/cameranator-segment-processor:latest
+                  imagePullPolicy: Always
+                  securityContext:
+                      privileged: true
+                  volumeMounts:
+                      - name: shared
+                        mountPath: /srv/target_dir/segments
+                        subPath: media/srv/segments
+                  env:
+                      - name: NVIDIA_VISIBLE_DEVICES
+                        value: all
+                      - name: NVIDIA_DRIVER_CAPABILITIES
+                        value: all
+                      - name: DISABLE_NVIDIA
+                        value: "0"
+                      - name: ENABLE_PASSTHROUGH
+                        value: "1"
+                  command:
+                      [
+                          "/srv/segment_processor",
+                          "-url",
+                          "http://hasura:8080/v1/graphql",
+                      ]
+                - name: segment-generator
+                  image: initialed85/cameranator-segment-generator:latest
+                  imagePullPolicy: Always
+                  securityContext:
+                      privileged: true
+                  volumeMounts:
+                      - name: segment
+                        subPath: segment-conf
+                        mountPath: /etc/segment/segment.conf
+                      - name: segment-conf-d
+                        mountPath: /etc/segment/conf.d
+                      - name: shared
+                        mountPath: /srv/target_dir/segments
+                        subPath: media/srv/segments
+                  env:
+                      - name: NVIDIA_VISIBLE_DEVICES
+                        value: all
+                      - name: NVIDIA_DRIVER_CAPABILITIES
+                        value: all
+                      - name: DISABLE_NVIDIA
+                        value: "0"
+                      - name: ENABLE_PASSTHROUGH
+                        value: "1"
+                  command: ["bash", "/etc/segment/conf.d/docker-command.sh"]
+                  livenessProbe:
+                      httpGet:
+                          path: /healthz
+                          port: 8080
+                      initialDelaySeconds: 30
+                      periodSeconds: 5
