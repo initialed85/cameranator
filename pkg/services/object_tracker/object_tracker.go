@@ -23,7 +23,7 @@ import (
 // TODO: fix hacked file_path match
 const subscription = `
 subscription LiveEvents {
-	event(where: {status: {_eq: "needs tracking"}, start_timestamp: {_gte: "__timestamp__"}, original_video: {file_path: {_eq: "/srv/target_dir/segments/Segment_2024-03-11T15:56:01_Driveway.mp4"}}}, order_by: {start_timestamp: desc}, limit: 1) {
+	event(where: {status: {_eq: "needs tracking"}, start_timestamp: {_gte: "__timestamp__"}, original_video: {file_path: {_eq: "/srv/target_dir/segments/Segment_2024-04-01T05:27:01_FrontDoor.mp4"}}}, order_by: {start_timestamp: desc}, limit: 1) {
 	  id
 	  original_video {
 		file_path
@@ -135,7 +135,12 @@ func (o *ObjectTracker) handleEvent(event *PartialEvent) error {
 		event.PartialDetection[i] = detection
 	}
 
-	filePath := "test_data/segments/Segment_2024-03-11T15_56_01_Driveway.mp4"
+	originalVideoFilePathParts := strings.Split(event.OriginalVideo.FilePath, "/")
+
+	filePath := fmt.Sprintf(
+		"/Users/edwardbeech/romulus-storage/cameranator-cameranator-pvc-02357f2f-139d-4963-85f7-ca2428d9fa2d/media/srv/segments/%v",
+		originalVideoFilePathParts[len(originalVideoFilePathParts)-1],
+	)
 
 	rawData, err := ffmpeg.Probe(filePath)
 	if err != nil {
@@ -285,10 +290,6 @@ func (o *ObjectTracker) handleEvent(event *PartialEvent) error {
 }
 
 func (o *ObjectTracker) handler(message []byte, err error) error {
-	if err != nil {
-		return err
-	}
-
 	log.Printf("handling message=%v, err=%v", string(message), err)
 
 	if err != nil {

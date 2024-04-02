@@ -2,6 +2,7 @@ import { gql } from "@apollo/client"
 import moment from "moment"
 import { Camera } from "./camera"
 import { Type } from "./type"
+import { Detection } from "./detection"
 
 export const getEventsQuery = (
     camera: Camera,
@@ -81,14 +82,6 @@ export interface Object {
     start_timestamp: string
     end_timestamp: string
     tracked_object_id: number
-}
-
-export interface Detection {
-    class_id: number
-    class_name: string
-    score: number
-    count: number
-    weighted_score: number
 }
 
 export interface Event {

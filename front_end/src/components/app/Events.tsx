@@ -2,11 +2,14 @@ import { Camera } from "../../hasura/camera"
 import moment from "moment"
 import { Type } from "../../hasura/type"
 import { useSubscription } from "@apollo/client"
-import { Detection, Event, getEventsQuery } from "../../hasura/event"
-import { Table } from "react-bootstrap"
+import { Event, getEventsQuery } from "../../hasura/event"
+import { Modal, Table } from "react-bootstrap"
 import { useEffect, useState } from "react"
 import { adjustPath, Preview } from "./Preview"
-import { CloudDownload } from "react-bootstrap-icons"
+import { CloudDownload, Play } from "react-bootstrap-icons"
+import { Video } from "./Video"
+import { Detection } from "../../hasura/detection"
+import "./styles.css"
 
 const MIN_SECONDS_SEEN = 2.0
 const MIN_SCORE = 0.55
@@ -34,6 +37,9 @@ export function Events(props: EventsProps) {
     )
 
     const [focusEventUUID, setFocusEventUUID] = useState(null)
+
+    const [showModal, setShowModal] = useState(false)
+    const [event, setEvent] = useState<Event | null>(null)
 
     const rawObjectFilter = (props.objectFilter.trim() || "")
         .replaceAll(" ", "")
@@ -139,7 +145,7 @@ export function Events(props: EventsProps) {
 
         const objectElements: JSX.Element[] = []
 
-        detectionSummaries.forEach((detectionSummary) => {
+        detectionSummaries.forEach((detectionSummary, i: number) => {
             let color = "black"
             let textDecoration = "none"
             if (detectionSummary.outlier) {
@@ -184,6 +190,7 @@ export function Events(props: EventsProps) {
 
             objectElements.push(
                 <div
+                    key={`${event.id}-${i}`}
                     style={{
                         display: "flex",
                         flexDirection: "row",
@@ -302,19 +309,42 @@ export function Events(props: EventsProps) {
                     </div>
                 </td>
                 <td style={{ verticalAlign: "middle", width: "40px" }}>
-                    <a
-                        target={`_original_video_${event.id}`}
-                        rel={"noreferrer"}
-                        href={adjustPath(event.original_video?.file_path)}
+                    <div
+                        key={event.id}
+                        style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            height: "100%",
+                        }}
                     >
-                        <CloudDownload
+                        <a
+                            target={`_original_video_${event.id}`}
+                            rel={"noreferrer"}
+                            href={adjustPath(event.original_video?.file_path)}
+                        >
+                            <CloudDownload
+                                style={{
+                                    width: "20px",
+                                    height: "20px",
+                                    color: "gray",
+                                }}
+                            />
+                        </a>
+                        <Play
                             style={{
-                                width: "20px",
-                                height: "20px",
+                                width: "25px",
+                                height: "25px",
                                 color: "gray",
                             }}
+                            role={"button"}
+                            onClick={() => {
+                                setEvent(event)
+                                setShowModal(true)
+                            }}
                         />
-                    </a>
+                    </div>
                 </td>
             </tr>,
         )
@@ -325,21 +355,43 @@ export function Events(props: EventsProps) {
     }, [eventsQuery.loading, props])
 
     return (
-        <Table striped bordered hover size="sm">
-            <thead>
-                <tr>
-                    <th>Details</th>
-                    <th>
-                        Detections{" "}
-                        <span style={{ fontWeight: "normal" }}>
-                            {props.responsive && <br />}
-                            (frames @ score)
-                        </span>
-                    </th>
-                    <th colSpan={2}>Media</th>
-                </tr>
-            </thead>
-            <tbody>{rows}</tbody>
-        </Table>
+        <>
+            <Table striped bordered hover size="sm">
+                <thead>
+                    <tr>
+                        <th>Details</th>
+                        <th>
+                            Detections{" "}
+                            <span style={{ fontWeight: "normal" }}>
+                                {props.responsive && <br />}
+                                (frames @ score)
+                            </span>
+                        </th>
+                        <th colSpan={2}>Media</th>
+                    </tr>
+                </thead>
+                <tbody>{rows}</tbody>
+            </Table>
+
+            <Modal
+                contentClassName={"videoModal"}
+                dialogClassName={"videoModal"}
+                backdropClassName={"videoModal"}
+                show={showModal}
+                onHide={() => {
+                    setShowModal(false)
+                }}
+                size={"xl"}
+            >
+                <Modal.Body
+                    style={{
+                        padding: 2,
+                        margin: 0,
+                    }}
+                >
+                    {event && <Video event={event} />}
+                </Modal.Body>
+            </Modal>
+        </>
     )
 }

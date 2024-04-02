@@ -422,27 +422,18 @@ CREATE
 OR REPLACE FUNCTION aggregate_detection () RETURNS TRIGGER AS $$
 BEGIN
     IF NEW.status = 'needs tracking' THEN
-        -- id bigint NOT NULL PRIMARY KEY,
-        -- start_timestamp timestamp with time zone NOT NULL,
-        -- end_timestamp timestamp with time zone NOT NULL,
-        -- class_id bigint NOT NULL,
-        -- class_name text NOT NULL,
-        -- score float NOT NULL,
-        -- count bigint NOT NULL,
-        -- weighted_score float NOT NULL,
-        -- event_id bigint NULL
-
         WITH cte1 AS (
             SELECT
                 d.class_id AS class_id,
                 d.class_name AS class_name,
                 avg(d.score) AS score,
                 count(d.*) AS count,
-                avg(d.score) * count(d.*) AS weighted_score,
+                (avg(d.score) * count(d.*)) / extract(epoch from (e.end_timestamp - e.start_timestamp)) AS weighted_score,
                 NEW.id AS event_id
             FROM detections d
+            INNER JOIN events e ON e.id = NEW.id
             WHERE d.event_id = NEW.id
-            GROUP BY (d.class_id, d.class_name)
+            GROUP BY (d.class_id, d.class_name, e.start_timestamp, e.end_timestamp)
         ),
         cte2 AS (
             SELECT NEW.start_timestamp AS start_timestamp,

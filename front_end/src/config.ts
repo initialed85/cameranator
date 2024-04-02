@@ -1,4 +1,4 @@
-export let apiHttpUrl = `https://cameranator.initialed85.cc/v1/graphql`
+export let apiHttpUrl = `https://cameranator.initialed85.cc/api/v1/graphql`
 export let apiWsUrl = `wss://cameranator.initialed85.cc/api/v1/graphql`
 export let fileHttpUrl = `https://cameranator.initialed85.cc/`
 

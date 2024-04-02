@@ -13,7 +13,7 @@ import (
 func main() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
 
-	urlFlag := flag.String("url", "http://localhost:8080/v1/graphql", "")
+	urlFlag := flag.String("url", "https://cameranator.initialed85.cc/api/v1/graphql", "")
 	timeoutFlag := flag.Duration("timeout", time.Second*300, "")
 
 	flag.Parse()

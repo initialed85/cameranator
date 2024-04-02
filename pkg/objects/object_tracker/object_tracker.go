@@ -218,7 +218,11 @@ func (o *ObjectTracker) trackEvent(event PartialEvent) error {
 
 	errs := make(chan error, 16)
 
+	ffmpegCtx, ffmpegCancel := context.WithCancel(o.ctx)
+
 	go func() {
+		defer ffmpegCancel()
+
 		err := ffmpeg.Input(event.OriginalVideo.AdjustedFilePath).
 			Output("pipe:",
 				ffmpeg.KwArgs{
@@ -234,7 +238,7 @@ func (o *ObjectTracker) trackEvent(event PartialEvent) error {
 	}()
 
 	select {
-	case <-time.After(time.Second * 5):
+	case <-time.After(time.Second * 1):
 	case err := <-errs:
 		return fmt.Errorf("failed to open ffmpeg input stream for event.ID: %v: %v", event.ID, err)
 	}
@@ -258,12 +262,20 @@ func (o *ObjectTracker) trackEvent(event PartialEvent) error {
 	objectID := 0
 
 	for {
+		select {
+		case <-ffmpegCtx.Done():
+			log.Printf("finished; ffmpegCtx cancelled")
+			return nil
+		default:
+		}
+
 		n, err := io.ReadFull(reader, buf)
 		if n != frameSize || (err != nil && err != io.EOF) {
 			return fmt.Errorf("failed to read %#+v after %v bytes for event.ID: %v: %v", event.OriginalVideo.AdjustedFilePath, n, event.ID, err)
 		}
 
 		if n == 0 || err == io.EOF {
+			log.Printf("finished; n: %v, err: %v", n, err)
 			break
 		}
 
@@ -273,6 +285,7 @@ func (o *ObjectTracker) trackEvent(event PartialEvent) error {
 		}
 
 		if originalImage.Empty() {
+			log.Printf("finished; originalImage was empty")
 			break
 		}
 
@@ -412,7 +425,9 @@ func (o *ObjectTracker) trackEvent(event PartialEvent) error {
 
 			thisFrameObjectIDs[objectID] = struct{}{}
 
-			log.Printf("%v (%v); %v (%v) has %v scores", frameTimestamp, frame, detection.ClassName, detection.ObjectID, len(scores))
+			_ = frameTimestamp
+
+			// log.Printf("%v (%v); %v (%v) has %v scores", frameTimestamp, frame, detection.ClassName, detection.ObjectID, len(scores))
 		}
 
 		// draw the bounding box and trail
@@ -468,9 +483,9 @@ func (o *ObjectTracker) trackEvent(event PartialEvent) error {
 			bottomLeft := detection.BoundingBox[3]
 
 			textColor := color.RGBA{
-				0,
-				0,
-				0,
+				255,
+				255,
+				255,
 				0,
 			}
 

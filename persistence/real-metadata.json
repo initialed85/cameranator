@@ -1,5 +1,5 @@
 {
-    "resource_version": 7,
+    "resource_version": 15,
     "metadata": {
         "version": 3,
         "sources": [
@@ -7,6 +7,20 @@
                 "name": "default",
                 "kind": "postgres",
                 "tables": [
+                    {
+                        "table": {
+                            "schema": "public",
+                            "name": "aggregated_detection"
+                        },
+                        "object_relationships": [
+                            {
+                                "name": "event",
+                                "using": {
+                                    "foreign_key_constraint_on": "event_id"
+                                }
+                            }
+                        ]
+                    },
                     {
                         "table": {
                             "schema": "public",
@@ -146,6 +160,18 @@
                         ],
                         "array_relationships": [
                             {
+                                "name": "aggregated_detections",
+                                "using": {
+                                    "foreign_key_constraint_on": {
+                                        "column": "event_id",
+                                        "table": {
+                                            "schema": "public",
+                                            "name": "aggregated_detection"
+                                        }
+                                    }
+                                }
+                            },
+                            {
                                 "name": "detections",
                                 "using": {
                                     "foreign_key_constraint_on": {
@@ -201,6 +227,21 @@
                             "name": "event_with_detection"
                         },
                         "object_relationships": [
+                            {
+                                "name": "event",
+                                "using": {
+                                    "manual_configuration": {
+                                        "remote_table": {
+                                            "schema": "public",
+                                            "name": "event"
+                                        },
+                                        "insertion_order": null,
+                                        "column_mapping": {
+                                            "event_id": "id"
+                                        }
+                                    }
+                                }
+                            },
                             {
                                 "name": "original_video",
                                 "using": {

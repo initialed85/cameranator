@@ -28,7 +28,6 @@ func CreateAndHandleGoCVWindow(ctx context.Context, cancel context.CancelFunc, m
 	}()
 
 	window.SetWindowProperty(gocv.WindowPropertyAspectRatio, gocv.WindowKeepRatio)
-	window.MoveWindow(100, 100)
 
 	go func() {
 		<-ctx.Done()
