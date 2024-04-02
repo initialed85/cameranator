@@ -188,14 +188,16 @@ export function Video(props: VideoProps) {
                         ctx.strokeStyle = `rgba(255, 0, 0, 0.75)`
 
                         ctx.fillStyle = `rgba(255, 255, 255, 0.75)`
-                        ctx.font = "18px Tahoma"
+                        ctx.font = "18px sans-serif"
                         ctx.textAlign = "left"
 
                         if (deltaMilliseconds <= 200) {
                             ctx.fillText(
-                                detection.class_name,
-                                topLeft.x + 1,
-                                bottomRight.y - 5,
+                                `${
+                                    detection.class_name
+                                } @ ${detection.score.toFixed(3)}`,
+                                topLeft.x + 3,
+                                bottomRight.y - 4,
                             )
 
                             ctx.strokeRect(
