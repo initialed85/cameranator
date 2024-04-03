@@ -1,8 +1,12 @@
 import { Camera } from "../../hasura/camera"
 import moment from "moment"
 import { Type } from "../../hasura/type"
-import { useSubscription } from "@apollo/client"
-import { Event, getEventsQuery } from "../../hasura/event"
+import { useQuery, useSubscription } from "@apollo/client"
+import {
+    Event,
+    getEventsQuery,
+    getEventsSubscription,
+} from "../../hasura/event"
 import { Modal, Table } from "react-bootstrap"
 import { useEffect, useState } from "react"
 import { adjustPath, Preview } from "./Preview"
@@ -10,6 +14,7 @@ import { CloudDownload, Play } from "react-bootstrap-icons"
 import { Video } from "./Video"
 import { Detection } from "../../hasura/detection"
 import "./styles.css"
+import { useInView } from "react-intersection-observer"
 
 const MIN_SECONDS_SEEN = 2.0
 const MIN_SCORE = 0.55
@@ -32,9 +37,84 @@ export interface DetectionSummary {
 }
 
 export function Events(props: EventsProps) {
-    const eventsQuery = useSubscription(
-        getEventsQuery(props.camera!, props.date!, props.type!),
-    )
+    const { ref, inView } = useInView({})
+    const [eventById, setEventById] = useState<{ [n: number]: Event }>({})
+    const [startTimestampLessThan, setStartTimestampLessThan] = useState<
+        string | null
+    >(null)
+
+    const startTimestamp = props.date
+        ? moment(`${props.date.local().format("YYYY-MM-DD")}T00:00:00+0800`)
+        : null
+
+    const endTimestamp = props.date
+        ? moment(`${props.date.local().format("YYYY-MM-DD")}T23:59:59+0800`)
+        : null
+
+    const eventsSubscription = useSubscription(getEventsSubscription(), {
+        variables: {
+            startTimestamp: startTimestamp,
+            endTimestamp: endTimestamp,
+            sourceCameraId: props.camera?.id,
+        },
+    })
+
+    const eventsQuery = useQuery(getEventsQuery(), {
+        variables: {
+            camera: props.camera,
+            date: props.date,
+            type: props.type,
+            startTimestampLessThan: startTimestampLessThan,
+        },
+    })
+
+    useEffect(() => {
+        const thisEventById: { [n: number]: Event } = { ...eventById }
+
+        if (
+            !eventsSubscription.loading &&
+            eventsSubscription.data?.event?.length
+        ) {
+            eventsSubscription.data?.event?.forEach((event: Event) => {
+                thisEventById[parseInt(event.id)] = event
+            })
+        }
+
+        if (!eventsQuery.loading && eventsQuery.data?.event?.length) {
+            eventsQuery.data?.event?.forEach((event: Event) => {
+                thisEventById[parseInt(event.id)] = event
+            })
+        }
+
+        const thisEventByIdHash = JSON.stringify(
+            Object.keys(thisEventById)
+                .map((k) => parseInt(k))
+                .sort(),
+        )
+
+        const eventByIdHash = JSON.stringify(
+            Object.keys(eventById)
+                .map((k) => parseInt(k))
+                .sort(),
+        )
+
+        if (thisEventByIdHash !== eventByIdHash) {
+            setEventById({ ...eventById, ...thisEventById })
+        }
+    }, [
+        eventById,
+        eventsQuery.data?.event,
+        eventsQuery.loading,
+        eventsSubscription.data?.event,
+        eventsSubscription.loading,
+        startTimestampLessThan,
+        inView,
+        props,
+    ])
+
+    useEffect(() => {
+        props.setLoading(eventsSubscription.loading || eventsQuery.loading)
+    }, [eventsQuery.loading, eventsSubscription.loading, props])
 
     const [focusEventUUID, setFocusEventUUID] = useState(null)
 
@@ -76,7 +156,46 @@ export function Events(props: EventsProps) {
 
     const rows: JSX.Element[] = []
 
-    let events: Event[] = eventsQuery?.data?.event || []
+    const events: Event[] = Object.values(eventById)
+        .filter((event: Event) => {
+            if (event.source_camera.id !== props.camera?.id) {
+                return false
+            }
+
+            const thisStartTimestamp = moment(event.start_timestamp)
+            if (thisStartTimestamp.isBefore(startTimestamp)) {
+                return false
+            }
+
+            const thisEndTimestamp = moment(event.end_timestamp)
+            if (thisEndTimestamp.isAfter(endTimestamp)) {
+                return false
+            }
+
+            return true
+        })
+        .sort((a: Event, b: Event) => {
+            if (a.start_timestamp < b.start_timestamp) {
+                return 1
+            } else if (a.start_timestamp > b.start_timestamp) {
+                return -1
+            } else {
+                return 0
+            }
+        })
+
+    if (inView && !eventsSubscription.loading && !eventsQuery.loading) {
+        const thisStartTimestampLessThan = events
+            .map((event: Event) => event.start_timestamp)
+            .sort()[0]
+
+        if (
+            thisStartTimestampLessThan &&
+            thisStartTimestampLessThan !== startTimestampLessThan
+        ) {
+            setStartTimestampLessThan(thisStartTimestampLessThan)
+        }
+    }
 
     events.forEach((event: Event) => {
         const startTimestamp = moment.utc(event.start_timestamp)
@@ -350,10 +469,6 @@ export function Events(props: EventsProps) {
         )
     })
 
-    useEffect(() => {
-        props.setLoading(eventsQuery.loading)
-    }, [eventsQuery.loading, props])
-
     return (
         <>
             <Table striped bordered hover size="sm">
@@ -372,6 +487,15 @@ export function Events(props: EventsProps) {
                 </thead>
                 <tbody>{rows}</tbody>
             </Table>
+
+            <span
+                ref={ref}
+                style={{
+                    color: "#aaaaaa",
+                    textAlign: "center",
+                    fontSize: "6pt",
+                }}
+            />
 
             <Modal
                 contentClassName={"videoModal"}

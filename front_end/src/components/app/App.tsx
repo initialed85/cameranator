@@ -25,7 +25,7 @@ function App() {
     const [objectFilter, setObjectFilter] = useState("")
     const debouncedSetObjectFilter = useDebouncedCallback(
         (x) => setObjectFilter(x),
-        100,
+        1_000,
     )
 
     const [isLoading, setIsLoading] = useState(false)
