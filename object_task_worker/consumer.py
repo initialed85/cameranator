@@ -26,8 +26,8 @@ from object_task_worker.object_tracker import (
 )
 
 _AMQP_IDENTIFIER = "object_tasks"
-_CONNECT_TIMEOUT = 60
-_HEARTBEAT = 60
+_CONNECT_TIMEOUT = 5
+_HEARTBEAT = 0
 
 _INSERT_VIDEO_QUERY = """
 INSERT INTO video (
@@ -426,7 +426,9 @@ class Consumer(object):
 
         while 1:
             try:
+                print(f"calling {self._conn.drain_events}...")
                 self._conn.drain_events(timeout=5)
+                print(f"called {self._conn.drain_events}.")
             except Timeout:
                 pass
             except KeyboardInterrupt:
