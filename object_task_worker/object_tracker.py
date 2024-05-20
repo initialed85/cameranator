@@ -183,7 +183,7 @@ class ObjectTracker(object):
 
         device = device or "cuda"
 
-        self._executor = ThreadPoolExecutor(max_workers=1)
+        self._executor = ThreadPoolExecutor()
         self._futures = []
 
         self._model = torch.hub.load("WongKinYiu/yolov7", "custom", model_path)

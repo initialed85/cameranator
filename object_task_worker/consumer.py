@@ -1,13 +1,19 @@
 import os
+import copy
 import time
 import traceback
+from types import SimpleNamespace
+import pika
+from pika import BlockingConnection
+from pika.channel import Channel
+from pika.exceptions import ChannelClosed
+from pika.spec import Basic, BasicProperties
 import psycopg2
 import datetime
 from threading import Thread, Event
 from queue import Queue, Empty
 
 from typing import Optional, Dict, cast, List, Tuple
-from amqpy import Connection, Message, Timeout, Channel
 from dateutil.parser import parse
 from orjson import loads
 
@@ -99,7 +105,7 @@ class Consumer(object):
         self._userid = userid
         self._password = password
 
-        self._conn: Optional[Connection] = None
+        self._conn: Optional[BlockingConnection] = None
         self._consume_ch: Optional[Channel] = None
 
         self._queue = Queue(maxsize=65536)
@@ -161,43 +167,39 @@ class Consumer(object):
                                 camera_id,
                                 event_id,
                             ) = self._queue.get(timeout=1)
-
-                            detections += max(
-                                [
-                                    len(detection_context.centroid_detections),
-                                    len(detection_context.bbox_detections),
-                                ],
-                            )
-
-                            detection_context = cast(
-                                DetectionContext, detection_context
-                            )
-                            name_by_class_id = cast(Dict[int, str], name_by_class_id)
-                            start_timestamp = cast(datetime.datetime, start_timestamp)
-                            camera_id = cast(int, camera_id)
-                            event_id = cast(int, event_id)
-
-                            detections += len(
-                                detection_context.centroid_detections or []
-                            )
-                            detections += len(detection_context.bbox_detections or [])
-
-                            if event_id not in event_ids:
-                                event_ids.append(event_id)
-
-                            tasks.append(
-                                (
-                                    detection_context,
-                                    name_by_class_id,
-                                    start_timestamp,
-                                    camera_id,
-                                    event_id,
-                                )
-                            )
                         except Empty:
+                            print("no tasks from queue...")
                             continue
 
-                    print(f"processing {len(tasks)} batched tasks")
+                        detection_context = cast(DetectionContext, detection_context)
+                        name_by_class_id = cast(Dict[int, str], name_by_class_id)
+                        start_timestamp = cast(datetime.datetime, start_timestamp)
+                        camera_id = cast(int, camera_id)
+                        event_id = cast(int, event_id)
+
+                        detections += len(detection_context.centroid_detections or [])
+                        detections += len(detection_context.bbox_detections or [])
+
+                        if event_id not in event_ids:
+                            event_ids.append(event_id)
+
+                        tasks.append(
+                            (
+                                detection_context,
+                                name_by_class_id,
+                                start_timestamp,
+                                camera_id,
+                                event_id,
+                            )
+                        )
+
+                    if not len(tasks):
+                        print(f"nothing to insert for this batch run")
+                        continue
+
+                    print(
+                        f"buildin queries for insert of {detections} detections for event_ids={event_ids}"
+                    )
 
                     for (
                         detection_context,
@@ -223,7 +225,7 @@ class Consumer(object):
                     query = get_query_for_repeaters(repeaters)
 
                     print(
-                        f"insert of {detections} detections for event_ids={event_ids}"
+                        f"executing insert of {detections} detections for event_ids={event_ids}"
                     )
 
                     if not query:
@@ -250,6 +252,8 @@ class Consumer(object):
             ]
         )
 
+        print(f"queued {detections} for event_id={event_id} for writing to db")
+
         self._queue.put(
             (
                 detection_context,
@@ -260,7 +264,7 @@ class Consumer(object):
             )
         )
 
-    def _actual_handler(self, message: Message):
+    def _actual_handler(self, message: SimpleNamespace):
         event = loads(message.body)
         print(f"received event={repr(event)}")
 
@@ -280,6 +284,9 @@ class Consumer(object):
             detection_context: DetectionContext,
             name_by_class_id: Dict[int, str],
         ):
+            detection_context = copy.deepcopy(detection_context)
+            name_by_class_id = copy.deepcopy(name_by_class_id)
+
             return self._write_detections_to_db(
                 detection_context=detection_context,
                 name_by_class_id=name_by_class_id,
@@ -357,12 +364,25 @@ class Consumer(object):
 
                 print("done.")
 
-    def _handler(self, message: Message):
+    def _handler(
+        self,
+        channel: Channel,
+        method: Basic.Deliver,
+        properties: BasicProperties,
+        body: bytes,
+    ):
+        message = SimpleNamespace(
+            channel=channel,
+            method=method,
+            properties=properties,
+            body=body,
+        )
+
         try:
             print(f"handling message={repr(message)}...")
             self._actual_handler(message)
             print(f"successfully handled message={repr(message)}, acking...")
-            message.ack()
+            channel.basic_ack(method.delivery_tag)
             print(f"acked message={repr(message)}.")
         except Exception as e:
             traceback.print_exc()
@@ -372,7 +392,7 @@ class Consumer(object):
             )
 
             try:
-                message.reject(requeue=True)
+                channel.basic_reject(method.delivery_tag)
                 print(f"rejected message={repr(message)}.")
             except Exception as e:
                 traceback.print_exc()
@@ -386,14 +406,10 @@ class Consumer(object):
 
     def open(self):
         print("connecting to {}:{}".format(self._host, self._port))
-        self._conn = Connection(
-            host=self._host,
-            port=self._port,
-            userid=self._userid,
-            password=self._password,
-            connect_timeout=_CONNECT_TIMEOUT,
-            heartbeat=_HEARTBEAT,
-        )
+
+        credentials = pika.PlainCredentials(self._userid, self._password)
+        parameters = pika.ConnectionParameters(self._host, credentials=credentials)
+        self._conn = pika.BlockingConnection(parameters)
 
         print("opening consume channel and declaring exchange and queue")
         self._consume_ch = self._conn.channel()
@@ -417,29 +433,28 @@ class Consumer(object):
             routing_key=_AMQP_IDENTIFIER,
         )
 
-        self._consume_ch.basic_consume(
-            _AMQP_IDENTIFIER,
-            callback=self._handler,
+        self._consume_ch.basic_qos(
+            prefetch_count=1,
         )
 
-        print("waiting for events...")
+        self._consume_ch.basic_consume(
+            _AMQP_IDENTIFIER,
+            on_message_callback=self._handler,
+        )
 
-        while 1:
-            try:
-                print(f"calling {self._conn.drain_events}...")
-                self._conn.drain_events(timeout=5)
-                print(f"called {self._conn.drain_events}.")
-            except Timeout:
-                pass
-            except KeyboardInterrupt:
-                break
-            except Exception as e:
-                traceback.print_exc()
+        print("consuming...")
 
-                print(f"failed to drain events; e={repr(e)}, crashing out...")
+        try:
+            self._consume_ch.start_consuming()
+        except ChannelClosed:
+            traceback.print_exc()
 
-                self._stop_event.set()
-                raise SystemExit(e) from e
+            print(f"failed to consume; e={repr(e)}, crashing out...")
+
+            self._stop_event.set()
+            raise SystemExit(e) from e
+        except KeyboardInterrupt:
+            self._consume_ch.stop_consuming()
 
     def close(self):
         if self._consume_ch:

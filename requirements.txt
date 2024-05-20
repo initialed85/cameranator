@@ -16,3 +16,5 @@ protobuf<4.21.3
 tensorboard>=2.4.1
 ipython==7.34.0
 psutil==5.9.8
+norfair==2.2.0
+pika==1.3.2
