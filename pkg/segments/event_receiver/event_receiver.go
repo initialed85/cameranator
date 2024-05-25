@@ -24,9 +24,11 @@ func NewEventReceiver(port int64, handler func(event segment_generator.Event)) (
 		return nil, err
 	}
 
+	addr, _ := net.ResolveUDPAddr("udp4", fmt.Sprintf("0.0.0.0:%v", port))
+
 	r := EventReceiver{
 		receiver: network.NewReceiver(
-			fmt.Sprintf("0.0.0.0:%v", port),
+			addr,
 			interfaceName,
 		),
 		handler: handler,
@@ -35,8 +37,8 @@ func NewEventReceiver(port int64, handler func(event segment_generator.Event)) (
 	return &r, nil
 }
 
-func (r *EventReceiver) callback(addr *net.UDPAddr, data []byte) {
-	log.Printf("EventReceiver.callback; received: addr=%#+v, data=%#+v)", addr.String(), string(data))
+func (r *EventReceiver) callback(srcAddr *net.UDPAddr, dstAddr *net.UDPAddr, data []byte) {
+	log.Printf("EventReceiver.callback; received: srcAddr=%#+v, dstAddr=%#+v, data=%#+v)", srcAddr.String(), dstAddr.String(), string(data))
 
 	r.mu.Lock()
 	defer r.mu.Unlock()

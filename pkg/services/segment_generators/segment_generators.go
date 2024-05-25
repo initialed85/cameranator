@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net"
 	"sync"
 
 	"github.com/initialed85/cameranator/pkg/liveness"
@@ -53,7 +54,9 @@ func (s *SegmentGenerators) Start() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	s.sender = network.NewSender(fmt.Sprintf("%v:%v", s.host, s.port))
+	addr, _ := net.ResolveUDPAddr("udp4", fmt.Sprintf("%v:%v", s.host, s.port))
+
+	s.sender = network.NewSender(addr)
 	err := s.sender.Open()
 	if err != nil {
 		return err

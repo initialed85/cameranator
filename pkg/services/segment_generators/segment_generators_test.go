@@ -22,11 +22,13 @@ func TestNewSegmentGenerators(t *testing.T) {
 	interfaceName, err := network.GetDefaultInterfaceName()
 	require.NoError(t, err)
 
-	receiver := network.NewReceiver("0.0.0.0:6291", interfaceName)
+	addr, _ := net.ResolveUDPAddr("udp4", "0.0.0.0:6291")
+
+	receiver := network.NewReceiver(addr, interfaceName)
 
 	events := make([]segment_generator.Event, 0)
 
-	err = receiver.RegisterCallback(func(addr *net.UDPAddr, data []byte) {
+	err = receiver.RegisterCallback(func(srcAddr *net.UDPAddr, dstAddr *net.UDPAddr, data []byte) {
 		event := segment_generator.Event{}
 
 		err := json.Unmarshal(data, &event)

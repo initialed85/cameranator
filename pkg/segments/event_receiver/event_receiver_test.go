@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"net"
+
 	"github.com/initialed85/glue/pkg/network"
 	"github.com/relvacode/iso8601"
 	"github.com/stretchr/testify/assert"
@@ -29,7 +31,9 @@ func TestNewEventReceiver_All(t *testing.T) {
 	require.NoError(t, err)
 	time.Sleep(time.Millisecond * 100)
 
-	sender := network.NewSender("localhost:6291")
+	addr, _ := net.ResolveUDPAddr("udp4", "localhost:6291")
+
+	sender := network.NewSender(addr)
 	err = sender.Open()
 	defer sender.Close()
 	require.NoError(t, err)

@@ -3,6 +3,7 @@ package segment_processor
 import (
 	"encoding/json"
 	"log"
+	"net"
 	"testing"
 	"time"
 
@@ -93,7 +94,9 @@ func TestSegmentProcessor(t *testing.T) {
 	require.NoError(t, err)
 	time.Sleep(time.Millisecond * 100)
 
-	sender := network.NewSender("localhost:6291")
+	addr, _ := net.ResolveUDPAddr("udp4", "localhost:6291")
+
+	sender := network.NewSender(addr)
 	err = sender.Open()
 	defer sender.Close()
 	require.NoError(t, err)
