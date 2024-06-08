@@ -1,14 +1,14 @@
-import { Camera } from "../../hasura/camera"
-import moment from "moment"
-import { Type } from "../../hasura/type"
 import { useSubscription } from "@apollo/client"
-import { Event, getEventsQuery } from "../../hasura/event"
-import { Modal, Table } from "react-bootstrap"
+import moment from "moment"
 import { useEffect, useState } from "react"
-import { adjustPath, Preview } from "./Preview"
+import { Modal, Table } from "react-bootstrap"
 import { CloudDownload, Play } from "react-bootstrap-icons"
-import { Video } from "./Video"
+import { Camera } from "../../hasura/camera"
 import { Detection } from "../../hasura/detection"
+import { Event, getEventsQuery } from "../../hasura/event"
+import { Type } from "../../hasura/type"
+import { Preview, adjustPath } from "./Preview"
+import { Video } from "./Video"
 import "./styles.css"
 
 const MIN_SECONDS_SEEN = 2.0
@@ -374,14 +374,11 @@ export function Events(props: EventsProps) {
             </Table>
 
             <Modal
-                contentClassName={"videoModal"}
-                dialogClassName={"videoModal"}
-                backdropClassName={"videoModal"}
+                dialogClassName={"video-modal"}
                 show={showModal}
                 onHide={() => {
                     setShowModal(false)
                 }}
-                size={"xl"}
             >
                 <Modal.Body
                     style={{
