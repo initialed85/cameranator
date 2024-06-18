@@ -1,13 +1,17 @@
-FROM node:13.12.0-alpine
+FROM node:20 AS builder
 
 WORKDIR /srv
 
 COPY front_end/package.json ./
 COPY front_end/package-lock.json ./
-RUN npm install
+RUN npm ci
 
 COPY front_end ./
 RUN npm run build
 
-# start app
-CMD ["npm", "start"]
+ENTRYPOINT ["npm"]
+CMD ["run", "start"]
+
+# FROM nginx:stable
+
+# COPY --from=builder /srv/build/ /usr/share/nginx/html
