@@ -45,6 +45,7 @@ object Build : BuildType({
             commandType = build {
                 source = file {
                     path = "docker/event-pruner/Dockerfile"
+                    context = "./"
                 }
             }
         }
@@ -53,6 +54,7 @@ object Build : BuildType({
             commandType = build {
                 source = file {
                     path = "docker/front-end/Dockerfile"
+                    context = "./"
                 }
             }
         }
@@ -61,6 +63,7 @@ object Build : BuildType({
             commandType = build {
                 source = file {
                     path = "docker/object-detector/Dockerfile"
+                    context = "./"
                 }
             }
         }
@@ -69,6 +72,7 @@ object Build : BuildType({
             commandType = build {
                 source = file {
                     path = "docker/object-task-scheduler/Dockerfile"
+                    context = "./"
                 }
             }
         }
@@ -77,6 +81,7 @@ object Build : BuildType({
             commandType = build {
                 source = file {
                     path = "docker/segment-generator/Dockerfile"
+                    context = "./"
                 }
             }
         }
@@ -85,6 +90,7 @@ object Build : BuildType({
             commandType = build {
                 source = file {
                     path = "docker/segment-processor/Dockerfile"
+                    context = "./"
                 }
             }
         }
