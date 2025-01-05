@@ -1,6 +1,6 @@
 # cameranator
 
-# status: undergoing a hacky change in direction (moving away from motion daemon, towards PyTorch + YOLOv7)
+# status: dead; check out [initialed85/camry](https://github.com/initialed85/camry) instead
 
 ```shell
 sudo mount -t nfs 192.168.137.253:/storage ~/romulus-storage/
